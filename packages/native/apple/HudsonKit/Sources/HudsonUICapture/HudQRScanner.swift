@@ -99,17 +99,25 @@ private struct HudQRScannerRepresentable: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> HudQRScannerViewController {
         let vc = HudQRScannerViewController()
         vc.onCodeScanned = onScan
+        vc.setActive(isActive)
         return vc
     }
 
     func updateUIViewController(_ vc: HudQRScannerViewController, context: Context) {
-        if isActive { vc.start() } else { vc.stop() }
+        vc.setActive(isActive)
+    }
+
+    static func dismantleUIViewController(_ vc: HudQRScannerViewController, coordinator: ()) {
+        vc.setActive(false)
+        vc.onCodeScanned = nil
     }
 }
 
 private final class HudQRScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
     var onCodeScanned: ((String) -> Void)?
     private var session: AVCaptureSession?
+    private var isActive = false
+    private let captureQueue = DispatchQueue(label: "hudson.qr.capture")
     private var preview: AVCaptureVideoPreviewLayer?
     private var lastScanned: String?
     private var lastScanAt: Date = .distantPast
@@ -134,14 +142,18 @@ private final class HudQRScannerViewController: UIViewController, AVCaptureMetad
         })
     }
 
-    func start() {
-        guard let session, !session.isRunning else { return }
-        DispatchQueue.global(qos: .userInitiated).async { session.startRunning() }
-    }
-
-    func stop() {
-        guard let session, session.isRunning else { return }
-        session.stopRunning()
+    /// Serialized start/stop prevents a delayed start from racing teardown.
+    /// Keep desired activity even when SwiftUI updates before viewDidLoad.
+    func setActive(_ active: Bool) {
+        isActive = active
+        guard let session else { return }
+        captureQueue.async {
+            if active {
+                if !session.isRunning { session.startRunning() }
+            } else if session.isRunning {
+                session.stopRunning()
+            }
+        }
     }
 
     private func setupCamera() {
@@ -166,7 +178,7 @@ private final class HudQRScannerViewController: UIViewController, AVCaptureMetad
         self.session = session
         self.preview = preview
         updateOrientation()
-        start()
+        setActive(isActive)
     }
 
     private func updateOrientation() {
@@ -187,7 +199,8 @@ private final class HudQRScannerViewController: UIViewController, AVCaptureMetad
         didOutput metadataObjects: [AVMetadataObject],
         from connection: AVCaptureConnection
     ) {
-        guard let object = metadataObjects.first as? AVMetadataMachineReadableCodeObject,
+        guard isActive,
+              let object = metadataObjects.first as? AVMetadataMachineReadableCodeObject,
               let code = object.stringValue else { return }
 
         // Debounce duplicate scans within 1.5s
