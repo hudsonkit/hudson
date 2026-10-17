@@ -35,6 +35,8 @@ import { hudLoggerApp } from './hud-logger';
 import { hudsonVoiceApp } from './hudson-voice';
 import { servicesApp } from './services';
 import { terminalApp } from './terminal';
+// Hero — font viewer/glyph editor, vendored from Atelier as a demo app (not part of hudsonkit).
+import { heroApp } from './hero/hero';
 
 // --- Built-in batteries (shipped with the kit) --------------------------------
 // Generic, client-only utility apps now live in the kit as `hudsonkit/apps`.
@@ -95,6 +97,7 @@ function getAppById(id: string): HudsonApp | null {
     'hudson-voice': hudsonVoiceApp,
     'services': servicesApp,
     'terminal': terminalApp,
+    'hero': heroApp,
   };
   if (table[id]) return table[id];
   // Also search local apps (e.g., hero, external repos)
@@ -318,6 +321,24 @@ export function getDocumentLabWorkspace(): HudsonWorkspace {
   };
 }
 
+/** Hero Studio — font viewer and glyph editor running on the Hudson shell. */
+export function getHeroStudioWorkspace(): HudsonWorkspace {
+  return {
+    id: 'hero-studio',
+    name: 'Hero Studio',
+    description: 'Font viewer, glyph inspection, and wordmark editing',
+    mode: 'canvas',
+    apps: [{
+      app: heroApp,
+      canvasMode: 'windowed',
+      defaultWindowBounds: { x: -490, y: -360, w: 980, h: 720 },
+    }],
+    defaultFocusedAppId: 'hero',
+    defaultActivatedAppIds: ['hero'],
+    leftNavigation: 'on',
+  };
+}
+
 /** Workflow Lab — read-only fixture harness for the shared workflow graph primitive. */
 export function getWorkflowLabWorkspace(): HudsonWorkspace {
   return {
@@ -360,6 +381,7 @@ export function getCoreWorkspaces(): HudsonWorkspace[] {
     { workspace: getDeveloperModeWorkspace(), source: 'core:developer-mode' },
     { workspace: getDocumentLabWorkspace(), source: 'core:document-lab' },
     { workspace: getWorkflowLabWorkspace(), source: 'core:workflow-lab' },
+    { workspace: getHeroStudioWorkspace(), source: 'core:hero-studio' },
   ]);
 }
 

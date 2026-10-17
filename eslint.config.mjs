@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     "apps/web/site/out/**",
     "build/**",
     "apps/web/public/embed/**",
+    // Hero is vendored from Atelier as a demo app; it is linted at its source.
+    "apps/web/app/apps/hero/**",
     "**/next-env.d.ts",
     // Build artifacts and generated bundles — never lint these.
     "**/dist/**",
