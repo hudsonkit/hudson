@@ -1,5 +1,6 @@
 import CoreGraphics
 import SwiftUI
+import Observation
 
 /// Spacing scale — synthesized from the values that recur across Lattices'
 /// `LatsDesignSystem` and Hudson's web chrome. Lattices uses inline literals
@@ -22,10 +23,36 @@ public enum HudSpacing {
 /// Corner-radius scale matching the `--hud-radius` web default and Lattices'
 /// 3/6/8 hierarchy: `tight` for badges, `standard` for inset rows and small
 /// controls, `card` for surface containers.
+/// Web template identifiers are retained so hosts can persist one shared choice.
+public enum HudCornerTemplate: String, CaseIterable, Sendable {
+    case rounded = "hudson"
+    case nearSquare = "editorial"
+    case square = "drafting"
+}
+
+/// SwiftUI tracks reads of the tokens in view bodies, including existing open
+/// windows. Hosts change the template on the UI thread; no view identity reset.
+@Observable
+private final class HudCornerState: @unchecked Sendable {
+    var template: HudCornerTemplate = .rounded
+}
+
 public enum HudRadius {
-    public static var tight:    CGFloat { 3 }
-    public static var standard: CGFloat { 6 }
-    public static var card:     CGFloat { 8 }
+    private static let state = HudCornerState()
+
+    public static var template: HudCornerTemplate {
+        get { state.template }
+        set { state.template = newValue }
+    }
+    public static var tight: CGFloat {
+        switch template { case .rounded: 3; case .nearSquare: 2; case .square: 0 }
+    }
+    public static var standard: CGFloat {
+        switch template { case .rounded: 6; case .nearSquare: 2; case .square: 0 }
+    }
+    public static var card: CGFloat {
+        switch template { case .rounded: 8; case .nearSquare: 2; case .square: 0 }
+    }
 }
 
 // MARK: - Layout
