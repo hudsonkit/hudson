@@ -106,7 +106,7 @@ var products: [Product] = [
 var dependencies: [Package.Dependency] = []
 
 // Direct local inference remains independent from the existing Vox runtime.
-dependencies.append(.package(url: "https://github.com/FluidInference/FluidAudio.git", exact: "0.15.6"))
+dependencies.append(.package(url: "https://github.com/FluidInference/FluidAudio.git", exact: "0.17.7"))
 products.append(hudsonLibrary(name: "HudsonTranscriptionCloud", targets: ["HudsonTranscriptionCloud"]))
 products.append(hudsonLibrary(name: "HudsonTranscriptionFluidAudio", targets: ["HudsonTranscriptionFluidAudio"]))
 
