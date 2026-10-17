@@ -13,6 +13,8 @@ const { statusBarHeight } = SHELL_THEME.layout;
 interface TerminalDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Accessible close action name for the host's drawer terminology. */
+  closeLabel?: string;
   onToggleMaximize?: () => void;
   isMaximized?: boolean;
   /** Controlled height in px (default 320) */
@@ -37,7 +39,7 @@ const chromeGripStyle = {
 } satisfies React.CSSProperties;
 
 const TerminalDrawer: React.FC<TerminalDrawerProps> = ({
-  isOpen, onClose, onToggleMaximize, isMaximized = false,
+  isOpen, onClose, closeLabel = "Close console", onToggleMaximize, isMaximized = false,
   height = 320, onHeightChange,
   title, headerActions, contentOverlay, children
 }) => {
@@ -88,7 +90,9 @@ const TerminalDrawer: React.FC<TerminalDrawerProps> = ({
   return (
     <div
       ref={drawerRef}
-      data-hudson-template="hudson"
+      // Inherit the host's resolved chrome tokens. Reapplying the template here
+      // wraps host color aliases (e.g. Scout's --border) in oklch() a second time.
+      data-hudson-terminal-drawer="true"
       className={`
         fixed left-0 right-0 shadow-[0_-2px_12px_rgba(0,0,0,0.16)] flex flex-col border-t text-card-foreground
         bg-card
@@ -131,8 +135,8 @@ const TerminalDrawer: React.FC<TerminalDrawerProps> = ({
           <button
             onClick={onClose}
             className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-            title="Close console"
-            aria-label="Close console"
+            title={closeLabel}
+            aria-label={closeLabel}
           >
             <X size={14} />
           </button>

@@ -130,7 +130,7 @@ import {
   MagicWand as MagicWandGlyph,
   PathArrow as PathArrowGlyph,
   Wrench as WrenchGlyph,
-  X as XGlyph,
+  Xmark as XGlyph,
   XmarkCircle as XmarkCircleGlyph,
 } from 'iconoir-react';
 import * as React from 'react';
