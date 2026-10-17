@@ -9,7 +9,7 @@ export default function DemoPage() {
     <WorkspaceShell
       workspaces={allWorkspaces}
       defaultWorkspaceId="hudson-os"
-      bootMode="full"
+      bootMode="none"
       environment={hudsonShellEnvironment}
     />
   );
