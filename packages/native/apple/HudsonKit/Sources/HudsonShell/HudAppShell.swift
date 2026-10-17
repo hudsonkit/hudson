@@ -25,12 +25,18 @@ public enum HudAppShellStatusBarSpan: String, CaseIterable, Identifiable, Sendab
 /// a host that extends its sidebar material there gets one L-shaped frame
 /// around the stage, and the traffic lights sit on a single surface instead
 /// of a seam.
+///
+/// `.floating` goes one step further: the center column is set in from the
+/// window's trailing and bottom edges by `inset` and rounds all four corners
+/// with one `radius`, outlined by a hairline all the way round, so the host's
+/// frame wraps it on three sides.
 public enum HudAppShellStage: Equatable, Sendable {
     case flush
     case card(radius: CGFloat)
     /// All four corners rounded, with one thin border around the full stage.
     /// Use `stageInsets` to reveal the host's background around its edges.
     case roundedCard(radius: CGFloat)
+    case floating(radius: CGFloat, inset: CGFloat)
 }
 
 /// Top-level app chassis for HudsonKit.
@@ -303,6 +309,17 @@ private struct HudAppShellStageSurface: ViewModifier {
                         .strokeBorder(theme.hairline.subtle, lineWidth: HudStrokeWidth.thin)
                         .allowsHitTesting(false)
                 }
+        case .floating(let radius, let inset):
+            content
+                .background(theme.palette.bg)
+                .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: radius, style: .continuous)
+                        .strokeBorder(theme.hairline.subtle, lineWidth: HudStrokeWidth.standard)
+                        .allowsHitTesting(false)
+                }
+                .padding(.trailing, inset)
+                .padding(.bottom, inset)
         }
     }
 }
