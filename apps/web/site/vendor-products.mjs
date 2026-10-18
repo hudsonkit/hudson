@@ -25,7 +25,7 @@ const vendorDir = join(root, 'site', '.vendor');
 const PRODUCTS = [
   {
     name: 'arc',
-    repo: 'https://github.com/arach/arc.git',
+    repo: 'https://github.com/hudsonkit/arc.git',
     // Pin to a sha/tag for reproducible deploys; ARC_REF overrides.
     ref: 'main',
     buildEnv: {

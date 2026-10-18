@@ -16,7 +16,7 @@ Navigation, side panels, command palettes, status bars, draggable windows, and a
 
 **[ARC](https://hudsonkit.com/arc/)** is a diagram editor built on HudsonKit’s `AppShell`. ARC supplies the diagram model, drawing tools, and inspector content; Hudson supplies the shell that holds them together. The screenshot shows the running editor with its built-in example diagram.
 
-[Try ARC →](https://hudsonkit.com/arc/) · [Read the source →](https://github.com/arach/arc)
+[Try ARC →](https://hudsonkit.com/arc/) · [Read the source →](https://github.com/hudsonkit/arc)
 
 [![A Studio study in the hosted demo: the Talkie “One thought” narrative, framed by Studio’s sidebar of foundations, proposals, and studies.](./docs/images/studio-showcase.png)](https://hudsonkit.com/studio/)
 
