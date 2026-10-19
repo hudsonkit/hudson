@@ -104,7 +104,7 @@ export function HudSideNavLayout({
       data-side={side}
       className={cx(
         'relative isolate grid h-full min-h-0 w-full overflow-hidden',
-        'transition-[grid-template-columns] duration-[180ms] ease-[cubic-bezier(0.32,0.72,0,1)]',
+        'transition-[grid-template-columns] duration-[var(--hud-duration-spring,460ms)] ease-[var(--hud-ease-spring,cubic-bezier(0.32,0.72,0,1))]',
         'motion-reduce:duration-[1ms]',
         resizing && 'transition-none',
         overlay ? 'pointer-events-none fixed inset-0 bg-transparent' : 'bg-background',
@@ -291,7 +291,7 @@ export function HudSideRail({
       data-resizing={resizing ? '' : undefined}
       className={cx(
         'relative flex h-full min-h-0 flex-col overflow-hidden',
-        'transition-[width] duration-[180ms] ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:duration-[1ms]',
+        'transition-[width] duration-[var(--hud-duration-spring,460ms)] ease-[var(--hud-ease-spring,cubic-bezier(0.32,0.72,0,1))] motion-reduce:duration-[1ms]',
         resizing && 'transition-none',
         className,
       )}

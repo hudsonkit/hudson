@@ -1,3 +1,13 @@
+/* Motion. A damped spring (damping ratio 0.8) sampled into linear(); see
+ * springEasing() in hudsonkit/theme to make others. Template-independent. */
+:root {
+  --hud-ease-spring: linear(0, 0.0315, 0.1089, 0.2115, 0.3245, 0.4376, 0.544, 0.64, 0.7235, 0.7939, 0.8518, 0.8981, 0.9341, 0.9614, 0.9814, 0.9955, 1.0049, 1.0107, 1.0138, 1.0151, 1.015, 1.014, 1.0126, 1.0109, 1.0092, 1.0076, 1.006, 1.0047, 1.0035, 1.0026, 1.0018, 1.0012, 1);
+  --hud-duration-spring: 460ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --hud-duration-spring: 1ms; }
+}
+
 [data-hudson-template="hudson"] {
   --hud-bg: oklch(var(--background));
   --hud-bg-2: oklch(var(--card));
