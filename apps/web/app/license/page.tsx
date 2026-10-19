@@ -67,10 +67,10 @@ export default function LicensePage() {
         <Section num="§3" title="The full terms">
           <p style={SECTION_P}>
             This page summarizes the license. The{' '}
-            <a href="https://github.com/arach/hudson/blob/main/LICENSE.md">full Apache 2.0 license</a>{' '}
+            <a href="https://github.com/hudsonkit/hudson/blob/main/LICENSE.md">full Apache 2.0 license</a>{' '}
             governs use of Hudson code released under it. Third-party dependencies
             retain their own licenses; see the{' '}
-            <a href="https://github.com/arach/hudson/blob/main/NOTICE.md">third-party notices</a>.
+            <a href="https://github.com/hudsonkit/hudson/blob/main/NOTICE.md">third-party notices</a>.
             The software is provided without warranties. The license does not
             grant rights to Hudson trademarks.
           </p>

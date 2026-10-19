@@ -1,5 +1,6 @@
 import { Eyebrow } from '@/marketing/primitives/Eyebrow';
 import { Sheet } from '@/marketing/primitives/Sheet';
+import { sheetNumber } from './order';
 import { PrimitiveSparkline } from './_components/PrimitiveSparkline';
 
 const PRIMS = [
@@ -17,19 +18,17 @@ export function Sheet06Primitives() {
   return (
     <Sheet
       id="primitives"
-      num="07"
       slugTitle="PRIMITIVES"
       slugSub="reference · all 8"
       sheetTitle="Primitives — Reference Sheet"
       footer={{
-        left: ['SHEET', '07 / 08'],
         mid: 'PRIMITIVES — REFERENCE SHEET · 8 COMPONENTS',
         right: ['LOC', '~ 2,400'],
       }}
     >
       <div style={{ maxWidth: 1300, margin: '96px auto 0' }}>
         <div style={{ marginBottom: 24 }}>
-          <Eyebrow>07 / Primitives · the kit</Eyebrow>
+          <Eyebrow>{sheetNumber('primitives')} / Primitives · the kit</Eyebrow>
         </div>
 
         <div

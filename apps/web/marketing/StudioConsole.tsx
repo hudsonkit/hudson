@@ -31,6 +31,15 @@ function writeStudioCookie(state: StudioState) {
 
 export function StudioConsole() {
   const [open, setOpen] = useState(false);
+  // The tuner is a design tool, not a visitor feature: its button only shows
+  // in dev or with ?tune in the URL. The effect below still applies the theme.
+  const [tunable, setTunable] = useState(false);
+  useEffect(() => {
+    setTunable(
+      process.env.NODE_ENV === 'development' ||
+        new URLSearchParams(window.location.search).has('tune'),
+    );
+  }, []);
   const { state, setState, set, reset, hydrated } = useStudio();
 
   useEffect(() => {
@@ -85,6 +94,7 @@ export function StudioConsole() {
   }
 
   if (!open) {
+    if (!tunable) return null;
     return (
       <div className="studio-console">
         <button

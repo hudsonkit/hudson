@@ -4,6 +4,7 @@ import { HudsonEmbed } from '@/marketing/lib/embed';
 import { EmbedFrame } from '@/marketing/primitives/EmbedFrame';
 import { Eyebrow } from '@/marketing/primitives/Eyebrow';
 import { Sheet } from '@/marketing/primitives/Sheet';
+import { sheetNumber } from './order';
 
 const SPEC: Array<[string, string, boolean?]> = [
   ['NAV.HEIGHT', '48 px'],
@@ -29,19 +30,17 @@ export function Sheet02Possession() {
   return (
     <Sheet
       id="possession"
-      num="02"
       slugTitle="LIVE WORKSPACE"
       slugSub="elevation · 1:1 scale"
       sheetTitle="Possession Mode — Live Embed"
       footer={{
-        left: ['SHEET', '02 / 08'],
         mid: 'LIVE EMBED · POSSESSION MODE — workspace = self',
         right: ['SCALE', '1 : 1'],
       }}
     >
       <div style={{ maxWidth: 1300, margin: '48px auto 0' }}>
         <div style={{ marginBottom: 24 }}>
-          <Eyebrow>02 / Live Embed · spec ↔ live</Eyebrow>
+          <Eyebrow>{sheetNumber('possession')} / Live Embed · spec ↔ live</Eyebrow>
         </div>
 
         <h2 className="h-section" style={{ marginBottom: 16 }}>

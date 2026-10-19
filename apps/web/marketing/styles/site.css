@@ -1581,6 +1581,10 @@
   /* Headlines retain the existing clamp() shape on desktop; here we just
      pin the floor explicitly so designers can tune phone size without
      fighting the clamp upper bound. */
+  /* The 18px drafting ruler is wider than the 16px gutter and sat on top
+     of the first letters. Keep only its tick column on phones. */
+  .hudson-site .sheet__rule--left { width: 8px; }
+
   .hudson-site .h-display { font-size: 44px !important; }
   .hudson-site .h-section { font-size: 32px !important; }
 

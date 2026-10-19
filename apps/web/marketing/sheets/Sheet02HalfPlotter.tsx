@@ -4,6 +4,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { PLOTTER_FONT } from '@/marketing/lib/plotter-font';
 import { Eyebrow } from '@/marketing/primitives/Eyebrow';
 import { Sheet } from '@/marketing/primitives/Sheet';
+import { sheetNumber } from './order';
 import {
   PLOTTER_GLYPH_BOX_H,
   PLOTTER_H,
@@ -92,7 +93,6 @@ export function Sheet02HalfPlotter() {
   return (
     <Sheet
       id="plotter"
-      num="03"
       slugTitle="THE PLOTTER"
       slugSub="phrase → drafting specimen"
       sheetTitle="Drafting Plotter — HP-7475A EMU"
@@ -104,7 +104,7 @@ export function Sheet02HalfPlotter() {
     >
       <div style={{ maxWidth: 1300, margin: '96px auto 0', position: 'relative' }}>
         <div style={{ marginBottom: 16 }}>
-          <Eyebrow>03 / Interactive plotter</Eyebrow>
+          <Eyebrow>{sheetNumber('plotter')} / Interactive plotter</Eyebrow>
         </div>
 
         <div

@@ -6,6 +6,7 @@ import { HudsonEmbed } from '@/marketing/lib/embed';
 import { EmbedFrame } from '@/marketing/primitives/EmbedFrame';
 import { Eyebrow } from '@/marketing/primitives/Eyebrow';
 import { Sheet } from '@/marketing/primitives/Sheet';
+import { sheetNumber } from './order';
 
 const SPEC: Array<[string, string, boolean?]> = [
   ['CAPTURE', 'useVoiceInput'],
@@ -27,19 +28,17 @@ export function Sheet03Voice() {
   return (
     <Sheet
       id="voice"
-      num="04"
       slugTitle="VOICE LOOP"
       slugSub="signal flow"
       sheetTitle="Voice → Intent → Command"
       footer={{
-        left: ['SHEET', '04 / 08'],
         mid: 'VOICE LOOP · signal flow',
         right: ['LATENCY', '< 80 ms'],
       }}
     >
       <div style={{ maxWidth: 1300, margin: '96px auto 0' }}>
         <div style={{ marginBottom: 24 }}>
-          <Eyebrow>04 / Voice loop · sub-80ms</Eyebrow>
+          <Eyebrow>{sheetNumber('voice')} / Voice loop · sub-80ms</Eyebrow>
         </div>
 
         <div
