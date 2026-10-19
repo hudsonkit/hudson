@@ -15,6 +15,7 @@ import {
 import type { HudsonIcon } from 'hudsonkit/icons';
 import { Eyebrow } from '@/marketing/primitives/Eyebrow';
 import { Sheet } from '@/marketing/primitives/Sheet';
+import { sheetNumber } from './order';
 
 type StoryStepId = 'surface' | 'app' | 'shell' | 'pipe' | 'workspace';
 
@@ -208,7 +209,6 @@ export function Sheet02BuildWorkspace() {
   return (
     <Sheet
       id="build-workspace"
-      num="02½"
       slugTitle="BUILD THE WORKSPACE"
       slugSub="interactive diagram"
       sheetTitle="Apps Own The Work · Hudson Owns The Workspace"
@@ -220,7 +220,7 @@ export function Sheet02BuildWorkspace() {
     >
       <div style={{ maxWidth: 1300, margin: '96px auto 0' }}>
         <div style={{ marginBottom: 24 }}>
-          <Eyebrow>02½ / Story diagram · workspace grammar</Eyebrow>
+          <Eyebrow>{sheetNumber('build-workspace')} / Story diagram · workspace grammar</Eyebrow>
         </div>
 
         <div

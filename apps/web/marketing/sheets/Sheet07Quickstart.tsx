@@ -2,6 +2,8 @@ import { HudsonEmbed } from '@/marketing/lib/embed';
 import { EmbedFrame } from '@/marketing/primitives/EmbedFrame';
 import { Eyebrow } from '@/marketing/primitives/Eyebrow';
 import { Sheet } from '@/marketing/primitives/Sheet';
+import { REPOSITORY_URL } from '@/site/seo';
+import { sheetNumber } from './order';
 
 const STEPS = [
   {
@@ -13,8 +15,8 @@ const STEPS = [
   {
     n: '02',
     t: 'DEFINE',
-    cmd: '$ hudson new my-app',
-    caption: 'Generate the app contract: provider, slots, hooks, commands, and intents.',
+    cmd: 'const app: HudsonApp = { … }',
+    caption: 'Write the app contract: provider, slots, hooks, commands, and intents.',
   },
   {
     n: '03',
@@ -25,7 +27,7 @@ const STEPS = [
 ];
 
 const WORKSPACE_URL = 'https://app.hudsonkit.com';
-const GITHUB_URL = 'https://github.com/arach/hudson';
+const GITHUB_URL = REPOSITORY_URL;
 
 const FOOTER_COLS: { h: string; links: { label: string; href: string }[] }[] = [
   {
@@ -69,19 +71,17 @@ export function Sheet07Quickstart() {
   return (
     <Sheet
       id="quickstart"
-      num="08"
       slugTitle="IMPLEMENT"
       slugSub="install · define · build"
       sheetTitle="Product Implementation Spec"
       footer={{
-        left: ['SHEET', '08 / 08'],
         mid: 'HUDSONKIT — PRODUCT SPEC → WORKING WORKSPACE',
         right: ['LICENSE', 'Apache 2.0'],
       }}
     >
       <div style={{ maxWidth: 1300, margin: '96px auto 0' }}>
         <div style={{ marginBottom: 24 }}>
-          <Eyebrow>08 / Implementation · from spec to product</Eyebrow>
+          <Eyebrow>{sheetNumber('quickstart')} / Implementation · from spec to product</Eyebrow>
         </div>
 
         <div

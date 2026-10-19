@@ -1,5 +1,6 @@
 import { Eyebrow } from '@/marketing/primitives/Eyebrow';
 import { Sheet } from '@/marketing/primitives/Sheet';
+import { sheetNumber } from './order';
 import { AppCard, type AppCardData } from './_components/AppCard';
 
 const APPS: AppCardData[] = [
@@ -48,19 +49,17 @@ export function Sheet05Apps() {
   return (
     <Sheet
       id="apps"
-      num="06"
       slugTitle="APPS GALLERY"
       slugSub="real software, public"
       sheetTitle="Apps Built on Hudson"
       footer={{
-        left: ['SHEET', '06 / 08'],
-        mid: 'APPS GALLERY · 4 IN PRODUCTION · MORE IN-FLIGHT',
-        right: ['INSTALLS', '2,847'],
+        mid: 'APPS GALLERY · BUILT ON HUDSON KIT',
+        right: ['APPS', String(APPS.length)],
       }}
     >
       <div style={{ maxWidth: 1300, margin: '96px auto 0' }}>
         <div style={{ marginBottom: 24 }}>
-          <Eyebrow>06 / Apps gallery · in production</Eyebrow>
+          <Eyebrow>{sheetNumber('apps')} / Apps gallery · in production</Eyebrow>
         </div>
 
         <div

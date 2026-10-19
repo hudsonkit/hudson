@@ -1,5 +1,6 @@
 import { Eyebrow } from '@/marketing/primitives/Eyebrow';
 import { Sheet } from '@/marketing/primitives/Sheet';
+import { sheetNumber } from './order';
 import { WorkspaceSpecBox } from './_components/ManifestBox';
 import { PlatformFrame } from './_components/PlatformFrame';
 import { SurfaceMapBlock } from './_components/ShipBlock';
@@ -9,19 +10,17 @@ export function Sheet04Surfaces() {
   return (
     <Sheet
       id="surfaces"
-      num="05"
       slugTitle="CONSISTENT PRIMITIVES"
       slugSub="shared vocabulary · native code"
       sheetTitle="A Shared Workspace Vocabulary"
       footer={{
-        left: ['SHEET', '05 / 08'],
         mid: 'CONSISTENT PRIMITIVES — WEB · MACOS · IOS',
         right: ['STACK', 'NATIVE'],
       }}
     >
       <div style={{ maxWidth: 1300, margin: '96px auto 0' }}>
         <div style={{ marginBottom: 24 }}>
-          <Eyebrow>05 / Consistent primitives</Eyebrow>
+          <Eyebrow>{sheetNumber('surfaces')} / Consistent primitives</Eyebrow>
         </div>
 
         <h2 className="h-section" style={{ marginBottom: 64 }}>

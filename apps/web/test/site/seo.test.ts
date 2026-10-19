@@ -88,9 +88,9 @@ describe('source-relative documentation links', () => {
     expect(rewriteDocLink('../reports/conversational-voice-review.md', 'guides/conversational-voice')).toBe('/docs/reports/conversational-voice-review/');
   });
   it('sends existing source files and directories to GitHub instead of nonexistent site routes', () => {
-    expect(rewriteDocLink('../NOTICE.md', 'voice')).toBe('https://github.com/arach/hudson/blob/main/NOTICE.md');
-    expect(rewriteDocLink('../packages/web/hudsonkit/src/types/', 'api')).toBe('https://github.com/arach/hudson/tree/main/packages/web/hudsonkit/src/types');
-    expect(rewriteDocLink('../examples/conversational-voice/web-host-example.ts', 'guides/conversational-voice')).toBe('https://github.com/arach/hudson/blob/main/docs/examples/conversational-voice/web-host-example.ts');
+    expect(rewriteDocLink('../NOTICE.md', 'voice')).toBe('https://github.com/hudsonkit/hudson/blob/main/NOTICE.md');
+    expect(rewriteDocLink('../packages/web/hudsonkit/src/types/', 'api')).toBe('https://github.com/hudsonkit/hudson/tree/main/packages/web/hudsonkit/src/types');
+    expect(rewriteDocLink('../examples/conversational-voice/web-host-example.ts', 'guides/conversational-voice')).toBe('https://github.com/hudsonkit/hudson/blob/main/docs/examples/conversational-voice/web-host-example.ts');
   });
   it('preserves external URLs, website paths, anchors, and visibly broken targets for audit', () => {
     for (const url of ['#section', 'https://example.com/test.md', '/demo/side-nav', 'missing-document.md']) expect(rewriteDocLink(url, 'overview')).toBe(url);

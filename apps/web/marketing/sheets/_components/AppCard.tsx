@@ -1,5 +1,3 @@
-import Image from 'next/image';
-
 export type AppCardData = {
   id: string;
   name: string;
@@ -43,7 +41,10 @@ export function AppCard({ app, index }: { app: AppCardData; index: number }) {
           }}
         />
         {app.icon ? (
-          <Image
+          // Plain <img>: the static export has no image optimizer, so
+          // next/image's /_next/image URLs 404 in production.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={app.icon}
             alt={`${app.name} icon`}
             width={88}

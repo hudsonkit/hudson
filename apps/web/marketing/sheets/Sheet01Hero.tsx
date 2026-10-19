@@ -6,9 +6,10 @@ import { HudsonEmbed } from '@/marketing/lib/embed';
 import { EmbedFrame } from '@/marketing/primitives/EmbedFrame';
 import { Eyebrow } from '@/marketing/primitives/Eyebrow';
 import { Sheet } from '@/marketing/primitives/Sheet';
+import { REPOSITORY_URL } from '@/site/seo';
 
 const INSTALL_CMD = 'bun add hudsonkit';
-const GITHUB_URL = 'https://github.com/arach/hudson';
+const GITHUB_URL = REPOSITORY_URL;
 
 const STATS: Array<[string, string, string]> = [
   ['Surfaces', '3', 'iOS · macOS · Web'],
@@ -36,7 +37,6 @@ export function Sheet01Hero() {
   return (
     <Sheet
       id="hero"
-      num="01"
       slugTitle="HERO"
       slugSub="general arrangement"
       sheetTitle="General Arrangement"
@@ -184,8 +184,7 @@ export function Sheet01Hero() {
               FIG. 01-A · LIVE EMBED
             </span>
             <span style={{ color: 'var(--ink-3)', letterSpacing: '0.18em' }}>
-              workspace = self · installs <span style={{ color: 'var(--ink-1)' }}>2,847</span>
-              &nbsp;·&nbsp; stars <span style={{ color: 'var(--ink-1)' }}>1,217</span>
+              workspace = self · <span style={{ color: 'var(--ink-1)' }}>live</span>
             </span>
           </div>
 

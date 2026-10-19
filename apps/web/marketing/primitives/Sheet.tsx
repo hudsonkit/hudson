@@ -1,12 +1,11 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { HudsonKitLockup } from 'hudsonkit';
 import { InlineDraftingToolbar } from '@/marketing/lib/fx/InlineDraftingToolbar';
+import { SHEET_TOTAL, sheetNumber, type SheetId } from '@/marketing/sheets/order';
 import { FooterPlate, type FooterPlateProps } from './FooterPlate';
 
 export type SheetProps = {
-  id: string;
-  num: string;
-  total?: string;
+  id: SheetId;
   slugTitle: string;
   slugSub?: string;
   sheetTitle: string;
@@ -28,8 +27,6 @@ const DEFAULT_STYLE: CSSProperties = {
 
 export function Sheet({
   id,
-  num,
-  total = '08',
   slugTitle,
   slugSub,
   sheetTitle,
@@ -39,6 +36,9 @@ export function Sheet({
   screenLabel,
   children,
 }: SheetProps) {
+  const num = sheetNumber(id);
+  const total = SHEET_TOTAL;
+  const plate = footer && { left: ['SHEET', `${num} / ${total}`] as [string, string], ...footer };
   return (
     <section
       id={id}
@@ -78,7 +78,7 @@ export function Sheet({
 
       <div className="sheet-body">
         {children}
-        {footer && <FooterPlate {...footer} />}
+        {plate && <FooterPlate {...plate} />}
       </div>
     </section>
   );
