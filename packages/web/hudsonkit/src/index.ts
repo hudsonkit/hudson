@@ -212,6 +212,7 @@ export type { SoundName } from './lib/sounds';
 export { logEvent, FRAME_LOG_EVENT } from './lib/logger';
 export type { FrameLogEntry } from './lib/logger';
 export { worldToScreen, screenToWorld } from './lib/viewport';
+export { HUD_SPRING, springEasing, springTransition } from './lib/motion';
 export { probeVoxAvailability } from './lib/voxProbe';
 export type { VoxAvailability } from './lib/voxProbe';
 export {
