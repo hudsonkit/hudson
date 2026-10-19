@@ -2,10 +2,13 @@ import { loadToolset } from '../app/api/ai/toolsets';
 import { APP_HOST, MARKETING_HOSTS, isNoIndexPath, siteRedirect } from './seo';
 
 const DEFAULT_WORKERS_AI_MODEL = '@cf/meta/llama-3.1-8b-instruct';
-// Product SPAs vendored into site/out/<name>/ and served at /<name>.
+// Products vendored into site/out/<name>/ and served at /<name>.
 // Directory + file paths resolve via ASSETS; anything else under the root
 // is a client-side route and falls back to the product's index.html.
-const PRODUCT_ROOTS = ['arc', 'studio'];
+const PRODUCT_ROOTS = ['arc', 'studio', 'sfx'];
+// Multi-page static exports: a miss is a real 404, served from the
+// product's own 404.html instead of the SPA shell.
+const STATIC_PRODUCTS = new Set(['sfx']);
 
 interface Env {
   ASSETS: {
@@ -208,6 +211,13 @@ async function serveProductRoute(request: Request, env: Env) {
   const response = await env.ASSETS.fetch(request);
   if (response.status !== 404) {
     return response;
+  }
+
+  if (STATIC_PRODUCTS.has(product)) {
+    // Extensionless: the assets binding redirects *.html requests.
+    url.pathname = `/${product}/404`;
+    const notFound = await env.ASSETS.fetch(new Request(url, request));
+    return new Response(notFound.body, { status: 404, headers: notFound.headers });
   }
 
   // A client-side route inside the product SPA — hand it the shell so

@@ -50,6 +50,20 @@ const PRODUCTS = [
     buildCommand: ['bun', 'run', 'build:site'],
     distDir: 'apps/studio/site/dist',
   },
+  {
+    // Hudson Kit SFX — the former Peal site, exported by Next.js.
+    name: 'sfx',
+    repo: 'https://github.com/arach/peal.git',
+    ref: 'sfx-conversation',
+    buildEnv: {
+      BUILD_STATIC: 'true',
+      NEXT_PUBLIC_BUILD_STATIC: 'true',
+      NEXT_PUBLIC_BASE_PATH: '/sfx',
+      NEXT_PUBLIC_SITE_ORIGIN: 'https://hudsonkit.com',
+    },
+    buildCommand: ['bun', 'run', 'build:static'],
+    distDir: 'out',
+  },
   // { name: 'atelier', ... } — mount the same way when it lands.
 ];
 
