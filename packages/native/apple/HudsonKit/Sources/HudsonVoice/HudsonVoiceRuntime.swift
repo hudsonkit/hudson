@@ -26,12 +26,13 @@ public struct HudsonVoiceRuntimeCapability: Decodable, Equatable, Sendable {
     public let port: UInt16
     public let webSocketUrl: String
     public let authToken: String
+    public let socketPath: String?
     public let pid: Int32?
     public let startedAt: String?
     public let voxRuntimePath: String?
 
     public var endpoint: HudVoxEndpoint {
-        HudVoxEndpoint(host: host, port: port)
+        HudVoxEndpoint(host: host, port: port, socketPath: socketPath)
     }
 }
 
@@ -69,7 +70,17 @@ public enum HudsonVoiceRuntime {
         guard fileManager.fileExists(atPath: url.path) else {
             throw HudsonVoiceRuntimeError.missing(url)
         }
-        let data = try Data(contentsOf: url)
+        let fd = open(url.path, O_RDONLY | O_NOFOLLOW | O_CLOEXEC)
+        guard fd >= 0 else { throw HudsonVoiceRuntimeError.invalid("capability cannot be opened safely") }
+        defer { close(fd) }
+        var info = stat()
+        guard fstat(fd, &info) == 0, info.st_mode & S_IFMT == S_IFREG, info.st_uid == geteuid(),
+              info.st_mode & 0o077 == 0, info.st_nlink == 1, info.st_size > 0, info.st_size <= 65_536 else {
+            throw HudsonVoiceRuntimeError.invalid("capability must be a private user-owned file")
+        }
+        var data = Data(count: Int(info.st_size))
+        let count = data.withUnsafeMutableBytes { Darwin.read(fd, $0.baseAddress, $0.count) }
+        guard count == data.count else { throw HudsonVoiceRuntimeError.invalid("incomplete capability") }
         let capability = try JSONDecoder().decode(HudsonVoiceRuntimeCapability.self, from: data)
         try validate(capability)
         return capability
@@ -110,8 +121,12 @@ public enum HudsonVoiceRuntime {
         guard capability.service == "hudson-voice" else {
             throw HudsonVoiceRuntimeError.invalid("expected service hudson-voice")
         }
-        guard capability.transport == "ws+json-rpc" else {
-            throw HudsonVoiceRuntimeError.invalid("expected ws+json-rpc transport")
+        if capability.transport == "unix+ws+json-rpc" {
+            guard let path = capability.socketPath, path.hasPrefix("/"), !path.contains("\0") else {
+                throw HudsonVoiceRuntimeError.invalid("missing private socket path")
+            }
+        } else if capability.transport != "ws+json-rpc" || capability.socketPath != nil {
+            throw HudsonVoiceRuntimeError.invalid("unsupported transport")
         }
         guard capability.host == "127.0.0.1" || capability.host == "localhost" || capability.host == "::1" else {
             throw HudsonVoiceRuntimeError.invalid("runtime host must be loopback")

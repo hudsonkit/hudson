@@ -46,16 +46,30 @@ func appendGitDependency(
     to dependencies: inout [Package.Dependency],
     url defaultURL: String,
     branch defaultBranch: String = "main",
-    envPrefix: String
+    envPrefix: String,
+    defaultLocalPath: String? = nil,
+    defaultRevision: String? = nil
 ) -> String {
     if let path = nonEmptyEnv("\(envPrefix)_PATH") {
         dependencies.append(.package(path: path))
         return nonEmptyEnv("\(envPrefix)_PACKAGE") ?? packageIdentity(forGitURL: path)
     }
 
+    // Explicit path/git/package selections take precedence over a local
+    // development default. Release builds continue to use the git graph.
+    let hasGitOverride = ["GIT_URL", "GIT_REVISION", "GIT_BRANCH", "PACKAGE"].contains {
+        nonEmptyEnv("\(envPrefix)_\($0)") != nil
+    }
+    if !hasGitOverride, let path = defaultLocalPath {
+        dependencies.append(.package(path: path))
+        return packageIdentity(forGitURL: path)
+    }
+
     let url = nonEmptyEnv("\(envPrefix)_GIT_URL") ?? defaultURL
 
-    if let revision = nonEmptyEnv("\(envPrefix)_GIT_REVISION") {
+    let pinnedRevision = nonEmptyEnv("\(envPrefix)_GIT_REVISION")
+        ?? (nonEmptyEnv("\(envPrefix)_GIT_BRANCH") == nil && nonEmptyEnv("\(envPrefix)_GIT_URL") == nil ? defaultRevision : nil)
+    if let revision = pinnedRevision {
         dependencies.append(.package(url: url, revision: revision))
     } else {
         dependencies.append(
@@ -202,10 +216,17 @@ targets.append(.testTarget(name: "HudsonConversationHostTests", dependencies: ["
 
 
 if voiceEnabled {
+    let siblingVox = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+        .deletingLastPathComponent().appendingPathComponent("vox").path
+    let localVoxDefault = nonEmptyEnv("LATTICES_VOX_SOURCE")
+        ?? (nonEmptyEnv("LATTICES_HUDSON_SOURCE") != "git"
+            && FileManager.default.fileExists(atPath: siblingVox + "/Package.swift") ? siblingVox : nil)
     let voxPackage = appendGitDependency(
         to: &dependencies,
         url: "https://github.com/arach/vox.git",
-        envPrefix: "HUDSON_VOX"
+        envPrefix: "HUDSON_VOX",
+        defaultLocalPath: localVoxDefault,
+        defaultRevision: "df744e5403a265bf411003a4d1b931365d2328de"
     )
     products.append(hudsonLibrary(name: "HudsonVoice", targets: ["HudsonVoice"]))
     targets.append(
@@ -226,6 +247,7 @@ if voiceEnabled {
             name: "HudsonVoiceTests",
             dependencies: [
                 "HudsonVoice",
+                .product(name: "VoxService", package: voxPackage),
                 .product(name: "VoxEngine", package: voxPackage),
                 .product(name: "VoxAppleSpeech", package: voxPackage),
             ],

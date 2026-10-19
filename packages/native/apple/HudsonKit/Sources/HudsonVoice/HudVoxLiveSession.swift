@@ -45,7 +45,7 @@ public final class HudVoxLiveSession: @unchecked Sendable {
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
     private let lock = NSLock()
-    private var task: URLSessionWebSocketTask?
+    private var task: HudVoiceWebSocket?
     private var streamContinuation: AsyncThrowingStream<HudVoiceEvent, Error>.Continuation?
     private var sessionId: String?
     private var started = false
@@ -60,7 +60,7 @@ public final class HudVoxLiveSession: @unchecked Sendable {
     }
 
     public func start() async throws -> AsyncThrowingStream<HudVoiceEvent, Error> {
-        let webSocket = URLSession.shared.webSocketTask(with: endpoint.url)
+        let webSocket = HudVoiceWebSocket(endpoint: endpoint, token: options.authToken)
         let stream = try prepareStart(webSocket: webSocket)
 
         webSocket.resume()
@@ -139,7 +139,7 @@ public final class HudVoxLiveSession: @unchecked Sendable {
         }
     }
 
-    private func prepareStart(webSocket: URLSessionWebSocketTask) throws -> AsyncThrowingStream<HudVoiceEvent, Error> {
+    private func prepareStart(webSocket: HudVoiceWebSocket) throws -> AsyncThrowingStream<HudVoiceEvent, Error> {
         try locked {
             guard !started else {
                 throw HudVoxError.alreadyStarted

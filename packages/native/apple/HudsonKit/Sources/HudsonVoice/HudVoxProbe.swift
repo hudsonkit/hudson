@@ -42,9 +42,14 @@ public enum HudVoxProbe {
         method: String,
         params: [String: HudJSONValue]
     ) async throws -> [String: HudJSONValue] {
-        let webSocket = URLSession.shared.webSocketTask(with: endpoint.url)
+        let webSocket = HudVoiceWebSocket(endpoint: endpoint, token: params["authToken"]?.stringValue)
         webSocket.resume()
-        defer { webSocket.cancel(with: .normalClosure, reason: nil) }
+        let timeout = Task {
+            do { try await Task.sleep(nanoseconds: 5_000_000_000) }
+            catch { return }
+            webSocket.cancel(with: .goingAway, reason: nil)
+        }
+        defer { timeout.cancel(); webSocket.cancel(with: .normalClosure, reason: nil) }
 
         let request = HudVoxProbeRequest(id: UUID().uuidString, method: method, params: params)
         let data = try JSONEncoder().encode(request)

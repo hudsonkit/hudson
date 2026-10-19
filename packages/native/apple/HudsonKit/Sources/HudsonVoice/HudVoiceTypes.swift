@@ -87,14 +87,17 @@ public struct HudVoxEndpoint: Equatable, Sendable {
 
     public var host: String
     public var port: UInt16
+    public var socketPath: String?
 
-    public init(host: String = "127.0.0.1", port: UInt16 = Self.defaultPort) {
+    public init(host: String = "127.0.0.1", port: UInt16 = Self.defaultPort, socketPath: String? = nil) {
         self.host = host
         self.port = port
+        self.socketPath = socketPath
     }
 
     public var url: URL {
-        URL(string: "ws://\(host):\(port)")!
+        if let socketPath { return URL(fileURLWithPath: socketPath) }
+        return URL(string: "ws://\(host):\(port)")!
     }
 }
 
