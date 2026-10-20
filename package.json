@@ -6,7 +6,7 @@
     "dev": "bun run --filter @hudsonkit/ai build && bun run --filter hudsonkit build && bun run --cwd apps/web dev",
     "dev:safe": "bun scripts/dev-guard.ts",
     "build": "bun run --filter @hudsonkit/ai build && bun run --filter @hudsonkit/admin build && bun run --filter hudsonkit build && bun run --cwd apps/web build",
-    "build:site": "bun run build && bun run --cwd apps/web embed:bundle && bun run --cwd apps/web export-pages && bun run --cwd apps/web vendor-products",
+    "build:site": "bun run build && bun run --cwd apps/web embed:bundle && bun run --cwd apps/web ai:bundle && bun run --cwd apps/web export-pages && bun run --cwd apps/web vendor-products",
     "deploy:hudsonkit": "bun run build:site && bun run --cwd apps/web cf:deploy",
     "upload:hudsonkit": "bun run build:site && bun run --cwd apps/web cf:upload",
     "embed:snapshot": "bun run --cwd apps/web embed:snapshot",

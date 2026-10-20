@@ -159,3 +159,7 @@ hudson-docs/.astro/
 .swiftpm/
 .playwright-cli/
 apps/web/site/.vendor/
+
+# Independently deployed product and host AI bundles
+apps/web/site/arc-out/
+apps/web/public/ai/

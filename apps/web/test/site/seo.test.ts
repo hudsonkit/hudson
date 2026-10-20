@@ -8,6 +8,15 @@ vi.mock('../../app/api/ai/toolsets', () => ({ loadToolset: () => ({ system: '' }
 import worker from '../../site/cloudflare-static-worker';
 
 describe('public site routing', () => {
+  it('serves the browser AI module across app origins without exposing credentials', async () => {
+    const response = await worker.fetch(new Request('https://hudsonkit.com/ai/browser-v1.js'), {
+      ASSETS: { fetch: async () => new Response('export function streamUI() {}', { headers: { 'Content-Type': 'text/javascript' } }) },
+    });
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*');
+    expect(response.headers.get('Content-Type')).toBe('text/javascript');
+    expect(response.headers.get('Cache-Control')).toBe('public, max-age=300');
+    expect(await response.text()).toContain('export function streamUI');
+  });
   it.each([
     ['http://www.hudsonkit.com/landing/?utm_source=test', 'https://hudsonkit.com/?utm_source=test'],
     ['https://hudsonkit.com/docs', 'https://hudsonkit.com/docs/quickstart/'],

@@ -12,11 +12,6 @@ on:
         required: true
         default: latest
         type: string
-      ai_dist_tag:
-        description: npm dist-tag for @hudsonkit/ai (latest for stable releases)
-        required: true
-        default: latest
-        type: string
 
 concurrency:
   group: publish-npm
@@ -109,10 +104,6 @@ jobs:
             --cwd packages/web/hudsonkit \
             --filename "$RUNNER_TEMP/npm-packages/hudsonkit.tgz" \
             --quiet
-          bun pm pack \
-            --cwd packages/web/ai-backends \
-            --filename "$RUNNER_TEMP/npm-packages/hudsonkit-ai.tgz" \
-            --quiet
 
       - name: Validate packed packages
         run: |
@@ -123,28 +114,21 @@ jobs:
           bunx attw "$RUNNER_TEMP/npm-packages/hudsonkit.tgz" \
             --profile esm-only \
             --exclude-entrypoints hudsonkit/styles hudsonkit/styles/tokens.css
-          bunx publint "$RUNNER_TEMP/npm-packages/hudsonkit-ai.tgz"
-          bunx attw "$RUNNER_TEMP/npm-packages/hudsonkit-ai.tgz" --profile esm-only
 
       - name: Plan package publication
         env:
           HUDSONKIT_DIST_TAG: ${{ inputs.hudsonkit_dist_tag }}
-          AI_DIST_TAG: ${{ inputs.ai_dist_tag }}
         run: |
           set -euo pipefail
           bun scripts/release/npm-publish-plan.mjs \
             packages/web/hudsonkit hudsonkit "$HUDSONKIT_DIST_TAG" \
             | tee "$RUNNER_TEMP/hudsonkit-publish-plan.json"
-          bun scripts/release/npm-publish-plan.mjs \
-            packages/web/ai-backends @hudsonkit/ai "$AI_DIST_TAG" \
-            | tee "$RUNNER_TEMP/hudsonkit-ai-publish-plan.json"
 
       - name: Publish planned artifacts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
           HUDSONKIT_DIST_TAG: ${{ inputs.hudsonkit_dist_tag }}
-          AI_DIST_TAG: ${{ inputs.ai_dist_tag }}
         run: |
           set -euo pipefail
 
@@ -175,7 +159,3 @@ jobs:
             "$RUNNER_TEMP/hudsonkit-publish-plan.json" \
             "$RUNNER_TEMP/npm-packages/hudsonkit.tgz" \
             "$HUDSONKIT_DIST_TAG"
-          publish_from_plan \
-            "$RUNNER_TEMP/hudsonkit-ai-publish-plan.json" \
-            "$RUNNER_TEMP/npm-packages/hudsonkit-ai.tgz" \
-            "$AI_DIST_TAG"

@@ -16,7 +16,8 @@
     "embed:deploy": "bun run embed:bundle && bun run embed:snapshot && cd embed-worker && bun run deploy",
     "cf:deploy": "bunx wrangler deploy",
     "cf:upload": "bunx wrangler versions upload",
-    "vendor-products": "bun site/vendor-products.mjs"
+    "vendor-products": "bun site/vendor-products.mjs",
+    "ai:bundle": "node site/bundle-ai-browser.mjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.50",
