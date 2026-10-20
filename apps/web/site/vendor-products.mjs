@@ -3,9 +3,10 @@
 // single-domain shape lattices.dev uses for its subproducts.
 //
 //   bun site/vendor-products.mjs            # build every product
-//   bun site/vendor-products.mjs arc        # build one product
+//   bun site/vendor-products.mjs sfx        # build one product
 //   SKIP_VENDOR_PRODUCTS=1 bun run build:site
 //
+// Arc deploys independently through deploy-arc.yml and wrangler.arc.jsonc.
 // Each product pins a `ref` (overridable via <NAME>_REF) so deploys are
 // reproducible; bump the ref to roll the product forward. <NAME>_REPO points
 // a build at another clone, e.g. a local checkout.
@@ -23,19 +24,6 @@ const outDir = join(root, 'site', 'out');
 const vendorDir = join(root, 'site', '.vendor');
 
 const PRODUCTS = [
-  {
-    name: 'arc',
-    repo: 'https://github.com/hudsonkit/arc.git',
-    // Pin to a sha/tag for reproducible deploys; ARC_REF overrides.
-    ref: 'main',
-    buildEnv: {
-      ARC_BASE: '/arc/',
-      SITE_URL: 'https://hudsonkit.com/arc',
-      GA_MEASUREMENT_ID: 'G-SEDXMKVG9K',
-    },
-    buildCommand: ['bun', 'run', 'build:site'],
-    distDir: 'dist',
-  },
   {
     name: 'studio',
     repo: 'https://github.com/hudsonkit/studio.git',

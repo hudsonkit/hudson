@@ -1,0 +1,15 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "hudsonkit-arc",
+  "account_id": "7f500c31ebdac9ae0271933b83f09722",
+  "main": "site/arc-worker.ts",
+  "compatibility_date": "2026-04-30",
+  "assets": { "directory": "site/arc-out", "binding": "ASSETS", "run_worker_first": true },
+  "observability": { "enabled": true },
+  "routes": [
+    { "pattern": "hudsonkit.com/arc", "zone_name": "hudsonkit.com" },
+    { "pattern": "hudsonkit.com/arc/*", "zone_name": "hudsonkit.com" },
+    { "pattern": "www.hudsonkit.com/arc", "zone_name": "hudsonkit.com" },
+    { "pattern": "www.hudsonkit.com/arc/*", "zone_name": "hudsonkit.com" }
+  ]
+}

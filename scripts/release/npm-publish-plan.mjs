@@ -98,6 +98,8 @@ async function main() {
     );
   }
 
+  if (manifest.private) throw new Error(`${manifest.name} is internal and cannot be published`);
+
   const metadata = await fetchRegistryMetadata(
     expectedPackageName,
     process.env.NPM_CONFIG_REGISTRY,

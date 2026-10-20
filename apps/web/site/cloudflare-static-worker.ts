@@ -307,6 +307,15 @@ export default {
     const redirect = siteRedirect(url);
     if (redirect) return Response.redirect(redirect.href, 308);
 
+    // Public code only: visitor credentials stay inside the importing browser.
+    if (url.pathname === '/ai/browser-v1.js') {
+      const asset = await env.ASSETS.fetch(request);
+      const response = new Response(asset.body, asset);
+      response.headers.set('Access-Control-Allow-Origin', '*');
+      response.headers.set('Cache-Control', 'public, max-age=300');
+      return response;
+    }
+
     // The application host has no indexable marketing inventory of its own.
     if (url.hostname === APP_HOST && url.pathname === '/robots.txt') {
       return new Response('User-agent: *\nAllow: /\n', { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });

@@ -63,4 +63,28 @@ describe('AI chat reasoning effort', () => {
     });
     expect(mockStreamUI).not.toHaveBeenCalled();
   });
+
+  it('runs app declarations through the host adapter with request-scoped credentials', async () => {
+    const response = await POST(request({
+      mode: 'cli',
+      credentials: { anthropic: 'visitor-key' },
+      appToolset: { system: 'SFX app', tools: {
+        compose_sound: { description: 'Compose', inputSchema: { type: 'object' } },
+      } },
+    }));
+    expect(response.status).toBe(200);
+    const options = mockStreamUI.mock.calls[0][0];
+    expect(options.loadCredentials()).toEqual({ anthropic: 'visitor-key' });
+    const toolset = options.loadToolset();
+    expect(toolset.system).toBe('SFX app');
+    expect(await toolset.tools.compose_sound.execute({})).toEqual({ applied: true });
+    await POST(request({}));
+    expect(mockStreamUI.mock.calls[1][0].loadCredentials()).toEqual({ anthropic: 'test-key' });
+  });
+
+  it('rejects malformed app tools before provider dispatch', async () => {
+    const response = await POST(request({ appToolset: { system: 'SFX', tools: { compose_sound: {} } } }));
+    expect(response.status).toBe(400);
+    expect(mockStreamUI).not.toHaveBeenCalled();
+  });
 });

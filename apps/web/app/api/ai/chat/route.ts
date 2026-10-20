@@ -2,6 +2,7 @@ import { createPiAiBackend, type PiAiUIRequest } from '@hudsonkit/ai/pi-ai';
 import { streamFromCLI } from './cli';
 import { DEFAULT_MODELS, loadCredentials } from '../providers';
 import { loadToolset } from '../toolsets';
+import { appCredentials, compileAppToolset } from '../app-toolset';
 
 function log(msg: string) {
   const ts = new Date().toISOString().slice(11, 23);
@@ -35,7 +36,16 @@ export async function POST(req: Request) {
     provider,
     model,
     effort: requestedEffort,
+    appToolset: requestedToolset,
+    credentials: requestedCredentials,
   } = await req.json();
+  let appToolset;
+  try {
+    appToolset = compileAppToolset(requestedToolset);
+  } catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : 'Invalid app toolset' }, { status: 400 });
+  }
+  const credentials = { ...loadCredentials(), ...appCredentials(requestedCredentials) };
   const effort = parseReasoningEffort(requestedEffort);
   if (effort === null) {
     return Response.json(
@@ -48,7 +58,7 @@ export async function POST(req: Request) {
   // If the caller asked for CLI but their provider isn't CLI-capable, fall
   // back to API. Picking copilot/gemini + CLI mode used to silently spawn
   // `claude` with the wrong model and fail.
-  const useCli = requested === 'cli' && (!provider || CLI_CAPABLE_PROVIDERS.has(provider));
+  const useCli = !appToolset && requested === 'cli' && (!provider || CLI_CAPABLE_PROVIDERS.has(provider));
   const mode = useCli ? 'cli' : 'api';
   if (requested === 'cli' && !useCli) {
     log(`forcing api mode: provider "${provider}" is not CLI-capable`);
@@ -71,8 +81,8 @@ export async function POST(req: Request) {
       // Hudson's loadToolset returns Zod-schema-bearing tools shaped like
       // HudsonTool at runtime; the extra `toolPrompt` field is unused by
       // streamUI. Cast through unknown to bridge the structural mismatch.
-      loadToolset: loadToolset as never,
-      loadCredentials: loadCredentials as () => Record<string, string | undefined>,
+      loadToolset: (appToolset ? () => appToolset : loadToolset) as never,
+      loadCredentials: () => credentials,
       defaultModels: DEFAULT_MODELS,
     });
   } catch (err) {
