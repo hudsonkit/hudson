@@ -2,13 +2,13 @@
 
 Status: source-linked walkthrough, checked September 16, 2026. The remote case
 has a passing public-API fixture, but no real vendor acceptance yet. The
-WhisperKit local case was removed with its adapter on September 24, 2026.
+WhisperKit local case was removed with its adapter on September 24, 2026, and
+the FluidAudio adapter on October 22, 2026. Hudson ships no local adapter.
 
 Adapters are ordinary Swift packages/targets registered by the host.
 They are not downloaded executable plugins. A vendor client is a remote adapter;
 it does not require the user to run a proxy service. A local adapter can embed
-an SDK independently of FluidAudio. Adding either kind does not change Parakeet
-as the preferred local path or replace saved engine choices.
+its own SDK. Adding either kind does not replace saved engine choices.
 
 ## Remote case: ElevenLabs
 
