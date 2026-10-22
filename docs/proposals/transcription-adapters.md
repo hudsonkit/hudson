@@ -5,6 +5,7 @@ Owner: Hudson contract and reusable presentation; Talkie product integration.
 Base: freshly fetched `origin/main` at `71fee5e03192dffe48056dedc0efacc94925bb62`, isolated branch `codex/transcription-adapters`.
 Evidence checked: September 16, 2026. Provider documentation is not live API verification.
 Change, September 24, 2026: the WhisperKit reference adapter was removed from Hudson. Talkie's own WhisperKit engine is unaffected.
+Change, October 22, 2026: the FluidAudio adapter was removed from Hudson, which now ships no local transcription adapter. Local Parakeet remains available through HudsonVoice (Vox).
 
 ## Outcome
 

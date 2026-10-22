@@ -55,8 +55,8 @@ bare strings, not as `{"rawValue": …}`. `credentialReference` and `localModel`
 structs and encode as objects. Getting this wrong is the most common error:
 
 ```json
-{ "providerID": { "rawValue": "fluidaudio" } }   // wrong: type mismatch on decode
-{ "providerID": "fluidaudio" }                    // correct
+{ "providerID": { "rawValue": "elevenlabs-reference" } }   // wrong: type mismatch on decode
+{ "providerID": "elevenlabs-reference" }                    // correct
 ```
 
 Decoding is strict about the three required keys and permissive about everything
@@ -106,50 +106,8 @@ Every JSON block below is a validated file in
 The fingerprints are the real digests of those exact bytes; edit any field and
 the fingerprint changes.
 
-### Parakeet, local (preferred)
-
-Provider `fluidaudio`, from
-[HudsonTranscriptionFluidAudio](../../packages/native/apple/HudsonKit/Sources/HudsonTranscriptionFluidAudio/).
-Models `parakeet-v3` and `parakeet-v2`. Batch and live, word timing, no speaker
-labels. Live sessions are capped at two minutes; live PCM must be mono 16 kHz
-signed 16-bit little-endian. Rejects language hints, vocabulary hints, clean
-style, and smart formatting.
-
-`localModel` is optional and this is the important part of the setup: with no
-`localModel` the adapter loads `AsrModels.defaultCacheDirectory(for:)`, which is
-the same cache Talkie's **existing** Parakeet installer writes
-(`TalkieEngineCore.EngineService.downloadModel` → `AsrModels.downloadAndLoad`).
-Install through that existing flow — the download/cancel controls on the same
-Transcription Models settings page — and this configuration picks the assets up.
-No adapter downloads anything: missing files report `needsDownload`, and
-`prepare` loads but never fetches.
-
-```json
-{
-  "providerID": "fluidaudio",
-  "modelID": "parakeet-v3",
-  "options": {}
-}
-```
-
-`sha256:7e19b2856a550aa48adecc6564e4410449aff7c2b9f1e874612234f5b88250ee`
-
-Point at a different folder only when the assets are not in the default cache:
-
-```json
-{
-  "providerID": "fluidaudio",
-  "modelID": "parakeet-v3",
-  "localModel": { "location": "/Users/EXAMPLE/Library/Application Support/FluidAudio/Models/parakeet-tdt-0.6b-v3-coreml" },
-  "options": {}
-}
-```
-
-`sha256:6ba1e12f865a4de32c2d7dc4c01c1d52de0971c037cbd061a80ba99b1de8e83c`
-
-A v3 folder must contain the preprocessor, the int8 encoder, the decoder, the v3
-joint, and the vocabulary file; `HudFluidAudioLocalModels.requiredFiles(version:)`
-is the authority.
+Hudson ships no local transcription adapter. Local Parakeet transcription runs
+through HudsonVoice, where Vox owns the model; see [voice](../voice.md).
 
 ### MAI-Transcribe-2 via OpenRouter
 
@@ -312,7 +270,6 @@ Shipped schemas:
 
 | Provider | Required | Optional |
 | --- | --- | --- |
-| `fluidaudio` | — | `localModel` |
 | `openrouter-mai` | `credentialReference` | — |
 | `microsoft-mai` | `endpoint`, `credentialReference` | — |
 | `gemini-file`, `gemini-live-transcription`, `gemini-live-input` | `credentialReference` | — |
@@ -352,8 +309,8 @@ adapter returns `ready` with the reason "Configured locally. Account access is
 checked on submission." A readiness check never sends audio — diagnostic audio
 from a credential probe is explicitly out of bounds.
 
-`prepare(configuration:)` defaults to readiness. FluidAudio overrides it to load
-model files into the shared
+`prepare(configuration:)` defaults to readiness. A local adapter overrides it to
+load model files into the shared
 `HudTranscriptionLocalResources` owner, which holds one prepared model and an
 exclusive lease. Preparing a second model while a lease is held reports
 `preparing` rather than loading both.
@@ -415,7 +372,7 @@ Every result carries `HudTranscriptionProvenance`: `providerID`, `modelID`,
 `adapterVersion`, `configurationFingerprint`, `sourceDigest` (SHA-256 of the
 submitted audio), `providerRequestID`, `runID`, `sessionID`, `timestamp`, and
 `annotationOrigin` (`native` when the provider supplied it, `derived` when the
-adapter computed it — Parakeet word timings are `derived` from token timings).
+adapter computed it).
 
 The host does not trust this; it verifies. Before a result is accepted, its
 provenance `providerID`, `modelID`, `configurationFingerprint`, and `runID` must
@@ -473,8 +430,8 @@ swift run --package-path "$CHECK" ConfigCheck "$HUDSON/docs/examples/transcripti
 
 Each file reports its canonical sorted-key encoding and its fingerprint, and
 `selections.json` additionally reports whether each recorded consent fingerprint
-matches its configuration. Last run: all 10 files decoded, round-trip stable,
-all three consent fingerprints matching.
+matches its configuration. Last run, October 22, 2026: all 7 files decoded,
+round-trip stable, all three consent fingerprints matching.
 
 `validate.swift` declares a local mirror of Talkie's `Selection` struct so the
 check needs only the Hudson contract module. If that struct changes in
