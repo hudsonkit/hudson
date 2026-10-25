@@ -226,7 +226,7 @@ if voiceEnabled {
         url: "https://github.com/arach/vox.git",
         envPrefix: "HUDSON_VOX",
         defaultLocalPath: localVoxDefault,
-        defaultRevision: "df744e5403a265bf411003a4d1b931365d2328de"
+        defaultRevision: "e1895152859779f4427296e8c5a8d0e38a16f123"
     )
     products.append(hudsonLibrary(name: "HudsonVoice", targets: ["HudsonVoice"]))
     targets.append(
