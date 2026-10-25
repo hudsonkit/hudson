@@ -1,11 +1,12 @@
 # Transcription adapters
 
 Status: Implemented in isolated worktrees; not released. Source and evidence
-reconciled September 16, 2026. Native Parakeet sample inference passed. Remote
-provider acceptance and native product interaction checks remain open. The
+reconciled September 16, 2026. Remote provider acceptance and native product
+interaction checks remain open. The
 [acceptance audit](../reports/transcription-acceptance-audit.md) records those
 limits separately from builds and fixture tests. The WhisperKit reference adapter
-was removed on September 24, 2026; reports written before then still describe it.
+was removed on September 24, 2026, and the FluidAudio adapter on October 22, 2026;
+reports written before then still describe them. Hudson ships no local adapter.
 
 Audience: developers adding an engine or integrating the contract into a host.
 
@@ -21,8 +22,6 @@ Audience: developers adding an engine or integrating the contract into a host.
 - [HudsonTranscriptionCloud](../../packages/native/apple/HudsonKit/Sources/HudsonTranscriptionCloud/)
   supplies MAI and separate Gemini file, dedicated live, and conversational-input
   adapters. Credential resolution belongs to the host.
-- [HudsonTranscriptionFluidAudio](../../packages/native/apple/HudsonKit/Sources/HudsonTranscriptionFluidAudio/)
-  supplies direct local Parakeet. Existing embedded Vox consumers remain intact.
 - [HudsonTranscriptionElevenLabs](../../packages/native/apple/HudsonKit/Sources/HudsonTranscriptionElevenLabs/)
   demonstrates a remote reference adapter through the same contract.
 
@@ -63,7 +62,7 @@ models. Model installation remains an outstanding design requirement.
 ## Local model retention
 
 `HudTranscriptionLocalResources` owns one prepared local model and an exclusive
-operation or session lease. FluidAudio accepts this owner through its initializer.
+operation or session lease. A local adapter accepts this owner through its initializer.
 Preparation of a different model reports `preparing` while native work holds a
 lease. Once idle, preparing another model evicts the previous in-memory value;
 `unloadIfIdle()` releases memory without deleting model files.
@@ -74,19 +73,16 @@ an inference task that ignores cancellation retains the lease until native work
 actually returns. A terminal event alone is not proof that model resources are
 idle. Callers must serialize native calls within an individual session lease.
 
-Talkie creates one owner per transcription workspace and injects it into
-FluidAudio. Separate app and agent processes have independent owners; legacy Vox
+A host creates one owner per transcription workspace and injects it into each
+local adapter. Separate app and agent processes have independent owners; legacy Vox
 paths do not acquire these leases. This is not a cross-process memory budget.
 
 ## Existing model installation
 
 Talkie retains its existing Parakeet installation flow in
-`TalkieEngineCore/EngineService.downloadModel`, which calls FluidAudio's
-`AsrModels.downloadAndLoad(version:)`. The Hudson adapter uses
-`AsrModels.defaultCacheDirectory(for:)` when no model directory is configured,
-so it can load the same installed assets. An explicitly selected directory remains
-supported. Adapter preparation loads existing files; missing assets return
-`needsDownload` and do not start a download implicitly.
+`TalkieEngineCore/EngineService.downloadModel`. A local adapter's preparation
+loads existing files; missing assets return `needsDownload` and do not start a
+download implicitly.
 
 Hudson does not add a second model installer, repository manifest resolver, or
 installation-plan requirement to the adapter contract. Hosts retain their existing
@@ -122,11 +118,11 @@ Talkie already hosts FluidAudio Parakeet and WhisperKit, and uses ElevenLabs and
 Talkie: capture, recordings, meeting tracks, durable runs, consent, use-case defaults
                                |
 Hudson: descriptors, request validation, jobs/sessions, results, configuration schema
-           |                  |                   |                  |
-     FluidAudio          MAI / Gemini       Custom vendor API    Custom local
-     embedded            remote adapters    adapter              library/process
-                                                                    |
-                                                              Vox is one option
+                |                   |                  |
+          MAI / Gemini       Custom vendor API    Custom local
+          remote adapters    adapter              library/process
+                                                     |
+                                               Vox is one option
 ```
 
 Talkie owns the job: which audio, which default, whether upload is allowed, and where the result is stored.
@@ -215,7 +211,6 @@ Provider constraints that the evaluator must represent (documentation-derived, n
 
 | Engine | Constraint | Source |
 | --- | --- | --- |
-| FluidAudio | Local Core ML, streaming, VAD, diarization. Registry config is for downloads, not cloud routing. Check support against the shipped dependency. Direct Hudson adapter, no Vox hop. Resolve one FluidAudio version against Talkie and VoxEngine. Do not load duplicate local runtimes for the same job | [Overview](https://github.com/FluidInference/FluidAudio#readme), [API](https://github.com/FluidInference/FluidAudio/blob/main/Documentation/API.md) |
 | MAI-Transcribe-2 | File transcription, word timing, diarization. Diarization can fail around 15 minutes or longer. Voice Live is a separate path. Live support stays unverified until checked | [Microsoft documentation](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/mai-transcribe) |
 | Gemini files | Speaker labels and word timings. Annotated audio limited to 30 minutes. Three or more speakers experimental. Vocabulary hints conflict with those annotations. Smart formatting also conflicts | [Google file transcription](https://ai.google.dev/gemini-api/docs/transcribe) |
 | Gemini 3.5 live | Separate live model and API. Documented sessions last up to ten minutes. Interim and final utterances. No live speaker diarization or word-level timing. Rotation needs caller-owned timeline continuity | [Google live transcription](https://ai.google.dev/gemini-api/docs/live-api/live-transcribe) |
@@ -227,7 +222,7 @@ Keep provider, model, and API-version identifiers in run provenance. Do not free
 
 Remote adapters receive credentials from an injected resolver. The host can back that resolver with `HudVault` or its existing Keychain store. Migration must not copy secrets into JSON.
 
-Current local adapters prepare existing model assets. Submission does not install
+A local adapter prepares existing model assets. Submission does not install
 a model. A complete shared installer, unload control, and cross-adapter memory
 arbiter are not implemented by this contract.
 If an installer is added, cancellation must not mark partial assets installed,
@@ -308,7 +303,7 @@ Cancellation after submit must report cancellation requested, cancelled, or remo
 
 ## Add a local engine
 
-HudsonTranscriptionFluidAudio is the local adapter Hudson ships. Another local runtime goes behind the same public contract. Start with batch only. Publish streaming only after implementing and verifying its actual semantics. Vox is a further process/service example. It is not a prerequisite.
+Hudson ships no local adapter. A local runtime goes behind the same public contract; the ElevenLabs reference above shows the package shape. Start with batch only. Publish streaming only after implementing and verifying its actual semantics. Vox is one process/service example. It is not a prerequisite.
 
 1. Create a separate package. Do not add the engine's SDK to the contract target.
 2. Describe the provider as local. Configuration holds a model location or installation reference, not a secret.
