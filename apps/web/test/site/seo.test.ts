@@ -50,7 +50,6 @@ describe('public site routing', () => {
     ['https://hudsonkit.com/preview/', 'noindex, nofollow'],
     ['https://hudsonkit.com/app/', 'noindex, follow'],
     ['https://hudsonkit.com/theme-preview/', 'noindex, follow'],
-    ['https://hudsonkit.com/docs/reports/conversational-voice-review/', 'noindex, follow'],
     ['https://app.hudsonkit.com/', 'noindex, follow'],
   ])('keeps utility routes accessible but excluded: %s', async (url, policy) => {
     const response = await worker.fetch(new Request(url), { ASSETS: { fetch: async () => new Response('<html></html>') } });
@@ -94,7 +93,7 @@ describe('search and tracking policy', () => {
 describe('source-relative documentation links', () => {
   it('keeps the current nested directory and anchors', () => {
     expect(rewriteDocLink('transcription-configuration.md#the-options-dictionary', 'guides/conversational-voice')).toBe('/docs/guides/transcription-configuration/#the-options-dictionary');
-    expect(rewriteDocLink('../reports/conversational-voice-review.md', 'guides/conversational-voice')).toBe('/docs/reports/conversational-voice-review/');
+    expect(rewriteDocLink('../reports/conversational-voice-review.md', 'guides/conversational-voice')).toBe('https://github.com/hudsonkit/hudson/blob/main/docs/reports/conversational-voice-review.md');
   });
   it('sends existing source files and directories to GitHub instead of nonexistent site routes', () => {
     expect(rewriteDocLink('../NOTICE.md', 'voice')).toBe('https://github.com/hudsonkit/hudson/blob/main/NOTICE.md');

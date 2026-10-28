@@ -1,3 +1,4 @@
+import { isInternalDocPath } from './docs-policy';
 import { loadToolset } from '../app/api/ai/toolsets';
 import { APP_HOST, MARKETING_HOSTS, isNoIndexPath, siteRedirect } from './seo';
 
@@ -304,6 +305,9 @@ function withIndexingPolicy(response: Response, url: URL): Response {
 export default {
   async fetch(request: Request, env: Env) {
     const url = new URL(request.url);
+    if (isInternalDocPath(url.pathname)) {
+      return new Response('Not found', { status: 404, headers: { 'X-Robots-Tag': 'noindex' } });
+    }
     const redirect = siteRedirect(url);
     if (redirect) return Response.redirect(redirect.href, 308);
 

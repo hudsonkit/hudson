@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
+import { isPublicDoc } from './docs-policy.ts';
 import { SITE_ORIGIN, docPath } from './seo.ts';
 import { writeSearchFiles } from './finalize-search.mjs';
 
@@ -51,13 +52,13 @@ async function copyRoute(route, outDir) {
   await copyIfExists(source, target);
 }
 
-async function copyDocs(outDir) {
-  const docsDir = join(nextAppDir, 'docs');
+export async function copyDocs(outDir, docsDir = join(nextAppDir, 'docs')) {
   if (!existsSync(docsDir)) return;
 
   async function walk(dir) {
     for (const entry of await readdir(dir, { withFileTypes: true })) {
       const abs = join(dir, entry.name);
+      if (!isPublicDoc(relative(docsDir, abs))) continue;
       if (entry.isDirectory()) {
         await walk(abs);
         continue;
@@ -72,13 +73,12 @@ async function copyDocs(outDir) {
   await walk(docsDir);
 }
 
-async function collectDocs() {
+async function collectDocs(sourceDir = docsSourceDir) {
   const results = [];
   async function walk(dir, prefix = '') {
     for (const entry of await readdir(dir, { withFileTypes: true })) {
-      if (entry.name.startsWith('_') || entry.name.startsWith('.')) continue;
+      if (!isPublicDoc(prefix ? `${prefix}/${entry.name}` : entry.name)) continue;
       if (entry.isDirectory()) {
-        if (entry.name === 'agent' || entry.name === 'prompts' || entry.name === 'coordination' || entry.name === 'specs') continue;
         await walk(join(dir, entry.name), prefix ? `${prefix}/${entry.name}` : entry.name);
         continue;
       }
@@ -94,14 +94,14 @@ async function collectDocs() {
       });
     }
   }
-  await walk(docsSourceDir);
+  await walk(sourceDir);
   results.sort((a, b) => a.slug.localeCompare(b.slug));
   return results;
 }
 
-async function writeLLMsFiles(outDir) {
-  if (!existsSync(docsSourceDir)) return;
-  const docs = await collectDocs();
+export async function writeLLMsFiles(outDir, sourceDir = docsSourceDir) {
+  if (!existsSync(sourceDir)) return;
+  const docs = await collectDocs(sourceDir);
 
   const indexLines = [
     '# hudson',
@@ -155,15 +155,17 @@ async function exportTo(outDir) {
   );
 }
 
-await exportTo(primaryOut);
+if (import.meta.main) {
+  await exportTo(primaryOut);
 
-if (missingRoutes.length > 0) {
-  console.error(
-    `Missing prerendered HTML for route(s): ${[...new Set(missingRoutes)].join(', ')}\n` +
-    `Expected under ${nextAppDir}. Check the staticRoutes allow-list in site/export-pages.mjs ` +
-    'against app/ routes, and make sure `next build` ran first.',
-  );
-  process.exit(1);
+  if (missingRoutes.length > 0) {
+    console.error(
+      `Missing prerendered HTML for route(s): ${[...new Set(missingRoutes)].join(', ')}\n` +
+      `Expected under ${nextAppDir}. Check the staticRoutes allow-list in site/export-pages.mjs ` +
+      'against app/ routes, and make sure `next build` ran first.',
+    );
+    process.exit(1);
+  }
+
+  console.log(`Exported HudsonKit Pages site to ${primaryOut}`);
 }
-
-console.log(`Exported HudsonKit Pages site to ${primaryOut}`);

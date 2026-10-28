@@ -1,3 +1,4 @@
+import { isPublicDoc } from './docs-policy';
 /** Public URL and indexing policy shared by Next metadata, the static exporter, and the worker. */
 export const SITE_ORIGIN = 'https://hudsonkit.com';
 export const APP_HOST = 'app.hudsonkit.com';
@@ -9,16 +10,10 @@ export const GA_SHARED_MEASUREMENT_ID = 'G-GSHDZPFRZG';
 export const GA_HUDSON_MEASUREMENT_ID = 'G-R2H33Q2E9X';
 export const GOOGLE_TAG_URL = `https://www.googletagmanager.com/gtag/js?id=${GA_SHARED_MEASUREMENT_ID}`;
 
-// Keep these pages available for developers, but do not promote working notes in search.
-const INTERNAL_DOC_PREFIXES = ['plans/', 'proposals/', 'reports/'];
-const INTERNAL_DOC_SLUGS = new Set([
-  'inference-credits-codex-review',
-  'terminal-xterm-component-review',
-]);
 const UTILITY_ROOTS = ['/app', '/preview', '/theme-preview', '/embed'];
 
 export function isIndexableDoc(slug: string): boolean {
-  return !INTERNAL_DOC_PREFIXES.some(prefix => slug.startsWith(prefix)) && !INTERNAL_DOC_SLUGS.has(slug);
+  return isPublicDoc(slug);
 }
 
 export function canonicalUrl(pathname: string): string {

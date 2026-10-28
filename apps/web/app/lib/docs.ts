@@ -1,3 +1,4 @@
+import { isPublicDoc } from "../../site/docs-policy";
 import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
@@ -26,9 +27,8 @@ function walkDir(dir: string, prefix = ""): string[] {
   for (const entry of entries) {
     if (entry.name.startsWith("_") || entry.name.startsWith(".")) continue;
     const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (!isPublicDoc(rel)) continue;
     if (entry.isDirectory()) {
-      // Skip agent/, prompts/, coordination/, specs/ — those are internal
-      if (entry.name === "agent" || entry.name === "prompts" || entry.name === "coordination" || entry.name === "specs") continue;
       results.push(...walkDir(path.join(dir, entry.name), rel));
     } else if (entry.name.endsWith(".md") && entry.name !== "index.md") {
       results.push(rel);
@@ -74,6 +74,7 @@ export function getAllSlugs(): string[] {
 
 /** Get a single doc by slug (supports nested paths like npm/sdk/hooks) */
 export function getDocBySlug(slug: string): Doc | null {
+  if (!isPublicDoc(slug)) return null;
   const filepath = path.join(DOCS_DIR, `${slug}.md`);
   if (!fs.existsSync(filepath)) return null;
 
