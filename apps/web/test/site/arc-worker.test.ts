@@ -30,4 +30,25 @@ describe('independent Arc routes', () => {
     const root = await worker.fetch(new Request('https://hudsonkit.com/arc/'), env);
     expect(root.status).toBe(200);
   });
+
+  it('serves generated blog pages without replacing their HTML or metadata', async () => {
+    const html = '<html><head><title>Review a diagram</title></head><body><h1>Review a diagram</h1></body></html>';
+    const fetch = vi.fn(async () => new Response(html, { headers: { 'Content-Type': 'text/html' } }));
+    const response = await worker.fetch(new Request('https://hudsonkit.com/arc/blog/review-a-diagram/'), { ASSETS: { fetch } });
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe(html);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(['GET', 'HEAD'])('keeps missing blog pages as 404s for %s', async (method) => {
+    const fetch = vi.fn(async (request: Request) => new Response(null, {
+      status: new URL(request.url).pathname === '/arc/' ? 200 : 404,
+    }));
+    for (const path of ['/arc/blog', '/arc/blog/missing', '/arc/blog/missing/']) {
+      fetch.mockClear();
+      const response = await worker.fetch(new Request(`https://hudsonkit.com${path}`, { method }), { ASSETS: { fetch } });
+      expect(response.status).toBe(404);
+      expect(fetch).toHaveBeenCalledTimes(1);
+    }
+  });
 });

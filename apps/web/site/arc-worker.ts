@@ -20,8 +20,11 @@ export default {
     if (!url.pathname.startsWith('/arc/')) return new Response('Not found', { status: 404 });
     const response = await env.ASSETS.fetch(request);
     if (response.status !== 404 || !['GET', 'HEAD'].includes(request.method)) return response;
-    // Keep missing assets as 404s; extensionless editor routes use the SPA shell.
-    if (url.pathname.split('/').pop()?.includes('.')) return response;
+    // Blog pages are generated HTML. A missing article must stay a real 404,
+    // rather than exposing the homepage as a successful search result.
+    const isBlogPath = url.pathname === '/arc/blog' || url.pathname.startsWith('/arc/blog/');
+    if (isBlogPath || url.pathname.split('/').pop()?.includes('.')) return response;
+    // Extensionless editor routes still use the SPA shell.
     url.pathname = '/arc/';
     return env.ASSETS.fetch(new Request(url, request));
   },
