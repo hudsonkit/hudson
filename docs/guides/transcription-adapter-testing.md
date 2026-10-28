@@ -9,7 +9,7 @@ specific recorded runs, not universal acceptance of the entire design.
 Latest merge check: the root Hudson package on `origin/main` `4a60eb2` passed
 72 transcription tests and 27 existing HudsonVoice tests with published Vox
 `9190158` and no local Vox override. Run the root-package commands in the
-[merge validation record](../reports/transcription-acceptance-audit.md#hudson-merge-validation-16-september-2026).
+merge validation record (internal local document).
 The table below preserves earlier, separately scoped acceptance runs.
 
 | Check | Recorded result | Evidence limit |
@@ -21,8 +21,8 @@ The table below preserves earlier, separately scoped acceptance runs.
 | TalkieAgent | 6 tests previously passed | Routing fixtures, not physical capture acceptance |
 | Full Talkie validation build | Passed after the latest host completion fix | Isolated Termini header packaging; published dependency path remains unverified |
 
-The [acceptance audit](../reports/transcription-acceptance-audit.md) and
-[chronological evidence](../reports/transcription-implementation-progress.md)
+The acceptance audit (internal local document) and
+chronological evidence (internal local document)
 contain scope and log paths. Earlier counts in the chronological report are
 historical and are superseded by later runs.
 
@@ -68,7 +68,7 @@ send audio to a cloud service.
 
 These Swift Testing suites exist in this Hudson checkout today. They cover current `HudsonVoice` behavior that the proposal says to preserve. They are not adapter contract tests.
 
-Verified run, 16 September 2026, assigned `origin/main` worktree, exit 0. 27 tests in 5 suites passed. This validates existing behavior only, not proposed adapters. See the [baseline verification report](../reports/transcription-baseline-2026-09-16.md) for scope and limits.
+Verified run, 16 September 2026, assigned `origin/main` worktree, exit 0. 27 tests in 5 suites passed. This validates existing behavior only, not proposed adapters. See the baseline verification report (internal local document) for scope and limits.
 
 ```text
 swift test --scratch-path "$HOME/Library/Caches/codex-builds/hudson-transcription-baseline" --filter HudsonVoiceTests

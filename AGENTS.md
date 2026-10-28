@@ -1,3 +1,9 @@
+# Documentation publication boundary
+
+Internal plans, proposals, and reports belong in `apps/studio/local/docs/`
+(Git-ignored, local filesystem access for Studio and agents). Never place
+them in public `docs/` or force-add local Studio content to Git.
+
 # hudson
 
 > Multi-app canvas workspace platform for React

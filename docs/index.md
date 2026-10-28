@@ -51,10 +51,6 @@ Hudson is a shell + primitives library for building app-like interfaces across w
 - **[Admin resources](./admin-resources.md)** — schema-driven operator admin (Zod resources; not coupled to credits)
 - **[Inference credits](./inference-credits.md)** — user-level credit ledger for TTS / ASR / LLM
 
-## Proposals
-
-- **[Remote capability sources](./proposals/remote-capability-sources.md)** — baseline connection, reconnect, route, diagnostics, and multi-remote primitives for Hudson-powered apps
-
 ## Design system
 
 - **[Theme](./theme.md)** — runtime theming via `@Environment(\.hudTheme)`

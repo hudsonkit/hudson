@@ -45,4 +45,4 @@ origin rejection and no-credential refusal. Real GPT-Live WebSocket acceptance
 using the same package passed separately with synthetic speech, a local tool,
 returned audio, and provider-acknowledged close. This browser's actual WebRTC,
 microphone, audible playback, and interruption checklist remains pending. See
-[the evidence report](../../../reports/conversational-voice-verification.md).
+the evidence report (internal local document).

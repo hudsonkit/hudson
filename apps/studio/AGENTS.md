@@ -140,11 +140,13 @@ consumers; here it'd run too late.
 
 The sidebar updates automatically.
 
-## Adding a doc page
+## Local working documents
 
-1. Drop a `.md` file under `/Users/arach/dev/hudson/docs/`.
-2. Add a page entry in `src/registry/pages.ts` with
-   `href: "/eng/<slug>"` and bucket `"docs"`.
+Keep internal plans, proposals, and reports in `apps/studio/local/docs/`,
+organized into `plans/`, `proposals/`, and `reports/`. This directory is
+Git-ignored and available to local agents through the filesystem. It is not
+part of the public site or a production Studio bundle. Do not force-add it.
 
-`src/content/eng-docs.ts` picks up every `.md` via `import.meta.glob` — no
-copy step.
+Use the repository root `docs/` only for publishable product documentation.
+Do not put internal working documents back under `docs/`. Local documents
+are machine-local; a fresh clone will not include them.

@@ -96,6 +96,6 @@ terminal result. A remote connection closing does not prove remote cancellation.
 
 The September 16 current-source contract/cloud/ElevenLabs harness passed 38 tests
 across six suites, including both remote reference cases. See the
-[acceptance audit](../reports/transcription-acceptance-audit.md) for commands,
+acceptance audit (internal local document) for commands,
 evidence limits, and pending live acceptance. This walkthrough supplies executable source references for the developer and
 testing guides.

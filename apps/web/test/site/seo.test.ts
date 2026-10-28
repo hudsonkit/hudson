@@ -93,7 +93,7 @@ describe('search and tracking policy', () => {
 describe('source-relative documentation links', () => {
   it('keeps the current nested directory and anchors', () => {
     expect(rewriteDocLink('transcription-configuration.md#the-options-dictionary', 'guides/conversational-voice')).toBe('/docs/guides/transcription-configuration/#the-options-dictionary');
-    expect(rewriteDocLink('../reports/conversational-voice-review.md', 'guides/conversational-voice')).toBe('https://github.com/hudsonkit/hudson/blob/main/docs/reports/conversational-voice-review.md');
+    expect(rewriteDocLink('../examples/transcription-reference-walkthrough.md', 'guides/conversational-voice')).toBe('/docs/examples/transcription-reference-walkthrough/');
   });
   it('sends existing source files and directories to GitHub instead of nonexistent site routes', () => {
     expect(rewriteDocLink('../NOTICE.md', 'voice')).toBe('https://github.com/hudsonkit/hudson/blob/main/NOTICE.md');

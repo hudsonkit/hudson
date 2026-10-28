@@ -7,9 +7,9 @@ host-owned local tools.
 Audience: a developer or agent wiring a conversational session into a web or
 native host. For the design rationale and the provider research behind these
 rules, read the
-[architecture review](../reports/conversational-voice-review.md). For what has
+architecture review (internal local document). For what has
 and has not been verified, read the
-[verification checklist](../reports/conversational-voice-verification.md).
+verification checklist (internal local document).
 
 Status: **implemented on `codex/conversational-voice`, native and web.** The
 native stack (`HudsonConversation`, `HudsonConversationOpenAI`,
@@ -366,7 +366,7 @@ swift run --package-path "$CHECK" ConvCheck "$CV/docs/examples/conversational-vo
 
 The throwaway package symlinks the three modules so the check runs without a
 whole-package build. See the
-[defects report](../reports/conversational-voice-defects.md) for review status.
+defects report (internal local document) for review status.
 
 Last run: **all 7 examples checked** — 4 reached `.ready`, and 3 `invalid-*`
 files were rejected by their adapter with these reasons:
@@ -726,7 +726,7 @@ The SDP exchange is a JSON payload crossing a network boundary, so the client's
 that a compiler cannot reconcile: `createGPTLiveSessionRoute` reads `body.sdp`
 and returns `{ sdp, sessionId }`, which is not the shape a reasonable person
 guesses. Hand-copied field names on both ends is how that goes wrong silently
-— see D10 in the [defects report](../reports/conversational-voice-defects.md).
+— see D10 in the defects report (internal local document).
 If you must write the call yourself, validate `response.json()` and map the
 validated field; never `as`-assert a network response into the shape you want.
 

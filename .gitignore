@@ -163,3 +163,11 @@ apps/web/site/.vendor/
 # Independently deployed product and host AI bundles
 apps/web/site/arc-out/
 apps/web/public/ai/
+
+# Internal working documents stay local to Studio, never in the public repository.
+/apps/studio/local/
+/docs/plans/
+/docs/proposals/
+/docs/reports/
+/docs/inference-credits-codex-review.md
+/docs/terminal-xterm-component-review.md

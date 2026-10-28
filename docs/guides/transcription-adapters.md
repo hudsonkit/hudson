@@ -3,7 +3,7 @@
 Status: Implemented in isolated worktrees; not released. Source and evidence
 reconciled September 16, 2026. Native Parakeet sample inference passed. Remote
 provider acceptance and native product interaction checks remain open. The
-[acceptance audit](../reports/transcription-acceptance-audit.md) records those
+acceptance audit (internal local document) records those
 limits separately from builds and fixture tests. The WhisperKit reference adapter
 was removed on September 24, 2026; reports written before then still describe it.
 

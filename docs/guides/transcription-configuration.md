@@ -4,7 +4,7 @@ Audience: an agent or developer that must produce, read, or reason about a
 transcription engine configuration. This is the data reference. For the adapter
 contract and architecture, read [transcription adapters](transcription-adapters.md).
 For what has and has not been verified, read the
-[acceptance audit](../reports/transcription-acceptance-audit.md).
+acceptance audit (internal local document).
 
 Status: implemented in isolated worktrees, not released. Every example in
 `../examples/transcription-configurations/` decodes against the current source.
@@ -489,5 +489,5 @@ check needs only the Hudson contract module. If that struct changes in
 - Local adapters never install models. `needsDownload` is terminal until the
   host's existing installer runs.
 - Remote account acceptance is largely unverified — see the
-  [acceptance audit](../reports/transcription-acceptance-audit.md). Only
+  acceptance audit (internal local document). Only
   OpenRouter MAI and ElevenLabs Scribe have passing live requests.
