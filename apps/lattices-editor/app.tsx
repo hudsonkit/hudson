@@ -24,7 +24,7 @@ function Chat() {
   const composer = useRef<ReturnType<typeof createAgentComposer> | null>(null);
   useLayoutEffect(() => {
     composer.current = createAgentComposer(host.current!, {
-      placeholder: 'Ask about these windows… (agent arrives in a later version)',
+      placeholder: 'Ask about these windows…',
       ariaLabel: 'Ask about these windows (agent unavailable)',
       onSubmit: () => {}, onContextAction: item => removeContextRow(model, item.id),
     });
@@ -34,7 +34,7 @@ function Chat() {
   useLayoutEffect(() => { composer.current?.update({ disabled: true, canSend: false, contextActionsEnabled: true,
     contextItems: rows.map(row => ({ id: row.id, label: rowLabel(row) + ' ×', title: 'Remove ' + rowLabel(row) })) }); }, [rows]);
   return <div className="context-panel text-muted-foreground text-[12px]"><div className="context-scroll">
-    {!rows.length && <div className="chat-empty"><h2>Arrange your windows</h2><p className="context-hint">Select windows in Preview to add them as context. An agent will help you arrange them in a later version.</p></div>}
+    {!rows.length && <div className="chat-empty"><h2>Arrange your windows</h2><p className="context-hint">Select windows in Preview to add them as context.</p></div>}
     {rows.length > 0 && <div className="small-caps context-label">Context</div>}
     <div ref={chips} className="context-chips hk-agent-composer" aria-label="Selected windows" />
     <div className="context-examples"><p>Try</p><ul><li>Put these in Build and tile them</li><li>Explain why these windows are grouped together</li><li>Show me the settings for these windows</li></ul></div>
