@@ -154,6 +154,16 @@ public enum HudSidebarSectionAlignment: String, CaseIterable, Identifiable, Send
     public var id: String { rawValue }
 }
 
+/// Hover treatment for nav rows.
+public enum HudSidebarHoverStyle: String, CaseIterable, Identifiable, Sendable {
+    /// Inset rounded box with a hairline border.
+    case base
+    /// Square wash across the full row width, no border.
+    case flat
+
+    public var id: String { rawValue }
+}
+
 public struct HudSidebarStyle: Equatable, Sendable {
     public var surface: HudSidebarSurfaceStyle
     public var indicator: HudSidebarIndicatorStyle
@@ -161,6 +171,7 @@ public struct HudSidebarStyle: Equatable, Sendable {
     public var motion: HudSidebarMotionStyle
     public var liquidGlass: HudLiquidGlassConfig
     public var sectionAlignment: HudSidebarSectionAlignment
+    public var hover: HudSidebarHoverStyle
 
     public init(
         surface: HudSidebarSurfaceStyle = .base,
@@ -168,7 +179,8 @@ public struct HudSidebarStyle: Equatable, Sendable {
         icon: HudSidebarIconStyle = .base,
         motion: HudSidebarMotionStyle = .base,
         liquidGlass: HudLiquidGlassConfig = .default,
-        sectionAlignment: HudSidebarSectionAlignment = .leading
+        sectionAlignment: HudSidebarSectionAlignment = .leading,
+        hover: HudSidebarHoverStyle = .base
     ) {
         self.surface = surface
         self.indicator = indicator
@@ -176,6 +188,7 @@ public struct HudSidebarStyle: Equatable, Sendable {
         self.motion = motion
         self.liquidGlass = liquidGlass
         self.sectionAlignment = sectionAlignment
+        self.hover = hover
     }
 
     public static var `default`: HudSidebarStyle { HudSidebarStyle() }

@@ -672,7 +672,15 @@ public struct HudNavigationSidebar<
     /// as the pointer crosses between rail and label columns.
     @ViewBuilder
     private var hoverUnderlay: some View {
-        if let y = hoveredY {
+        if let y = hoveredY, style.hover == .flat {
+            Rectangle()
+                .fill(HudSurface.tint(theme.palette.ink, opacity: 0.05))
+                .frame(height: HudSidebarLayout.rowHeight)
+                .offset(y: y)
+                .animation(nil, value: hoveredY)
+                .allowsHitTesting(false)
+                .transition(.opacity.animation(.easeOut(duration: 0.06)))
+        } else if let y = hoveredY {
             RoundedRectangle(cornerRadius: HudSidebarLayout.selectionCornerRadius)
                 .fill(theme.palette.surface)
                 .overlay(
