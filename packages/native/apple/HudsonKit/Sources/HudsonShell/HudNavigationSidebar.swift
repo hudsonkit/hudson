@@ -385,6 +385,7 @@ public struct HudNavigationSidebar<
                 railColumn
                 labelColumn
             }
+            .padding(.leading, HudSidebarLayout.railContentInset)
             compactAccentBar
         }
         .overlay(alignment: .topLeading) {
@@ -412,7 +413,7 @@ public struct HudNavigationSidebar<
                 HudDivider(color: theme.hairline.subtle)
                 footer
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.vertical, HudSpacing.xs)
+                    .padding(.vertical, (HudSidebarLayout.edgeBandHeight - HudSidebarLayout.rowHeight) / 2)
             }
         }
     }
@@ -466,7 +467,7 @@ public struct HudNavigationSidebar<
             Color.clear
                 .frame(
                     width: HudSidebarLayout.railWidth,
-                    height: HudSidebarLayout.sectionTopGap + HudSidebarLayout.sectionHeaderHeight
+                    height: Self.sectionExtent(title)
                 )
                 .overlay(alignment: .bottomLeading) {
                     if style.sectionAlignment == .railLeading {
@@ -541,6 +542,10 @@ public struct HudNavigationSidebar<
                     case .ended:  updateHover(item.id, hovering: false)
                     }
                 }
+
+        case .section(_, let title) where title.isEmpty:
+            Color.clear
+                .frame(height: Self.sectionExtent(title))
 
         case .section(_, let title):
             let alignment = style.sectionAlignment
@@ -651,11 +656,18 @@ public struct HudNavigationSidebar<
             case .item(let item):
                 if item.id == id { return y }
                 y += HudSidebarLayout.rowHeight
-            case .section:
-                y += HudSidebarLayout.sectionTopGap + HudSidebarLayout.sectionHeaderHeight
+            case .section(_, let title):
+                y += Self.sectionExtent(title)
             }
         }
         return nil
+    }
+
+    /// An untitled section is a plain gap of one row, so groups stay on the row grid.
+    static func sectionExtent(_ title: String) -> CGFloat {
+        title.isEmpty
+            ? HudSidebarLayout.rowHeight
+            : HudSidebarLayout.sectionTopGap + HudSidebarLayout.sectionHeaderHeight
     }
 
     private var headerExtent: CGFloat {
@@ -708,7 +720,8 @@ public struct HudNavigationSidebar<
                 anchor: .leading
             )
             .offset(
-                x: HudSidebarLayout.railWidth + visibleLabelWidth + HudSpacing.xs,
+                x: HudSidebarLayout.railContentInset + HudSidebarLayout.railWidth
+                    + visibleLabelWidth + HudSpacing.xs,
                 y: y + (HudSidebarLayout.rowHeight - HudSidebarCompactHoverLabel.height) / 2
             )
             .allowsHitTesting(false)
@@ -1139,6 +1152,8 @@ private struct SidebarCompactAccent: View {
                 )
                 .frame(width: HudSidebarLayout.railWidth, alignment: .center)
                 .frame(height: HudSidebarLayout.rowHeight, alignment: .bottom)
+                // Follows the glyph, which sits in from the edge.
+                .padding(.leading, HudSidebarLayout.railContentInset)
 
         case .glass:
             // Glowing vertical rod at the leading edge — soft halo (blurred capsule)

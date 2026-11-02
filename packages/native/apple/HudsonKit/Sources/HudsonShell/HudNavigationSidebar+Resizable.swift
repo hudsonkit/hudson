@@ -281,7 +281,8 @@ struct HudSidebarResizeHost<
 
     private var resizePreviewOffset: CGFloat? {
         guard let dragPreviewLabelWidth else { return nil }
-        let previewWidth = leadingInset + HudSidebarLayout.railWidth + geometry.previewWidth(dragPreviewLabelWidth)
+        let previewWidth = leadingInset + HudSidebarLayout.railContentInset + HudSidebarLayout.railWidth
+            + geometry.previewWidth(dragPreviewLabelWidth)
         return previewWidth - layoutWidth
     }
 

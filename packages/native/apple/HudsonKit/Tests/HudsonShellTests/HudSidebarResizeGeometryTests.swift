@@ -197,7 +197,7 @@ struct HudSidebarIntrinsicWidthTests {
     func expandedWidth() {
         #expect(
             HudSidebarLayout.intrinsicWidth(progress: 0, labelWidth: 156)
-            == HudSidebarLayout.railWidth + 156
+            == HudSidebarLayout.railContentInset + HudSidebarLayout.railWidth + 156
         )
     }
 
@@ -205,7 +205,7 @@ struct HudSidebarIntrinsicWidthTests {
     func compactWidth() {
         #expect(
             HudSidebarLayout.intrinsicWidth(progress: 1, labelWidth: 156)
-            == HudSidebarLayout.railWidth
+            == HudSidebarLayout.railContentInset + HudSidebarLayout.railWidth
         )
     }
 
@@ -213,7 +213,7 @@ struct HudSidebarIntrinsicWidthTests {
     func scrubbedWidth() {
         #expect(
             HudSidebarLayout.intrinsicWidth(progress: 0.5, labelWidth: 200)
-            == HudSidebarLayout.railWidth + 100
+            == HudSidebarLayout.railContentInset + HudSidebarLayout.railWidth + 100
         )
     }
 
@@ -221,7 +221,7 @@ struct HudSidebarIntrinsicWidthTests {
     func overshootClampsToRail() {
         #expect(
             HudSidebarLayout.intrinsicWidth(progress: 1.4, labelWidth: 200)
-            == HudSidebarLayout.railWidth
+            == HudSidebarLayout.railContentInset + HudSidebarLayout.railWidth
         )
     }
 }

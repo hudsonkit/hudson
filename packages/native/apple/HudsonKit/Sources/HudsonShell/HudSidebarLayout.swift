@@ -33,6 +33,19 @@ public enum HudSidebarLayout {
     /// so resizable hosts default to zero extra inset.
     public static var leadingInset: CGFloat { 0 }
 
+    /// Center of the first window control (the close button) from the window's
+    /// leading edge, in a standard titled window.
+    public static var windowControlCenterX: CGFloat { 26 }
+
+    /// Space between the sidebar's leading edge and the rail glyphs, so they
+    /// center under the first window control. Applied to the rows only: the
+    /// selection stripe and hover band stay on the edge.
+    public static var railContentInset: CGFloat { max(0, windowControlCenterX - railWidth / 2) }
+
+    /// Height of the band that holds the rail's first and last rows, matching a
+    /// 30pt page toolbar. Rows sit centered in it at both ends of the sidebar.
+    public static var edgeBandHeight: CGFloat { 30 }
+
     // ── Cells ────────────────────────────────────────────────────────────────
 
     /// Height of a single nav row.
@@ -124,6 +137,6 @@ public enum HudSidebarLayout {
     /// Pass an explicit `labelWidth` when the sidebar instance overrides the default
     /// (e.g., user-resizable expanded width persisted via `@AppStorage`).
     public static func intrinsicWidth(progress: Double, labelWidth: CGFloat = HudSidebarLayout.labelWidth) -> CGFloat {
-        railWidth + max(0, labelWidth * CGFloat(1 - progress))
+        railContentInset + railWidth + max(0, labelWidth * CGFloat(1 - progress))
     }
 }
