@@ -112,7 +112,7 @@ public struct HudNotchInfo: Equatable, Sendable {
         )
     }
 
-    private static func displayID(for screen: NSScreen) -> CGDirectDisplayID? {
+    static func displayID(for screen: NSScreen) -> CGDirectDisplayID? {
         guard let screenNumber = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else {
             return nil
         }

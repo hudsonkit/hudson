@@ -76,6 +76,7 @@ public final class HudNotchController: ObservableObject {
     private var panel: HudOverlayPanel?
     private var server: HudNotchSocketServer?
     private var screenObserver: NSObjectProtocol?
+    private var presentationDisplayID: CGDirectDisplayID?
     private var hoverActivationTask: Task<Void, Never>?
     private var collapseTask: Task<Void, Never>?
     private var retractTask: Task<Void, Never>?
@@ -674,14 +675,29 @@ public final class HudNotchController: ObservableObject {
 
     // MARK: Screen
 
+    /// Presents on this display while it is available. Pass nil to restore
+    /// the usual preference for a screen with a notch, then the main screen.
+    /// The override lasts until cleared and does not change saved settings.
+    public func setPresentationScreen(_ screen: NSScreen?) {
+        presentationDisplayID = screen.flatMap { HudNotchInfo.displayID(for: $0) }
+        observeScreenChanges()
+        refreshNotchInfo()
+        updatePanelFrame(animated: false)
+    }
+
     private func refreshNotchInfo() {
         notchInfo = HudNotchInfo.effective(for: preferredScreen())
     }
 
     private func preferredScreen() -> NSScreen? {
-        NSScreen.screens.first { HudNotchInfo.detect(for: $0).hasNotch }
+        let screens = NSScreen.screens
+        if let presentationDisplayID,
+           let screen = screens.first(where: { HudNotchInfo.displayID(for: $0) == presentationDisplayID }) {
+            return screen
+        }
+        return screens.first { HudNotchInfo.detect(for: $0).hasNotch }
             ?? NSScreen.main
-            ?? NSScreen.screens.first
+            ?? screens.first
     }
 
     private func observeScreenChanges() {

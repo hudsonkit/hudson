@@ -9,6 +9,7 @@ import SwiftUI
 public struct HudNotchSurface: View {
     @ObservedObject private var controller: HudNotchController
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var replyText = ""
     @State private var isFlashing = false
     @State private var nudgeAmount: CGFloat = 0
@@ -173,11 +174,13 @@ public struct HudNotchSurface: View {
                 .overlay(outline.fill(Color.black).blendMode(.destinationOut))
                 .compositingGroup()
 
-            HudNotchBackdrop()
-                .opacity(look.fillOpacity < 1 ? look.blur : 0)
-                .clipShape(outline)
+            if !reduceTransparency, look.fillOpacity < 1 {
+                HudNotchBackdrop()
+                    .opacity(look.blur)
+                    .clipShape(outline)
+            }
 
-            outline.fill(theme.body.opacity(look.fillOpacity))
+            outline.fill(theme.body.opacity(reduceTransparency ? 1 : look.fillOpacity))
 
             outline.stroke(rimStyle(look), lineWidth: look.borderWidth)
         }
