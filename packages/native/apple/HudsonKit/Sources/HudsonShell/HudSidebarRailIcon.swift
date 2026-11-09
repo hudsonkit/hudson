@@ -85,7 +85,7 @@ public struct HudSidebarRailIcon<Selection: Hashable>: View {
 
     public var body: some View {
         Image(systemName: glyphName)
-            .font(.system(size: HudSidebarLayout.iconSize))
+            .font(.system(size: HudSidebarLayout.iconSize, weight: .light))
             .foregroundStyle(iconColor)
             .frame(width: HudSidebarLayout.railWidth, height: HudSidebarLayout.rowHeight)
             .scaleEffect(iconScale)
@@ -125,7 +125,13 @@ public struct HudSidebarRailIcon<Selection: Hashable>: View {
             }
             .accessibilityLabel(item.tooltipLabel ?? item.title)
             .accessibilityValue(isSelected ? "Selected" : "Not selected")
-            .accessibilityAddTraits(isSelected ? .isSelected : [])
+            // The tap gesture alone leaves the row an inert image to VoiceOver
+            // and AX clients; the button trait and default action make it
+            // pressable (AXPress), and Return/Space select it from the keyboard.
+            .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+            .accessibilityAction { onTap() }
+            .onKeyPress(.return) { onTap(); return .handled }
+            .onKeyPress(.space) { onTap(); return .handled }
     }
 
     private func setHovering(_ hovering: Bool) {

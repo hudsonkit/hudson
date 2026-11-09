@@ -462,7 +462,7 @@ public struct HudNavigationSidebar<
             // stay y-aligned. Usually empty — but a `railLeading` group name is
             // drawn from here, since this is the column whose leading edge it
             // wants. It is an overlay rather than a child so the text can run past
-            // the rail's 48pt into the label column's space: a parent `frame` sizes
+            // the rail's 32pt into the label column's space: a parent `frame` sizes
             // an overlay's anchor, it does not clip what the overlay draws.
             Color.clear
                 .frame(
@@ -528,7 +528,7 @@ public struct HudNavigationSidebar<
         case .item(let item):
             let isSelected = selection == item.id
             Text(item.title)
-                .font(HudFont.ui(HudTextSize.base, weight: isSelected ? .medium : .regular))
+                .font(HudFont.ui(HudTextSize.sm, weight: isSelected ? .medium : .regular))
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)
                 .foregroundStyle(isSelected ? theme.palette.ink : theme.palette.muted)

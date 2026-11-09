@@ -6,7 +6,7 @@ import CoreGraphics
 //
 //   ┌──────────┬───────────────────────┐
 //   │ rail     │ label                 │
-//   │  48      │   200 → 0  (animates) │
+//   │  32      │   200 → 0  (animates) │
 //   └──────────┴───────────────────────┘
 //
 // Rail: fixed compact column, icons centered. Never animated.
@@ -24,7 +24,7 @@ public enum HudSidebarLayout {
     /// Fixed compact column at the leading edge. Icons center on x = railWidth/2.
     /// This is the minimized sidebar width; expansion only adds label width to
     /// the trailing side, so icon x-positions never move between states.
-    public static var railWidth: CGFloat { 48 }
+    public static var railWidth: CGFloat { 32 }
 
     /// Maximum width of the animated label column when fully expanded.
     public static var labelWidth: CGFloat { 200 }
@@ -49,7 +49,7 @@ public enum HudSidebarLayout {
     // ── Cells ────────────────────────────────────────────────────────────────
 
     /// Height of a single nav row.
-    public static var rowHeight: CGFloat { 30 }
+    public static var rowHeight: CGFloat { 26 }
 
     /// Height of the section-header label cell.
     public static var sectionHeaderHeight: CGFloat { 28 }
@@ -80,19 +80,19 @@ public enum HudSidebarLayout {
     // ── Glyphs ───────────────────────────────────────────────────────────────
 
     /// SF Symbol point size for row icons.
-    public static var iconSize: CGFloat { 15 }
+    public static var iconSize: CGFloat { 14 }
 
     // ── Label inset ──────────────────────────────────────────────────────────
 
     /// Horizontal inset between the rail's trailing edge and the label text.
-    public static var labelLeading: CGFloat { 4 }  // HudSpacing.xs
+    public static var labelLeading: CGFloat { 0 }  // icon edge sits 9pt from the label
 
     /// Inset for a section label hung off the column's *trailing* edge.
     ///
-    /// Deliberately not `labelLeading`. That 4pt is a gutter between the rail and
-    /// the labels beside it — there is a 48pt icon column doing the visual work of
+    /// Deliberately not `labelLeading`. That 0pt gutter sits between the rail and
+    /// the labels beside it — there is a 32pt icon column doing the visual work of
     /// separating them. On the trailing side there is nothing: the label column's
-    /// right edge is the sidebar's own edge, so the same 4pt puts the text against
+    /// right edge is the sidebar's own edge, so the same 0pt puts the text against
     /// the divider rather than in a margin.
     public static var sectionTrailingInset: CGFloat { 12 }  // HudSpacing.xl
 
