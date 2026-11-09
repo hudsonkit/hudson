@@ -119,10 +119,7 @@ var products: [Product] = [
 
 var dependencies: [Package.Dependency] = []
 
-// Direct local inference remains independent from the existing Vox runtime.
-dependencies.append(.package(url: "https://github.com/FluidInference/FluidAudio.git", exact: "0.17.7"))
 products.append(hudsonLibrary(name: "HudsonTranscriptionCloud", targets: ["HudsonTranscriptionCloud"]))
-products.append(hudsonLibrary(name: "HudsonTranscriptionFluidAudio", targets: ["HudsonTranscriptionFluidAudio"]))
 
 var demoDependencies: [Target.Dependency] = ["HudsonUI", "HudsonShell", "HudsonVoice"]
 var demoSwiftSettings: [SwiftSetting] = []
@@ -190,9 +187,7 @@ var targets: [Target] = [
 ]
 
 targets.append(.target(name: "HudsonTranscriptionCloud", dependencies: ["HudsonTranscription"], path: src + "HudsonTranscriptionCloud"))
-targets.append(.target(name: "HudsonTranscriptionFluidAudio", dependencies: ["HudsonTranscription", .product(name: "FluidAudio", package: "FluidAudio")], path: src + "HudsonTranscriptionFluidAudio"))
 targets.append(.testTarget(name: "HudsonTranscriptionCloudTests", dependencies: ["HudsonTranscriptionCloud"], path: tst + "HudsonTranscriptionCloudTests"))
-targets.append(.testTarget(name: "HudsonTranscriptionFluidAudioTests", dependencies: ["HudsonTranscriptionFluidAudio"], path: tst + "HudsonTranscriptionFluidAudioTests"))
 
 products.append(hudsonLibrary(name: "HudsonTranscriptionElevenLabs", targets: ["HudsonTranscriptionElevenLabs"]))
 targets.append(.target(name: "HudsonTranscriptionElevenLabs", dependencies: ["HudsonTranscription", "HudsonTranscriptionCloud"], path: src + "HudsonTranscriptionElevenLabs"))

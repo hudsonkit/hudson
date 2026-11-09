@@ -1,11 +1,12 @@
 {
   "dictation": {
     "configuration": {
-      "providerID": "fluidaudio",
-      "modelID": "parakeet-v3",
+      "providerID": "gemini-live-transcription",
+      "modelID": "gemini-3.5-transcribe-live",
+      "credentialReference": { "identifier": "gemini" },
       "options": {}
     },
-    "remoteConsentFingerprint": null
+    "remoteConsentFingerprint": "sha256:3e1bee9d33a034389b0c745a71abedd0d4a880b679fd29d7f98c9fec27951721"
   },
   "recording": {
     "configuration": {

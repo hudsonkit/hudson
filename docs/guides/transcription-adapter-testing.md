@@ -15,8 +15,6 @@ The table below preserves earlier, separately scoped acceptance runs.
 | Check | Recorded result | Evidence limit |
 | --- | --- | --- |
 | Core, cloud, ElevenLabs current-source harness | 38 tests across 6 suites passed | Injected transports; no vendor audio requests |
-| Direct FluidAudio harness | 6 tests passed | Lifecycle/runtime fixtures |
-| Native Parakeet V3 | File and caller-fed live inference passed on a generated sentence | Does not prove physical microphone or product insertion behavior |
 | TalkieTranscription host | 27 reported tests passed; native opt-in skipped | Includes two parameterized completion tests, four cases each; read-only activity inspection; fixed capture routing |
 | TalkieAgent | 6 tests previously passed | Routing fixtures, not physical capture acceptance |
 | Full Talkie validation build | Passed after the latest host completion fix | Isolated Termini header packaging; published dependency path remains unverified |
@@ -57,11 +55,6 @@ HUDSON_PACKAGE_PATH=/Users/arach/dev/hudson-worktrees/transcription-adapters \
   swift test --package-path apps/macos/TalkieTranscription \
   --scratch-path "$HOME/Library/Caches/codex-builds/talkie-transcription-host"
 ```
-
-Native Parakeet acceptance requires a local model folder and an authorized
-recording. Set `HUDSON_PARAKEET_MODEL_DIR` and
-`HUDSON_TRANSCRIPTION_ACCEPTANCE_AUDIO`. The test does not record a microphone or
-send audio to a cloud service.
 
 ## Historical HudsonVoice baseline
 
@@ -175,7 +168,6 @@ Required named targets:
 | Gemini dedicated file | `gemini-3.5-transcribe` | Batch file | Required and distinct |
 | Gemini dedicated live | `gemini-3.5-transcribe-live` | Live PCM | Required and distinct |
 | Gemini 3.8 Live input transcription | `gemini-3.8-live` | Live PCM evaluation | Required as its own target. Not a replacement for dedicated Transcribe Live |
-| FluidAudio local | the shipped dependency's model | File and, if verified, stream | Direct adapter, no Vox hop |
 | ElevenLabs reference | vendor file model | Batch file | Example package |
 | Talkie ElevenLabs / Deepgram | current meeting providers | Meeting tracks | Preserve existing product paths |
 
@@ -188,13 +180,12 @@ Gemini 3.8 Live captions-only evaluation must record response behavior, transcri
 | Case | Input | Expected behavior | Required evidence |
 | --- | --- | --- | --- |
 | Dictation | Short push-to-talk recording | Batch-on-release is valid and labeled honestly. A separate live path shows replaceable partials and one final utterance | Captured audio, transcript, latency, stop/cancel, no duplicate insertion |
-| Existing recording | Several-minute user-approved fixture with names and punctuation | Compare MAI-Transcribe-2, Gemini 3.5 file, local FluidAudio, and the ElevenLabs reference adapter on the same file | Same input digest, exact options, output, provenance, measured time, vendor usage where supplied, human-checked errors |
+| Existing recording | Several-minute user-approved fixture with names and punctuation | Compare MAI-Transcribe-2, Gemini 3.5 file, and the ElevenLabs reference adapter on the same file | Same input digest, exact options, output, provenance, measured time, vendor usage where supplied, human-checked errors |
 | Meeting | Short multi-speaker fixture plus a 45-minute fixture | Preserve mic and system track origins. Reject unsupported long input before upload. No false speaker continuity. Original recording is not lost | Speaker/timing evaluation only on supported paths. 45-minute rejection evidence on constrained models |
 
 ## Remaining product acceptance
 
-The three use-case fixtures above remain in scope. The short local native tests
-do not replace the several-minute recording comparison or the meeting fixture.
+The three use-case fixtures above remain in scope.
 The two-track workspace regression verifies ledger recovery, successful-track
 reuse, and suppression of duplicate uploads after a partial failure. A separate production-helper harness now exercises adapter word mapping, the
 real merger, track separation, object serialization and revision increments. The database extension exercises the production GRDB publication helper,
@@ -257,6 +248,9 @@ Use keyboard-operable native controls and text explanations. Do not encode state
 - Switching existing `HudDictation` or Vox daemon callers onto the new contract in the same change that introduces the contract
 
 ## Longer native Parakeet file acceptance
+
+This record is historical. It ran through the FluidAudio adapter, which was
+removed from Hudson on October 22, 2026.
 
 The Talkie host test `nativeParakeetLongFileAcceptance` accepts
 `HUDSON_PARAKEET_LONG_AUDIO` and `HUDSON_PARAKEET_MODEL_DIR`. Supply at least
