@@ -26,9 +26,22 @@ public struct GeminiHudTTSProvider: HudTTSProviderAdapter {
         let apiKey = try await context.apiKey(for: self)
         let resolvedModel = request.model?.hudTrimmedNonEmpty ?? model
         let voice = request.voice?.hudTrimmedNonEmpty ?? defaultVoice
-        let prompt = request.instructions?.hudTrimmedNonEmpty
-            .map { "\($0)\n\n\(text)" }
-            ?? text
+        // 3.8 treats text as a verbatim transcript. Earlier models instead
+        // accept delivery instructions as part of the prompt.
+        let usesSpeechMetadata = resolvedModel == "gemini-3.8-flash-tts"
+            || resolvedModel == "gemini-3.8-flash-lite-tts"
+        let instructions = request.instructions?.hudTrimmedNonEmpty
+        var part: [String: Any] = ["text": text]
+        if let instructions {
+            if usesSpeechMetadata {
+                part["speech_metadata"] = ["style": instructions]
+            } else {
+                part["text"] = "\(instructions)\n\n\(text)"
+            }
+        }
+        let voiceConfig: [String: Any] = usesSpeechMetadata
+            ? ["voice": voice]
+            : ["prebuiltVoiceConfig": ["voiceName": voice]]
 
         var pathAllowed = CharacterSet.urlPathAllowed
         pathAllowed.remove(charactersIn: "/")
@@ -50,13 +63,11 @@ public struct GeminiHudTTSProvider: HudTTSProviderAdapter {
         urlRequest.setValue(apiKey, forHTTPHeaderField: "x-goog-api-key")
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.httpBody = try JSONSerialization.data(withJSONObject: [
-            "contents": [["parts": [["text": prompt]]]],
+            "contents": [["role": "user", "parts": [part]]],
             "generationConfig": [
                 "responseModalities": ["AUDIO"],
                 "speechConfig": [
-                    "voiceConfig": [
-                        "prebuiltVoiceConfig": ["voiceName": voice],
-                    ],
+                    "voiceConfig": voiceConfig,
                 ],
             ],
         ])
