@@ -10,6 +10,33 @@ import VoxEngine
 
 // MARK: - Fakes
 
+actor FirstCancelGate {
+    private var entered = false
+    private var released = false
+    private var enterWaiters: [CheckedContinuation<Void, Never>] = []
+    private var releaseWaiter: CheckedContinuation<Void, Never>?
+
+    func blockOnce() async {
+        guard !entered else { return }
+        entered = true
+        for waiter in enterWaiters { waiter.resume() }
+        enterWaiters.removeAll()
+        if released { return }
+        await withCheckedContinuation { releaseWaiter = $0 }
+    }
+
+    func waitUntilBlocked() async {
+        if entered { return }
+        await withCheckedContinuation { enterWaiters.append($0) }
+    }
+
+    func release() {
+        released = true
+        releaseWaiter?.resume()
+        releaseWaiter = nil
+    }
+}
+
 actor FakeLocalEngine: HudLocalSpeechEngine {
     nonisolated let info: HudLocalSpeechModelInfo
     private let states: HudLocalModelStateBroadcaster
@@ -143,17 +170,20 @@ final class FakeCloud: HudSpeechPlaybackControlling, HudSpeechCloudSynthesizing,
     private let lock = NSLock()
     let hub: HudSpeechEventHub
     let credentials: [HudSpeechProvider: String]
+    let cancelGate: FirstCancelGate?
     var script: Script = .succeed
     private(set) var spoken: [SynthesisRequest] = []
     private(set) var synthesized: [String] = []
     private var current: Task<Void, Never>?
 
-    init(hub: HudSpeechEventHub, credentials: [HudSpeechProvider: String]) {
+    init(hub: HudSpeechEventHub, credentials: [HudSpeechProvider: String], cancelGate: FirstCancelGate? = nil) {
         self.hub = hub
         self.credentials = credentials
+        self.cancelGate = cancelGate
     }
 
     var spokenModels: [String] { lock.lock(); defer { lock.unlock() }; return spoken.map(\.modelId) }
+    var spokenCount: Int { lock.lock(); defer { lock.unlock() }; return spoken.count }
 
     func speak(_ request: SynthesisRequest) async {
         lock.lock()
@@ -196,6 +226,7 @@ final class FakeCloud: HudSpeechPlaybackControlling, HudSpeechCloudSynthesizing,
     func stop() async { await cancel() }
 
     func cancel() async {
+        await cancelGate?.blockOnce()
         lock.lock()
         current?.cancel()
         lock.unlock()
@@ -224,9 +255,14 @@ final class CloudBox: @unchecked Sendable {
     private let lock = NSLock()
     private var all: [FakeCloud] = []
     var script: FakeCloud.Script = .succeed
+    let cancelGate: FirstCancelGate?
+
+    init(cancelGate: FirstCancelGate? = nil) {
+        self.cancelGate = cancelGate
+    }
 
     func make(_ credentials: [HudSpeechProvider: String], _ hub: HudSpeechEventHub) -> FakeCloud {
-        let cloud = FakeCloud(hub: hub, credentials: credentials)
+        let cloud = FakeCloud(hub: hub, credentials: credentials, cancelGate: cancelGate)
         lock.lock()
         cloud.script = script
         all.append(cloud)
@@ -409,6 +445,22 @@ func makeRouter(
 // MARK: - Speak, cancel, receipts
 
 @Suite struct HudSpeechRouterPlaybackTests {
+    @Test func overlappingStartsCannotReviveTheOlderUtterance() async throws {
+        let gate = FirstCancelGate()
+        let cloud = CloudBox(cancelGate: gate)
+        let router = makeRouter(credentials: [.openAI: "sk-test"], cloud: cloud)
+        let policy = HudSpeechPolicy.explicit(HudSpeechPreference(provider: .openAI))
+        let first = Task { await router.speak("first", policy: policy, requestId: "first") }
+        await gate.waitUntilBlocked()
+        let second = Task { await router.speak("second", policy: policy, requestId: "second") }
+        try await Task.sleep(for: .milliseconds(40))
+        await gate.release()
+
+        #expect(await first.value.outcome == .cancelled)
+        #expect(await second.value.outcome == .playbackFinished)
+        #expect(cloud.latest?.spokenCount == 1, "only the newest request may reach playback")
+    }
+
     @Test func localSpeechSeparatesGenerationFromPlayback() async {
         let engine = FakeLocalEngine(chunks: 4)
         let output = FakePCMOutput()
@@ -570,6 +622,16 @@ func makeRouter(
 // MARK: - Generate
 
 @Suite struct HudSpeechRouterGenerationTests {
+    @Test func firstAudioReceiptUsesTheFirstChunkTime() async throws {
+        let engine = FakeLocalEngine(chunks: 3, chunkDelay: .milliseconds(50))
+        let router = makeRouter(engines: [engine])
+        let generated = try await router.generate("hello", policy: .localOnly())
+        let first = try #require(generated.receipt.firstAudioMs)
+        let finished = try #require(generated.receipt.generationFinishedMs)
+        #expect(first >= 20)
+        #expect(finished - first >= 60, "first audio precedes the last two chunks")
+    }
+
     @Test func localGenerationReturnsPlayableWAV() async throws {
         let engine = FakeLocalEngine(chunks: 25)
         let output = FakePCMOutput()

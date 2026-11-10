@@ -27,6 +27,9 @@ public actor HudSpeechRouter {
     /// running one.
     private var generation: UInt64 = 0
     private var localTask: Task<HudLocalSynthesisStats, Error>?
+    /// Stops are ordered so an older request cannot cancel newer playback
+    /// after actor reentrancy lets the newer request start.
+    private var cloudCancellation: Task<Void, Never>?
 
     public init(
         credentials: [HudSpeechProvider: String] = [:],
@@ -76,9 +79,10 @@ public actor HudSpeechRouter {
     public func updateCredentials(_ next: [HudSpeechProvider: String]) async {
         let cleaned = HudSpeechSynthesizer.cleanedCredentials(next)
         guard cleaned != credentials else { return }
-        await cancel()
+        let (_, stopping) = beginInterruption()
         credentials = cleaned
         (cloudSynthesis, cloudPlayback) = makeCloud(cleaned, hub)
+        await stopping.value
     }
 
     public func localEngine(_ provider: HudVoiceProviderID) -> (any HudLocalSpeechEngine)? {
@@ -256,8 +260,7 @@ public actor HudSpeechRouter {
         let start = clock.now
         let elapsed = { Self.milliseconds(clock.now - start) }
 
-        await interrupt()
-        let token = generation
+        let token = await interrupt()
         let emit: @Sendable (HudSpeechUtterancePhase, HudSpeechRoute?, HudLocalModelState?, String?) -> Void = { phase, route, state, error in
             onEvent?(HudSpeechUtteranceEvent(requestId: requestId, phase: phase, route: route, localState: state, error: error))
         }
@@ -269,6 +272,7 @@ public actor HudSpeechRouter {
             attempts: [],
             outcome: .failed("no route")
         )
+        guard token == generation else { return cancelledReceipt(receipt, emit: emit) }
 
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
@@ -331,16 +335,30 @@ public actor HudSpeechRouter {
     /// Stop generation and audible playback. Late chunks from the stopped
     /// request are dropped. Idempotent.
     public func cancel() async {
-        await interrupt()
+        _ = await interrupt()
     }
 
-    private func interrupt() async {
+    private func beginInterruption() -> (UInt64, Task<Void, Never>) {
         generation &+= 1
+        let token = generation
         localTask?.cancel()
         localTask = nil
         pcmOutput.stop()
         hub.cancelAll()
-        await cloudPlayback.cancel()
+        let prior = cloudCancellation
+        let playback = cloudPlayback
+        let stopping = Task {
+            await prior?.value
+            await playback.cancel()
+        }
+        cloudCancellation = stopping
+        return (token, stopping)
+    }
+
+    private func interrupt() async -> UInt64 {
+        let (token, stopping) = beginInterruption()
+        await stopping.value
+        return token
     }
 
     private func cancelledReceipt(
@@ -524,6 +542,7 @@ public actor HudSpeechRouter {
     ) async throws -> HudSpeechGeneration {
         let clock = ContinuousClock()
         let start = clock.now
+        let elapsed: @Sendable () -> Int = { Self.milliseconds(clock.now - start) }
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { throw HudSpeechRoutingError.emptyText }
 
@@ -543,13 +562,13 @@ public actor HudSpeechRouter {
         for (index, route) in resolution.candidates.enumerated() {
             receipt.route = route
             do {
-                let (data, format, contentType, seconds, firstAudio) = try await generateOne(trimmed, route: route)
+                let (data, format, contentType, seconds, firstAudio) = try await generateOne(trimmed, route: route, elapsed: elapsed)
                 tried.append((route, .used))
                 receipt.attempts = Self.mergeAttempts(policy: policy, skipped: resolution.attempts, tried: tried)
                 receipt.outcome = .generated
                 receipt.audioSeconds = seconds
-                receipt.firstAudioMs = firstAudio.map { _ in Self.milliseconds(clock.now - start) }
-                receipt.generationFinishedMs = Self.milliseconds(clock.now - start)
+                receipt.firstAudioMs = firstAudio
+                receipt.generationFinishedMs = elapsed()
                 return HudSpeechGeneration(data: data, format: format, contentType: contentType, receipt: receipt)
             } catch is CancellationError {
                 receipt.outcome = .cancelled
@@ -568,7 +587,8 @@ public actor HudSpeechRouter {
 
     private func generateOne(
         _ text: String,
-        route: HudSpeechRoute
+        route: HudSpeechRoute,
+        elapsed: @escaping @Sendable () -> Int
     ) async throws -> (Data, String, String, Double?, Int?) {
         if route.delivery != .streamedPCM {
             let audio = try await cloudSynthesis.synthesize(text, modelId: route.modelId, voiceId: route.voiceId)
@@ -579,14 +599,17 @@ public actor HudSpeechRouter {
         }
         try await engine.prepare()
         let samples = HudLockedValue<[Float]>([])
+        let firstAudioMs = HudLockedValue<Int?>(nil)
         let stats = try await engine.synthesize(text, voiceId: route.voiceId) { chunk in
+            guard !chunk.isEmpty else { return }
+            firstAudioMs.mutate { if $0 == nil { $0 = elapsed() } }
             samples.mutate { $0 += chunk }
         }
         try Task.checkCancellation()
         let pcm = samples.get()
         guard !pcm.isEmpty else { throw HudSpeechError.noAudio }
         let wav = HudSpeechWAV.encode(pcm, sampleRate: engine.info.sampleRate)
-        return (wav, "wav", "audio/wav", stats.audioSeconds, stats.firstAudioMs)
+        return (wav, "wav", "audio/wav", stats.audioSeconds, firstAudioMs.get())
     }
 
     // MARK: Helpers
