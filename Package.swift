@@ -249,6 +249,40 @@ if voiceEnabled {
             path: tst + "HudsonVoiceTests"
         )
     )
+
+    // On-device speech: Gradium Phonon 31m English (Apache-2.0 weights) on
+    // Core ML, via the `ptts` package. A separate product so a host that does
+    // not want the engine or its binary framework never links it. arm64 only.
+    // The model is never fetched at build time; hosts install it explicitly.
+    //   HUDSONKIT_WITH_PHONON=0  -> no HudsonVoicePhonon, no ptts dependency
+    if environment["HUDSONKIT_WITH_PHONON"] != "0" {
+        dependencies.append(.package(url: "https://github.com/gradium-ai/xn-ptts.git", exact: "0.7.0"))
+        products.append(hudsonLibrary(name: "HudsonVoicePhonon", targets: ["HudsonVoicePhonon"]))
+        targets.append(
+            .target(
+                name: "HudsonVoicePhonon",
+                dependencies: [
+                    "HudsonVoice",
+                    .product(name: "ptts", package: "xn-ptts"),
+                ],
+                path: src + "HudsonVoicePhonon"
+            )
+        )
+        targets.append(
+            .testTarget(
+                name: "HudsonVoicePhononTests",
+                dependencies: ["HudsonVoicePhonon"],
+                path: tst + "HudsonVoicePhononTests"
+            )
+        )
+        targets.append(
+            .executableTarget(
+                name: "hudson-voice-smoke",
+                dependencies: ["HudsonVoice", "HudsonVoicePhonon"],
+                path: src + "HudsonVoiceSmoke"
+            )
+        )
+    }
 }
 
 if terminalEnabled {

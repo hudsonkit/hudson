@@ -44,7 +44,7 @@ public enum HudSpeechProvider: String, CaseIterable, Identifiable, Sendable {
         self != .system
     }
 
-    fileprivate var providerId: String {
+    var providerId: String {
         switch self {
         case .openAI: return "openai"
         case .elevenLabs: return "elevenlabs"
@@ -72,7 +72,7 @@ public enum HudSpeechProvider: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    fileprivate var modelIds: [String] {
+    var modelIds: [String] {
         switch self {
         case .openAI: return OpenAITTSProvider.supportedModelIDs
         case .elevenLabs: return ElevenLabsTTSProvider.supportedModelIDs
