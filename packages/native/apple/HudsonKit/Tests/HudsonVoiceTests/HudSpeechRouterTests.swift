@@ -174,6 +174,7 @@ final class FakeCloud: HudSpeechPlaybackControlling, HudSpeechCloudSynthesizing,
     var script: Script = .succeed
     private(set) var spoken: [SynthesisRequest] = []
     private(set) var synthesized: [String] = []
+    private(set) var synthesisOptions: [(Double?, String?)] = []
     private var current: Task<Void, Never>?
 
     init(hub: HudSpeechEventHub, credentials: [HudSpeechProvider: String], cancelGate: FirstCancelGate? = nil) {
@@ -234,9 +235,10 @@ final class FakeCloud: HudSpeechPlaybackControlling, HudSpeechCloudSynthesizing,
 
     func voices(modelId: String) async throws -> [HudSpeechVoice] { [] }
 
-    func synthesize(_ text: String, modelId: String, voiceId: String?) async throws -> HudSpeechAudio {
+    func synthesize(_ text: String, modelId: String, voiceId: String?, speed: Double?, instructions: String?) async throws -> HudSpeechAudio {
         lock.lock()
         synthesized.append(modelId)
+        synthesisOptions.append((speed, instructions))
         lock.unlock()
         if case .failBeforeAudio(let message) = script { throw HudSpeechError.synthesisFailed(message) }
         return HudSpeechAudio(
@@ -647,10 +649,16 @@ func makeRouter(
     }
 
     @Test func cloudGenerationKeepsProviderFormat() async throws {
-        let router = makeRouter(credentials: [.openAI: "sk-test"])
-        let generation = try await router.generate("hello", policy: .explicit(HudSpeechPreference(provider: .openAI)))
+        let box = CloudBox()
+        let router = makeRouter(credentials: [.openAI: "sk-test"], cloud: box)
+        let generation = try await router.generate(
+            "hello", policy: .explicit(HudSpeechPreference(provider: .openAI)),
+            speed: 1.1, instructions: "Speak warmly"
+        )
         #expect(generation.format == "mp3")
         #expect(generation.receipt.route?.modelId == HudSpeechProvider.openAI.modelIds.first)
+        #expect(box.latest?.synthesisOptions.first?.0 == 1.1)
+        #expect(box.latest?.synthesisOptions.first?.1 == "Speak warmly")
     }
 
     @Test func generationWithNoRouteThrowsWithReceipt() async {

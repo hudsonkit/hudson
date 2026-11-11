@@ -538,6 +538,8 @@ public actor HudSpeechRouter {
     public func generate(
         _ text: String,
         policy: HudSpeechPolicy,
+        speed: Double? = nil,
+        instructions: String? = nil,
         requestId: String = UUID().uuidString
     ) async throws -> HudSpeechGeneration {
         let clock = ContinuousClock()
@@ -562,8 +564,11 @@ public actor HudSpeechRouter {
         for (index, route) in resolution.candidates.enumerated() {
             receipt.route = route
             do {
-                let (data, format, contentType, seconds, firstAudio) = try await generateOne(trimmed, route: route, elapsed: elapsed)
+                let (data, format, contentType, seconds, firstAudio, voiceId) = try await generateOne(
+                    trimmed, route: route, speed: speed, instructions: instructions, elapsed: elapsed
+                )
                 tried.append((route, .used))
+                receipt.route?.voiceId = voiceId ?? route.voiceId
                 receipt.attempts = Self.mergeAttempts(policy: policy, skipped: resolution.attempts, tried: tried)
                 receipt.outcome = .generated
                 receipt.audioSeconds = seconds
@@ -588,11 +593,15 @@ public actor HudSpeechRouter {
     private func generateOne(
         _ text: String,
         route: HudSpeechRoute,
+        speed: Double?,
+        instructions: String?,
         elapsed: @escaping @Sendable () -> Int
-    ) async throws -> (Data, String, String, Double?, Int?) {
+    ) async throws -> (Data, String, String, Double?, Int?, String?) {
         if route.delivery != .streamedPCM {
-            let audio = try await cloudSynthesis.synthesize(text, modelId: route.modelId, voiceId: route.voiceId)
-            return (audio.data, audio.format, audio.contentType, nil, nil)
+            let audio = try await cloudSynthesis.synthesize(
+                text, modelId: route.modelId, voiceId: route.voiceId, speed: speed, instructions: instructions
+            )
+            return (audio.data, audio.format, audio.contentType, nil, nil, audio.voiceId.isEmpty ? nil : audio.voiceId)
         }
         guard let engine = localEngines[route.provider] else {
             throw HudSpeechError.unknownModel(route.modelId)
@@ -609,7 +618,7 @@ public actor HudSpeechRouter {
         let pcm = samples.get()
         guard !pcm.isEmpty else { throw HudSpeechError.noAudio }
         let wav = HudSpeechWAV.encode(pcm, sampleRate: engine.info.sampleRate)
-        return (wav, "wav", "audio/wav", stats.audioSeconds, firstAudioMs.get())
+        return (wav, "wav", "audio/wav", stats.audioSeconds, firstAudioMs.get(), route.voiceId ?? engine.info.defaultVoiceId)
     }
 
     // MARK: Helpers
@@ -670,14 +679,10 @@ extension SpeechOutputPhase {
 /// voice lists. A seam for tests.
 protocol HudSpeechCloudSynthesizing: Sendable {
     func voices(modelId: String) async throws -> [HudSpeechVoice]
-    func synthesize(_ text: String, modelId: String, voiceId: String?) async throws -> HudSpeechAudio
+    func synthesize(_ text: String, modelId: String, voiceId: String?, speed: Double?, instructions: String?) async throws -> HudSpeechAudio
 }
 
-extension HudSpeechSynthesizer: HudSpeechCloudSynthesizing {
-    func synthesize(_ text: String, modelId: String, voiceId: String?) async throws -> HudSpeechAudio {
-        try await synthesize(text, modelId: modelId, voiceId: voiceId, speed: nil, instructions: nil)
-    }
-}
+extension HudSpeechSynthesizer: HudSpeechCloudSynthesizing {}
 
 /// Fans Vox playback events out to the attempt waiting on each request id.
 final class HudSpeechEventHub: @unchecked Sendable {
