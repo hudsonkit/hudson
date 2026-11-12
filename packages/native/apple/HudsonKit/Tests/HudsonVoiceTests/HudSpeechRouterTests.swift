@@ -10,6 +10,12 @@ import VoxEngine
 
 // MARK: - Fakes
 
+extension HudVoiceProviderID {
+    /// A stand-in on-device engine. HudsonVoice names no engine of its own.
+    static let testEngine = HudVoiceProviderID(rawValue: "test-engine")
+    static let otherEngine = HudVoiceProviderID(rawValue: "other-engine")
+}
+
 actor FirstCancelGate {
     private var entered = false
     private var released = false
@@ -50,7 +56,7 @@ actor FakeLocalEngine: HudLocalSpeechEngine {
     private(set) var producedChunks = 0
 
     init(
-        provider: HudVoiceProviderID = .phonon,
+        provider: HudVoiceProviderID = .testEngine,
         state: HudLocalModelState = .installed,
         chunks: Int = 3,
         chunkDelay: Duration = .milliseconds(5)
@@ -83,7 +89,12 @@ actor FakeLocalEngine: HudLocalSpeechEngine {
 
     func currentState() async -> HudLocalModelState { states.current }
     func stateUpdates() async -> AsyncStream<HudLocalModelState> { states.stream() }
-    func install() async throws { installCount += 1 }
+    func install() async throws {
+        installCount += 1
+        states.send(.downloading(0.5))
+        states.send(.verifying)
+        states.send(.installed)
+    }
     func cancelInstall() async {}
     func uninstall() async throws { states.send(.notInstalled) }
     func verify() async throws {}
@@ -321,14 +332,14 @@ func makeRouter(
 
     @Test func cloudFirstFallsToInstalledLocalEngineAndSaysWhy() async {
         let router = makeRouter(engines: [FakeLocalEngine()])
-        let resolution = await router.resolve(.cloudFirst())
-        #expect(resolution.route?.provider == .phonon)
+        let resolution = await router.resolve(router.cloudFirstPolicy())
+        #expect(resolution.route?.provider == .testEngine)
         #expect(resolution.route?.isLocal == true)
         #expect(resolution.attempts.map(\.outcome) == [.skipped(.missingCredential), .skipped(.missingCredential)])
 
-        let receipt = await router.speak("hello", policy: .cloudFirst())
+        let receipt = await router.speak("hello", policy: await router.cloudFirstPolicy())
         #expect(receipt.outcome == .playbackFinished)
-        #expect(receipt.route?.provider == .phonon)
+        #expect(receipt.route?.provider == .testEngine)
         #expect(receipt.usedFallback)
         #expect(receipt.fallbackReason == "elevenLabs: no credential")
     }
@@ -349,7 +360,7 @@ func makeRouter(
         let router = makeRouter(credentials: [.openAI: "sk-test", .elevenLabs: "el-test"], engines: [engine], cloud: cloud)
         let policy = HudSpeechPolicy(
             preferences: [
-                HudSpeechPreference(provider: .phonon),
+                HudSpeechPreference(provider: .testEngine),
                 HudSpeechPreference(provider: .openAI),
                 HudSpeechPreference(provider: .elevenLabs),
             ],
@@ -368,7 +379,7 @@ func makeRouter(
     @Test func modelIdsStayWithTheirProvider() async {
         let router = makeRouter(credentials: [.openAI: "sk-test"], engines: [FakeLocalEngine()])
         let mismatch = HudSpeechPreference(provider: .openAI, modelId: "eleven_multilingual_v2")
-        let local = HudSpeechPreference(provider: .phonon, modelId: "tts-1")
+        let local = HudSpeechPreference(provider: .testEngine, modelId: "tts-1")
         let resolution = await router.resolve(HudSpeechPolicy(preferences: [mismatch, local, HudSpeechPreference(provider: .system)]))
         #expect(resolution.attempts.map(\.outcome) == [
             .skipped(.modelProviderMismatch("eleven_multilingual_v2")),
@@ -380,7 +391,7 @@ func makeRouter(
 
     @Test func unknownLocalVoiceIsSkipped() async {
         let router = makeRouter(engines: [FakeLocalEngine()])
-        let resolution = await router.resolve(.explicit(HudSpeechPreference(provider: .phonon, voiceId: "Nobody")))
+        let resolution = await router.resolve(.explicit(HudSpeechPreference(provider: .testEngine, voiceId: "Nobody")))
         #expect(resolution.attempts.first?.outcome == .skipped(.unknownVoice("Nobody")))
     }
 
@@ -408,7 +419,7 @@ func makeRouter(
     @Test func fallbackNoneStopsAfterFirst() async {
         let router = makeRouter(engines: [FakeLocalEngine()])
         let policy = HudSpeechPolicy(
-            preferences: [HudSpeechPreference(provider: .openAI), HudSpeechPreference(provider: .phonon)],
+            preferences: [HudSpeechPreference(provider: .openAI), HudSpeechPreference(provider: .testEngine)],
             fallback: .none
         )
         let resolution = await router.resolve(policy)
@@ -419,18 +430,18 @@ func makeRouter(
     @Test func keyChangesReRouteAndRebuildCloud() async {
         let cloud = CloudBox()
         let router = makeRouter(engines: [FakeLocalEngine()], cloud: cloud)
-        #expect(await router.resolve(.cloudFirst()).route?.provider == .phonon)
+        #expect(await router.resolve(router.cloudFirstPolicy()).route?.provider == .testEngine)
 
         await router.updateCredentials([.elevenLabs: "  el-key  "])
         #expect(cloud.builds == 2)
         #expect(cloud.latest?.credentials == [.elevenLabs: "el-key"])
-        #expect(await router.resolve(.cloudFirst()).route?.provider == .elevenLabs)
+        #expect(await router.resolve(router.cloudFirstPolicy()).route?.provider == .elevenLabs)
 
         await router.updateCredentials([.elevenLabs: "el-key"])
         #expect(cloud.builds == 2, "unchanged keys do not rebuild")
 
         await router.updateCredentials([:])
-        #expect(await router.resolve(.cloudFirst()).route?.provider == .phonon)
+        #expect(await router.resolve(router.cloudFirstPolicy()).route?.provider == .testEngine)
     }
 
     @Test func catalogListsUnavailableModelsWithoutNetwork() async {
@@ -439,8 +450,8 @@ func makeRouter(
         #expect(catalog.provider(.openAI)?.availability == .missingCredential)
         #expect(catalog.provider(.openAI)?.models.contains { $0.id == "gpt-4o-mini-tts" } == true)
         #expect(catalog.provider(.system)?.availability == .available)
-        #expect(catalog.provider(.phonon)?.availability == .notInstalled)
-        #expect(catalog.provider(.phonon)?.isLocal == true)
+        #expect(catalog.provider(.testEngine)?.availability == .notInstalled)
+        #expect(catalog.provider(.testEngine)?.isLocal == true)
     }
 }
 
@@ -469,7 +480,7 @@ func makeRouter(
         output.playDuration = .milliseconds(50)
         let router = makeRouter(engines: [engine], output: output)
         let log = EventLog()
-        let receipt = await router.speak("hello", policy: .localOnly(), requestId: "r1") { log.append($0) }
+        let receipt = await router.speak("hello", policy: await router.localOnlyPolicy(), requestId: "r1") { log.append($0) }
 
         #expect(receipt.requestId == "r1")
         #expect(receipt.outcome == .playbackFinished)
@@ -492,9 +503,9 @@ func makeRouter(
     @Test func warmEngineIsReused() async {
         let engine = FakeLocalEngine()
         let router = makeRouter(engines: [engine])
-        _ = await router.speak("one", policy: .localOnly())
+        _ = await router.speak("one", policy: await router.localOnlyPolicy())
         let log = EventLog()
-        _ = await router.speak("two", policy: .localOnly()) { log.append($0) }
+        _ = await router.speak("two", policy: await router.localOnlyPolicy()) { log.append($0) }
         #expect(!log.phases.contains(.preparing), "a ready engine skips preparing")
         #expect(await engine.currentState() == .ready)
     }
@@ -504,7 +515,7 @@ func makeRouter(
         let output = FakePCMOutput()
         let router = makeRouter(engines: [engine], output: output)
         let log = EventLog()
-        let speaking = Task { await router.speak("long", policy: .localOnly()) { log.append($0) } }
+        let speaking = Task { await router.speak("long", policy: await router.localOnlyPolicy()) { log.append($0) } }
         try await Task.sleep(for: .milliseconds(80))
         await router.cancel()
         let receipt = await speaking.value
@@ -521,10 +532,10 @@ func makeRouter(
     @Test func newRequestBargesIn() async throws {
         let engine = FakeLocalEngine(chunks: 40, chunkDelay: .milliseconds(10))
         let router = makeRouter(engines: [engine])
-        let first = Task { await router.speak("first", policy: .localOnly(), requestId: "first") }
+        let first = Task { await router.speak("first", policy: await router.localOnlyPolicy(), requestId: "first") }
         try await Task.sleep(for: .milliseconds(50))
         await engine.configure(chunks: 2)
-        let second = await router.speak("second", policy: .localOnly(), requestId: "second")
+        let second = await router.speak("second", policy: await router.localOnlyPolicy(), requestId: "second")
         #expect(await first.value.outcome == .cancelled)
         #expect(second.outcome == .playbackFinished)
     }
@@ -532,9 +543,9 @@ func makeRouter(
     @Test func voiceSwitchingPassesProviderCorrectVoices() async {
         let engine = FakeLocalEngine()
         let router = makeRouter(engines: [engine])
-        _ = await router.speak("a", policy: .explicit(HudSpeechPreference(provider: .phonon, voiceId: "Alfie")))
-        _ = await router.speak("b", policy: .explicit(HudSpeechPreference(provider: .phonon, voiceId: "default")))
-        _ = await router.speak("c", policy: .explicit(HudSpeechPreference(provider: .phonon)))
+        _ = await router.speak("a", policy: .explicit(HudSpeechPreference(provider: .testEngine, voiceId: "Alfie")))
+        _ = await router.speak("b", policy: .explicit(HudSpeechPreference(provider: .testEngine, voiceId: "default")))
+        _ = await router.speak("c", policy: .explicit(HudSpeechPreference(provider: .testEngine)))
         #expect(await engine.voicesRequested == ["Alfie", "default", nil])
     }
 
@@ -543,11 +554,11 @@ func makeRouter(
         await engine.configure(failBeforeAudio: "model broke")
         let cloud = CloudBox()
         let router = makeRouter(engines: [engine], cloud: cloud)
-        let receipt = await router.speak("hello", policy: .localOnly())
+        let receipt = await router.speak("hello", policy: await router.localOnlyPolicy())
         #expect(receipt.outcome == .playbackFinished)
         #expect(receipt.route?.provider == .system)
         #expect(receipt.attempts.map(\.outcome) == [.failed("model broke"), .used])
-        #expect(receipt.fallbackReason == "phonon failed: model broke")
+        #expect(receipt.fallbackReason == "test-engine failed: model broke")
         #expect(cloud.latest?.spokenModels == ["avspeech:system"])
     }
 
@@ -556,12 +567,12 @@ func makeRouter(
         await engine.configure(failBeforeAudio: "model broke")
         let router = makeRouter(engines: [engine])
         let policy = HudSpeechPolicy(
-            preferences: [HudSpeechPreference(provider: .phonon), HudSpeechPreference(provider: .system)],
+            preferences: [HudSpeechPreference(provider: .testEngine), HudSpeechPreference(provider: .system)],
             fallback: .whenUnavailable
         )
         let receipt = await router.speak("hello", policy: policy)
         #expect(receipt.outcome == .failed("model broke"))
-        #expect(receipt.route?.provider == .phonon)
+        #expect(receipt.route?.provider == .testEngine)
     }
 
     @Test func failureAfterAudioIsNotRetried() async {
@@ -569,7 +580,7 @@ func makeRouter(
         await engine.configure(failAfterChunks: 2)
         let cloud = CloudBox()
         let router = makeRouter(engines: [engine], cloud: cloud)
-        let receipt = await router.speak("hello", policy: .localOnly())
+        let receipt = await router.speak("hello", policy: await router.localOnlyPolicy())
         #expect(receipt.outcome == .failed("broke mid-utterance"))
         #expect(receipt.firstAudioMs != nil)
         #expect(cloud.latest?.spokenModels.isEmpty == true, "nothing is spoken twice")
@@ -595,8 +606,8 @@ func makeRouter(
         let cloud = CloudBox()
         cloud.script = .failBeforeAudio("401 invalid key")
         let router = makeRouter(credentials: [.elevenLabs: "bad"], engines: [FakeLocalEngine()], cloud: cloud)
-        let receipt = await router.speak("hello", policy: .cloudFirst())
-        #expect(receipt.route?.provider == .phonon)
+        let receipt = await router.speak("hello", policy: await router.cloudFirstPolicy())
+        #expect(receipt.route?.provider == .testEngine)
         #expect(receipt.outcome == .playbackFinished)
         #expect(receipt.fallbackReason == "elevenLabs failed: 401 invalid key")
     }
@@ -606,7 +617,7 @@ func makeRouter(
         let output = FakePCMOutput()
         let router = makeRouter(engines: [engine], output: output)
         let text = String(repeating: "This is a long sentence for the local engine. ", count: 200)
-        let receipt = await router.speak(text, policy: .localOnly())
+        let receipt = await router.speak(text, policy: await router.localOnlyPolicy())
         #expect(receipt.outcome == .playbackFinished)
         #expect(output.acceptedCount == 300)
         #expect(receipt.audioSeconds == 24)
@@ -615,7 +626,7 @@ func makeRouter(
     @Test func emptyTextFailsWithoutRouting() async {
         let cloud = CloudBox()
         let router = makeRouter(cloud: cloud)
-        let receipt = await router.speak("   ", policy: .cloudFirst())
+        let receipt = await router.speak("   ", policy: await router.cloudFirstPolicy())
         guard case .failed = receipt.outcome else { Issue.record("expected failure"); return }
         #expect(cloud.latest?.spokenModels.isEmpty == true)
     }
@@ -627,7 +638,7 @@ func makeRouter(
     @Test func firstAudioReceiptUsesTheFirstChunkTime() async throws {
         let engine = FakeLocalEngine(chunks: 3, chunkDelay: .milliseconds(50))
         let router = makeRouter(engines: [engine])
-        let generated = try await router.generate("hello", policy: .localOnly())
+        let generated = try await router.generate("hello", policy: await router.localOnlyPolicy())
         let first = try #require(generated.receipt.firstAudioMs)
         let finished = try #require(generated.receipt.generationFinishedMs)
         #expect(first >= 20)
@@ -638,13 +649,13 @@ func makeRouter(
         let engine = FakeLocalEngine(chunks: 25)
         let output = FakePCMOutput()
         let router = makeRouter(engines: [engine], output: output)
-        let generation = try await router.generate("hello", policy: .localOnly())
+        let generation = try await router.generate("hello", policy: await router.localOnlyPolicy())
         #expect(generation.format == "wav")
         #expect(generation.contentType == "audio/wav")
         #expect(String(data: generation.data.prefix(4), encoding: .ascii) == "RIFF")
         #expect(HudSpeechWAV.duration(of: generation.data) == 2.0)
         #expect(generation.receipt.outcome == .generated)
-        #expect(generation.receipt.route?.provider == .phonon)
+        #expect(generation.receipt.route?.provider == .testEngine)
         #expect(output.acceptedCount == 0, "generation does not play")
     }
 
@@ -664,7 +675,7 @@ func makeRouter(
     @Test func generationWithNoRouteThrowsWithReceipt() async {
         let router = makeRouter()
         do {
-            _ = try await router.generate("hello", policy: .explicit(HudSpeechPreference(provider: .phonon)))
+            _ = try await router.generate("hello", policy: .explicit(HudSpeechPreference(provider: .testEngine)))
             Issue.record("expected throw")
         } catch let error as HudSpeechRoutingError {
             #expect(error.receipt?.attempts.first?.outcome == .skipped(.unknownProvider))
@@ -678,4 +689,66 @@ func makeRouter(
         #expect(wav.count == 44 + 8)
         #expect(HudSpeechWAV.duration(of: wav) == 4.0 / 24_000)
     }
+}
+
+// MARK: - Registered engines, policies and preload
+
+@Suite struct HudSpeechLocalEngineRegistryTests {
+    @Test func policiesFollowRegisteredEnginesNotANamedOne() async {
+        let router = makeRouter(engines: [FakeLocalEngine(), FakeLocalEngine(provider: .otherEngine)])
+        #expect(await router.localEngineIDs == [.testEngine, .otherEngine])
+        #expect(await router.localOnlyPolicy().preferences.map(\.provider) == [.testEngine, .otherEngine, .system])
+
+        let preferred = await router.localOnlyPolicy(preferring: .otherEngine, voiceId: "Alfie")
+        #expect(preferred.preferences.map(\.provider) == [.otherEngine, .testEngine, .system])
+        #expect(preferred.preferences.first?.voiceId == "Alfie")
+        #expect(preferred.preferences.dropFirst().allSatisfy { $0.voiceId == nil }, "voices never carry to another provider")
+        #expect(preferred.locality == .localOnly)
+
+        let cloud = await router.cloudFirstPolicy(preferring: .otherEngine)
+        #expect(cloud.preferences.map(\.provider) == [.elevenLabs, .openAI, .otherEngine, .testEngine, .system])
+    }
+
+    @Test func noRegisteredEngineLeavesTheOSVoice() async {
+        let router = makeRouter()
+        #expect(await router.localOnlyPolicy().preferences.map(\.provider) == [.system])
+        #expect(await router.localOnlyPolicy(preferring: .testEngine).preferences.map(\.provider) == [.system],
+                "an unregistered preference is not invented")
+        #expect(HudSpeechPolicy.localOnly().preferences.map(\.provider) == [.system])
+    }
+
+    @Test func preloadInstallsThenWarmsAndReportsStates() async throws {
+        let engine = FakeLocalEngine(state: .notInstalled)
+        let router = makeRouter(engines: [engine])
+        let seen = Locked<[HudLocalModelState]>([])
+        try await router.preload(.testEngine) { state in seen.mutate { $0.append(state) } }
+        #expect(await engine.installCount == 1)
+        #expect(await engine.prepareCount == 1)
+        #expect(await engine.currentState() == .ready)
+        try await Task.sleep(for: .milliseconds(20))
+        #expect(seen.get().contains(.downloading(0.5)))
+        #expect(await router.resolve(router.localOnlyPolicy()).route?.provider == .testEngine)
+    }
+
+    @Test func preloadSkipsInstallWhenOnDisk() async throws {
+        let engine = FakeLocalEngine(state: .installed)
+        let router = makeRouter(engines: [engine])
+        try await router.preload(.testEngine)
+        #expect(await engine.installCount == 0)
+        #expect(await engine.prepareCount == 1)
+    }
+
+    @Test func preloadRejectsUnknownAndUnsupportedEngines() async {
+        let router = makeRouter(engines: [FakeLocalEngine(state: .unsupported("Intel Mac"))])
+        await #expect(throws: HudSpeechError.unknownModel("other-engine")) { try await router.preload(.otherEngine) }
+        await #expect(throws: HudLocalModelFailure.self) { try await router.preload(.testEngine) }
+    }
+}
+
+final class Locked<Value>: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value: Value
+    init(_ value: Value) { self.value = value }
+    func get() -> Value { lock.lock(); defer { lock.unlock() }; return value }
+    func mutate(_ body: (inout Value) -> Void) { lock.lock(); body(&value); lock.unlock() }
 }

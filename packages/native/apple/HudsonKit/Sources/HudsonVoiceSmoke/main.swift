@@ -87,27 +87,27 @@ do {
 } catch {
     print("prepare failed:", error.localizedDescription)
     // Still show the receipt for the local-only policy: no cloud escalation.
-    let receipt = await router.speak(text, policy: .localOnly())
+    let receipt = await router.speak(text, policy: await router.localOnlyPolicy())
     print(json(receipt))
     exit(2)
 }
 print("prepare:", ms(clock.now - tPrepare), "ms; rss", Int(rssBefore), "->", Int(rssMB()), "MB")
 
 // Generation only: playable WAV through the same engine.
-let generation = try await router.generate(text, policy: .localOnly())
+let generation = try await router.generate(text, policy: await router.localOnlyPolicy())
 let wavURL = outDir.appending(path: "hudson-phonon-smoke.wav")
 try generation.data.write(to: wavURL)
 print("generated:", wavURL.path, generation.data.count, "bytes,", HudSpeechWAV.duration(of: generation.data) ?? 0, "s")
 print("generate receipt:", json(generation.receipt))
 
 // Fallback receipt: cloud-first with no credentials lands on Phonon.
-let resolution = await router.resolve(.cloudFirst())
+let resolution = await router.resolve(router.cloudFirstPolicy())
 print("cloudFirst route without keys:", resolution.route.map { "\($0.provider) \($0.modelId)" } ?? "none")
 
 if shouldPlay {
     for pass in 1...2 {
         let events = HudEventLog()
-        let receipt = await router.speak(text, policy: .cloudFirst(), requestId: "smoke-live-\(pass)") { event in
+        let receipt = await router.speak(text, policy: await router.cloudFirstPolicy(), requestId: "smoke-live-\(pass)") { event in
             events.append("\(event.phase.rawValue)\(event.localState.map { "(\($0))" } ?? "")")
         }
         print("live pass \(pass) phases:", events.lines.joined(separator: " > "))
@@ -117,7 +117,7 @@ if shouldPlay {
     // Barge-in: cancel shortly after first audio; nothing plays afterwards.
     let cancelEvents = HudEventLog()
     let speaking = Task {
-        await router.speak(text, policy: .localOnly(), requestId: "smoke-cancel") { event in
+        await router.speak(text, policy: await router.localOnlyPolicy(), requestId: "smoke-cancel") { event in
             cancelEvents.append(event.phase.rawValue)
         }
     }

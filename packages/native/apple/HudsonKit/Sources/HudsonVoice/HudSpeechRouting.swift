@@ -12,7 +12,8 @@ import Foundation
 // MARK: - Identity
 
 /// Names one speech backend: a Vox-backed cloud provider, the OS voice, or a
-/// registered on-device engine such as Phonon.
+/// registered on-device engine. An engine's product declares its own id;
+/// HudsonVoice names none of them.
 public struct HudVoiceProviderID: RawRepresentable, Hashable, Codable, Sendable, CustomStringConvertible {
     public let rawValue: String
 
@@ -31,8 +32,6 @@ public struct HudVoiceProviderID: RawRepresentable, Hashable, Codable, Sendable,
     public static let nvidia = HudVoiceProviderID(.nvidia)
     public static let groq = HudVoiceProviderID(.groq)
     public static let gemini = HudVoiceProviderID(.gemini)
-    /// Gradium Phonon, served by the `HudsonVoicePhonon` product.
-    public static let phonon = HudVoiceProviderID(rawValue: "phonon")
 
     /// The Vox-backed provider with this id, including `system`. Nil for an
     /// on-device engine registered with the router.
@@ -105,24 +104,25 @@ public struct HudSpeechPolicy: Hashable, Codable, Sendable {
         HudSpeechPolicy(preferences: [preference], fallback: .none, locality: locality)
     }
 
-    /// A ready-made order: ElevenLabs, then OpenAI, then an installed local
-    /// engine, then the OS voice. Hosts may use it or state their own order.
-    public static func cloudFirst(localEngine: HudVoiceProviderID? = .phonon) -> HudSpeechPolicy {
+    /// A ready-made order: ElevenLabs, then OpenAI, then the given local
+    /// engines in order, then the OS voice. `HudSpeechRouter.cloudFirstPolicy`
+    /// fills in the engines the router has registered.
+    public static func cloudFirst(localEngines: [HudVoiceProviderID] = []) -> HudSpeechPolicy {
         var preferences: [HudSpeechPreference] = [
             HudSpeechPreference(provider: .elevenLabs),
             HudSpeechPreference(provider: .openAI),
         ]
-        if let localEngine {
-            preferences.append(HudSpeechPreference(provider: localEngine))
-        }
+        preferences += localEngines.map { HudSpeechPreference(provider: $0) }
         preferences.append(HudSpeechPreference(provider: .system))
         return HudSpeechPolicy(preferences: preferences)
     }
 
-    /// Installed local engine first, OS voice second, never the network.
-    public static func localOnly(localEngine: HudVoiceProviderID = .phonon) -> HudSpeechPolicy {
+    /// The given local engines in order, then the OS voice, never the
+    /// network. `HudSpeechRouter.localOnlyPolicy` fills in the engines the
+    /// router has registered.
+    public static func localOnly(localEngines: [HudVoiceProviderID] = []) -> HudSpeechPolicy {
         HudSpeechPolicy(
-            preferences: [HudSpeechPreference(provider: localEngine), HudSpeechPreference(provider: .system)],
+            preferences: localEngines.map { HudSpeechPreference(provider: $0) } + [HudSpeechPreference(provider: .system)],
             fallback: .whenUnavailableOrFailed,
             locality: .localOnly
         )

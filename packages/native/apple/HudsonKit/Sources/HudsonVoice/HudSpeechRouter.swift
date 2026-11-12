@@ -11,8 +11,9 @@ import VoxAppleSpeech
 /// speaking (barge-in). `cancel()` stops generation and queued audio; no
 /// audio from a cancelled request plays afterwards.
 ///
-/// The router never downloads a model. Local engines are used only when
-/// already installed; installing is the host's explicit call on the engine.
+/// The router never downloads a model on its own. Local engines are used only
+/// when already installed; installing is the host's explicit call, through
+/// `preload(_:onState:)` or on the engine itself.
 public actor HudSpeechRouter {
     private var credentials: [HudSpeechProvider: String]
     private var cloudSynthesis: any HudSpeechCloudSynthesizing
@@ -87,6 +88,77 @@ public actor HudSpeechRouter {
 
     public func localEngine(_ provider: HudVoiceProviderID) -> (any HudLocalSpeechEngine)? {
         localEngines[provider]
+    }
+
+    /// The registered local engines, in registration order.
+    public var localEngineIDs: [HudVoiceProviderID] { localOrder }
+
+    // MARK: Policies
+
+    /// On-device only: `preferring` first (with its voice), then the other
+    /// registered engines in order, then the OS voice.
+    public func localOnlyPolicy(preferring: HudVoiceProviderID? = nil, voiceId: String? = nil) -> HudSpeechPolicy {
+        var policy = HudSpeechPolicy.localOnly(localEngines: ordered(preferring: preferring))
+        policy.applyVoice(voiceId, to: preferring)
+        return policy
+    }
+
+    /// ElevenLabs, OpenAI, then the registered engines (`preferring` first),
+    /// then the OS voice.
+    public func cloudFirstPolicy(preferring: HudVoiceProviderID? = nil, voiceId: String? = nil) -> HudSpeechPolicy {
+        var policy = HudSpeechPolicy.cloudFirst(localEngines: ordered(preferring: preferring))
+        policy.applyVoice(voiceId, to: preferring)
+        return policy
+    }
+
+    private func ordered(preferring: HudVoiceProviderID?) -> [HudVoiceProviderID] {
+        guard let preferring, localEngines[preferring] != nil else { return localOrder }
+        return [preferring] + localOrder.filter { $0 != preferring }
+    }
+
+    // MARK: Preload
+
+    /// Make a registered local engine ready to speak: install it when it is
+    /// not on disk, then load and warm it. This is the host's explicit
+    /// acquisition, the counterpart of Vox's `preload(modelId:)`; nothing
+    /// else downloads. `onState` receives the engine's states as they change,
+    /// download progress included. Cancel the calling task to stop.
+    public func preload(
+        _ provider: HudVoiceProviderID,
+        onState: (@Sendable (HudLocalModelState) -> Void)? = nil
+    ) async throws {
+        guard let engine = localEngines[provider] else {
+            throw HudSpeechError.unknownModel(provider.rawValue)
+        }
+        // Subscribe before acting so no state is missed; the stream buffers.
+        var watcher: Task<Void, Never>?
+        if let onState {
+            let updates = await engine.stateUpdates()
+            watcher = Task {
+                for await state in updates {
+                    onState(state)
+                    if state == .ready { break }
+                    if case .failed = state { break }
+                }
+            }
+        }
+        defer { watcher?.cancel() }
+        let state = await engine.currentState()
+        if case .unsupported(let detail) = state {
+            throw HudLocalModelFailure(kind: .unsupported, message: detail)
+        }
+        if !state.isInstalled {
+            try await engine.install()
+        }
+        try Task.checkCancellation()
+        try await engine.prepare()
+        // Let the watcher deliver through `.ready`, but never hang on an
+        // engine that settles without announcing it.
+        if let watcher {
+            let stop = Task { try? await Task.sleep(for: .seconds(1)); watcher.cancel() }
+            await watcher.value
+            stop.cancel()
+        }
     }
 
     // MARK: Catalog
@@ -755,5 +827,14 @@ final class HudLockedValue<Value>: @unchecked Sendable {
         lock.lock()
         body(&value)
         lock.unlock()
+    }
+}
+
+extension HudSpeechPolicy {
+    /// Give `provider`'s preference this voice; voices never carry to another provider.
+    mutating func applyVoice(_ voiceId: String?, to provider: HudVoiceProviderID?) {
+        guard let voiceId, let provider,
+              let index = preferences.firstIndex(where: { $0.provider == provider }) else { return }
+        preferences[index].voiceId = voiceId
     }
 }
