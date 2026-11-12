@@ -38,6 +38,12 @@ public struct HudPhononModelSource: Sendable, Equatable {
     )
 }
 
+extension HudVoiceProviderID {
+    /// Gradium Phonon, served by this product. Declared here, not in
+    /// HudsonVoice: the router knows engines only by what a host registers.
+    public static let phonon = HudVoiceProviderID(rawValue: "phonon")
+}
+
 /// Gradium Phonon 31m English as a `HudLocalSpeechEngine`.
 ///
 /// Creating the engine and reading its state touch only the disk. Nothing

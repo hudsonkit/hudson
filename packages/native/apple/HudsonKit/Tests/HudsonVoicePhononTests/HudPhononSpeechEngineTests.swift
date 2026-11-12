@@ -155,7 +155,7 @@ import Testing
     @Test func routerSkipsUninstalledPhononUnderLocalOnly() async throws {
         let engine = engine(.release070)
         let router = HudSpeechRouter(localEngines: [engine])
-        let resolution = await router.resolve(.localOnly())
+        let resolution = await router.resolve(router.localOnlyPolicy())
         #expect(resolution.route?.provider == .system)
         #expect(resolution.attempts.first?.outcome == .skipped(.notInstalled))
     }
