@@ -30,6 +30,12 @@ public enum HudAppShellStatusBarSpan: String, CaseIterable, Identifiable, Sendab
 /// window's trailing and bottom edges by `inset` and rounds all four corners
 /// with one `radius`, outlined by a hairline all the way round, so the host's
 /// frame wraps it on three sides.
+///
+/// `.floatingEdges` is `.floating` with each corner and each gap set on its
+/// own, so a host can nest the stage in the window's corner (stage radius =
+/// window radius − gap) and square off a side that meets other chrome, such
+/// as an inspector, with no gap. `openEdges` leaves the hairline off the
+/// edges whose neighbour draws its own rule, so the seam stays one line.
 public enum HudAppShellStage: Equatable, Sendable {
     case flush
     case card(radius: CGFloat)
@@ -37,6 +43,27 @@ public enum HudAppShellStage: Equatable, Sendable {
     /// Use `stageInsets` to reveal the host's background around its edges.
     case roundedCard(radius: CGFloat)
     case floating(radius: CGFloat, inset: CGFloat)
+    case floatingEdges(corners: HudStageCorners, gaps: EdgeInsets, openEdges: Edge.Set = [])
+}
+
+/// One radius per corner of a floating stage.
+public struct HudStageCorners: Equatable, Sendable {
+    public var topLeading: CGFloat
+    public var bottomLeading: CGFloat
+    public var bottomTrailing: CGFloat
+    public var topTrailing: CGFloat
+
+    public init(topLeading: CGFloat, bottomLeading: CGFloat, bottomTrailing: CGFloat, topTrailing: CGFloat) {
+        self.topLeading = topLeading
+        self.bottomLeading = bottomLeading
+        self.bottomTrailing = bottomTrailing
+        self.topTrailing = topTrailing
+    }
+
+    /// The same radius at every corner.
+    public init(all radius: CGFloat) {
+        self.init(topLeading: radius, bottomLeading: radius, bottomTrailing: radius, topTrailing: radius)
+    }
 }
 
 /// Top-level app chassis for HudsonKit.
@@ -320,6 +347,34 @@ private struct HudAppShellStageSurface: ViewModifier {
                 }
                 .padding(.trailing, inset)
                 .padding(.bottom, inset)
+        case .floatingEdges(let corners, let gaps, let openEdges):
+            let shape = UnevenRoundedRectangle(
+                topLeadingRadius: corners.topLeading,
+                bottomLeadingRadius: corners.bottomLeading,
+                bottomTrailingRadius: corners.bottomTrailing,
+                topTrailingRadius: corners.topTrailing,
+                style: .continuous
+            )
+            // An open edge's stroke is pushed one line width outside the stage
+            // and clipped away; the strokes along the other edges still run to it.
+            let line = HudStrokeWidth.standard
+            let outset = EdgeInsets(
+                top: openEdges.contains(.top) ? -line : 0,
+                leading: openEdges.contains(.leading) ? -line : 0,
+                bottom: openEdges.contains(.bottom) ? -line : 0,
+                trailing: openEdges.contains(.trailing) ? -line : 0
+            )
+            content
+                .background(theme.palette.bg)
+                .clipShape(shape)
+                .overlay {
+                    shape
+                        .strokeBorder(theme.hairline.subtle, lineWidth: line)
+                        .padding(outset)
+                        .allowsHitTesting(false)
+                }
+                .clipped()
+                .padding(gaps)
         }
     }
 }
