@@ -128,6 +128,7 @@ struct HudSidebarResizeHost<
     private let footer: Footer
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.hudsonSidebarRailInset) private var railInset
     @State private var dragPreviewLabelWidth: CGFloat?
     @State private var isDragging = false
 
@@ -276,12 +277,12 @@ struct HudSidebarResizeHost<
     }
 
     private var layoutWidth: CGFloat {
-        leadingInset + HudSidebarLayout.intrinsicWidth(progress: progress, labelWidth: effectiveLabelWidth)
+        leadingInset + HudSidebarLayout.intrinsicWidth(progress: progress, labelWidth: effectiveLabelWidth, railInset: railInset)
     }
 
     private var resizePreviewOffset: CGFloat? {
         guard let dragPreviewLabelWidth else { return nil }
-        let previewWidth = leadingInset + HudSidebarLayout.railContentInset + HudSidebarLayout.railWidth
+        let previewWidth = leadingInset + railInset + HudSidebarLayout.railWidth
             + geometry.previewWidth(dragPreviewLabelWidth)
         return previewWidth - layoutWidth
     }

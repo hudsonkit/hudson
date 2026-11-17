@@ -40,6 +40,7 @@ public enum HudSidebarLayout {
     /// Space between the sidebar's leading edge and the rail glyphs, so they
     /// center under the first window control. Applied to the rows only: the
     /// selection stripe and hover band stay on the edge.
+    /// The default; hosts can narrow or widen it with `.hudsonSidebarRailInset(_:)`.
     public static var railContentInset: CGFloat { max(0, windowControlCenterX - railWidth / 2) }
 
     /// Height of the band that holds the rail's first and last rows, matching a
@@ -136,7 +137,13 @@ public enum HudSidebarLayout {
     /// width changes — the rail column stays fixed.
     /// Pass an explicit `labelWidth` when the sidebar instance overrides the default
     /// (e.g., user-resizable expanded width persisted via `@AppStorage`).
-    public static func intrinsicWidth(progress: Double, labelWidth: CGFloat = HudSidebarLayout.labelWidth) -> CGFloat {
-        railContentInset + railWidth + max(0, labelWidth * CGFloat(1 - progress))
+    /// `railInset` is the space on each side of the rail glyphs: leading always,
+    /// trailing as the sidebar compacts, so the collapsed rail is symmetric.
+    public static func intrinsicWidth(
+        progress: Double,
+        labelWidth: CGFloat = HudSidebarLayout.labelWidth,
+        railInset: CGFloat = HudSidebarLayout.railContentInset
+    ) -> CGFloat {
+        railInset + railWidth + railInset * CGFloat(progress) + max(0, labelWidth * CGFloat(1 - progress))
     }
 }

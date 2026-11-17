@@ -166,6 +166,7 @@ public struct HudNavigationSidebar<
     @Environment(\.hudTheme) private var theme
     @Environment(\.hudsonSidebarStyle) private var style
     @Environment(\.hudsonSidebarMotionMode) private var motionMode
+    @Environment(\.hudsonSidebarRailInset) private var railInset
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var hoveredID: Selection?
 
@@ -312,7 +313,7 @@ public struct HudNavigationSidebar<
         let strokeColor: Color = glass.accent ?? Color.white.opacity(0.08)
         // hudlint:disable next-line opacity
         let strokeOpacity: Double = glass.accent == nil ? 1.0 : 0.45
-        let intrinsic = HudSidebarLayout.intrinsicWidth(progress: progress, labelWidth: labelWidth)
+        let intrinsic = HudSidebarLayout.intrinsicWidth(progress: progress, labelWidth: labelWidth, railInset: railInset)
 
         return VStack(spacing: 0) {
             sidebarBody
@@ -385,7 +386,7 @@ public struct HudNavigationSidebar<
                 railColumn
                 labelColumn
             }
-            .padding(.leading, HudSidebarLayout.railContentInset)
+            .padding(.leading, railInset)
             compactAccentBar
         }
         .overlay(alignment: .topLeading) {
@@ -728,7 +729,7 @@ public struct HudNavigationSidebar<
                 anchor: .leading
             )
             .offset(
-                x: HudSidebarLayout.railContentInset + HudSidebarLayout.railWidth
+                x: railInset + HudSidebarLayout.railWidth
                     + visibleLabelWidth + HudSpacing.xs,
                 y: y + (HudSidebarLayout.rowHeight - HudSidebarCompactHoverLabel.height) / 2
             )
@@ -1147,6 +1148,7 @@ private struct SidebarSelectionUnderlay: View {
 private struct SidebarCompactAccent: View {
     let style: HudSidebarIndicatorStyle
     let accent: Color
+    @Environment(\.hudsonSidebarRailInset) private var railInset
 
     var body: some View {
         switch style {
@@ -1161,7 +1163,7 @@ private struct SidebarCompactAccent: View {
                 .frame(width: HudSidebarLayout.railWidth, alignment: .center)
                 .frame(height: HudSidebarLayout.rowHeight, alignment: .bottom)
                 // Follows the glyph, which sits in from the edge.
-                .padding(.leading, HudSidebarLayout.railContentInset)
+                .padding(.leading, railInset)
 
         case .glass:
             // Glowing vertical rod at the leading edge — soft halo (blurred capsule)
