@@ -129,6 +129,7 @@ struct HudSidebarResizeHost<
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.hudsonSidebarRailInset) private var railInset
+    @Environment(\.displayScale) private var displayScale
     @State private var dragPreviewLabelWidth: CGFloat?
     @State private var isDragging = false
 
@@ -277,7 +278,12 @@ struct HudSidebarResizeHost<
     }
 
     private var layoutWidth: CGFloat {
-        leadingInset + HudSidebarLayout.intrinsicWidth(progress: progress, labelWidth: effectiveLabelWidth, railInset: railInset)
+        leadingInset + HudSidebarLayout.intrinsicWidth(
+            progress: progress,
+            labelWidth: effectiveLabelWidth,
+            railInset: railInset,
+            trailingRule: 1 / max(displayScale, 1)
+        )
     }
 
     private var resizePreviewOffset: CGFloat? {

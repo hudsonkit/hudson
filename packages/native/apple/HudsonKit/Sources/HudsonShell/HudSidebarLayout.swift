@@ -139,11 +139,16 @@ public enum HudSidebarLayout {
     /// (e.g., user-resizable expanded width persisted via `@AppStorage`).
     /// `railInset` is the space on each side of the rail glyphs: leading always,
     /// trailing as the sidebar compacts, so the collapsed rail is symmetric.
+    /// `trailingRule` is the width of the rule drawn inside the sidebar's
+    /// trailing edge. The compact rail reserves it after the trailing inset, so
+    /// the open space before the rule is exactly inset + rail + inset.
     public static func intrinsicWidth(
         progress: Double,
         labelWidth: CGFloat = HudSidebarLayout.labelWidth,
-        railInset: CGFloat = HudSidebarLayout.railContentInset
+        railInset: CGFloat = HudSidebarLayout.railContentInset,
+        trailingRule: CGFloat = 0
     ) -> CGFloat {
-        railInset + railWidth + railInset * CGFloat(progress) + max(0, labelWidth * CGFloat(1 - progress))
+        railInset + railWidth + (railInset + trailingRule) * CGFloat(progress)
+            + max(0, labelWidth * CGFloat(1 - progress))
     }
 }

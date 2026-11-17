@@ -167,6 +167,7 @@ public struct HudNavigationSidebar<
     @Environment(\.hudsonSidebarStyle) private var style
     @Environment(\.hudsonSidebarMotionMode) private var motionMode
     @Environment(\.hudsonSidebarRailInset) private var railInset
+    @Environment(\.displayScale) private var displayScale
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var hoveredID: Selection?
 
@@ -313,7 +314,12 @@ public struct HudNavigationSidebar<
         let strokeColor: Color = glass.accent ?? Color.white.opacity(0.08)
         // hudlint:disable next-line opacity
         let strokeOpacity: Double = glass.accent == nil ? 1.0 : 0.45
-        let intrinsic = HudSidebarLayout.intrinsicWidth(progress: progress, labelWidth: labelWidth, railInset: railInset)
+        let intrinsic = HudSidebarLayout.intrinsicWidth(
+            progress: progress,
+            labelWidth: labelWidth,
+            railInset: railInset,
+            trailingRule: 1 / max(displayScale, 1)
+        )
 
         return VStack(spacing: 0) {
             sidebarBody
