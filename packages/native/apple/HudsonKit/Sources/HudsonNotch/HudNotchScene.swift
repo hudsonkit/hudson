@@ -43,6 +43,22 @@ public struct HudNotchScene {
         }
     }
 
+    /// An optional full-width row for floating displays. Physical notches keep their wings and body.
+    private(set) var islandRow: AnyView?
+    private var islandRadius: CGFloat = 0
+
+    public func singleLineIsland<Row: View>(cornerRadius: CGFloat, @ViewBuilder row: () -> Row) -> Self {
+        var copy = self
+        copy.islandRow = AnyView(row())
+        copy.islandRadius = max(0, cornerRadius)
+        return copy
+    }
+
+    public func size(for style: HudNotchRenderStyle) -> Size {
+        guard style == .island, islandRow != nil else { return size }
+        return Size(width: size.width, bottomRadius: islandRadius)
+    }
+
     /// Identifies the body. A new id cross-fades it.
     public var id: String
     public var size: Size
@@ -228,6 +244,7 @@ public struct HudNotchKeycaps: View {
 /// takes, the body below at the scene's size.
 struct HudNotchSceneLayout: View {
     var scene: HudNotchScene
+    var renderStyle: HudNotchRenderStyle
     var notchGap: CGFloat
     var shellHeight: CGFloat
     var reduceMotion: Bool
@@ -238,9 +255,29 @@ struct HudNotchSceneLayout: View {
     var close: () -> Void = {}
 
     var body: some View {
+        if renderStyle == .island, let row = scene.islandRow {
+            HStack(spacing: 4) {
+                row.frame(maxWidth: .infinity, alignment: .leading)
+                if scene.dismissible {
+                    HudNotchCloseButton(color: closeColor, action: close)
+                        .opacity(showsClose ? 1 : 0)
+                        .allowsHitTesting(showsClose)
+                        .accessibilityHidden(!showsClose)
+                }
+            }
+            .padding(.horizontal, scene.wingInset)
+            .frame(width: scene.size.width, height: shellHeight)
+            .clipped()
+            .accessibilityElement(children: .contain)
+        } else {
+            wingLayout
+        }
+    }
+
+    private var wingLayout: some View {
         let size = scene.size
         let wingWidth = max(0, (size.width - notchGap) / 2)
-        VStack(spacing: 0) {
+        return VStack(spacing: 0) {
             HStack(spacing: 0) {
                 scene.leading
                     .padding(.leading, scene.wingInset)
@@ -304,6 +341,7 @@ public struct HudNotchScenePreview: View {
     public var scene: HudNotchScene
     public var theme: HudNotchTheme
     public var configuration: HudNotchConfiguration
+    public var renderStyle: HudNotchRenderStyle
     public var notchWidth: CGFloat
     public var notchHeight: CGFloat
 
@@ -312,9 +350,11 @@ public struct HudNotchScenePreview: View {
         theme: HudNotchTheme = .hudson,
         configuration: HudNotchConfiguration = .default,
         notchWidth: CGFloat = 185,
-        notchHeight: CGFloat = 32
+        notchHeight: CGFloat = 32,
+        renderStyle: HudNotchRenderStyle = .notch
     ) {
         self.scene = scene
+        self.renderStyle = renderStyle
         self.theme = theme
         self.configuration = configuration
         self.notchWidth = notchWidth
@@ -323,14 +363,17 @@ public struct HudNotchScenePreview: View {
 
     public var body: some View {
         let shellHeight = max(notchHeight, configuration.shellHeight)
-        let open = scene.size.contentHeight > 0
+        let size = scene.size(for: renderStyle)
+        let compact = renderStyle == .island && scene.islandRow != nil
+        let open = size.contentHeight > 0
         let outline = HudNotchSilhouetteShape(
-            shoulder: configuration.topOuterRadius,
-            bottomRadius: open ? scene.size.bottomRadius : configuration.bottomRadius
+            shoulder: compact ? -size.bottomRadius : configuration.topOuterRadius,
+            bottomRadius: compact || open ? size.bottomRadius : configuration.bottomRadius
         )
         let look = open ? configuration.appearance.card : configuration.appearance.pill
         HudNotchSceneLayout(
             scene: scene,
+            renderStyle: renderStyle,
             notchGap: HudNotchMetrics.notchGap(notchWidth: notchWidth),
             shellHeight: shellHeight,
             reduceMotion: true

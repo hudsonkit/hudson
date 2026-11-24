@@ -126,7 +126,10 @@ public struct HudNotchSurface: View {
         }
 
         if controller.showsScene, let scene = controller.scene {
-            let size = scene.size
+            let size = scene.size(for: controller.renderStyle)
+            if island, scene.islandRow != nil {
+                return Silhouette(width: size.width, height: height, shoulder: -size.bottomRadius, bottom: size.bottomRadius)
+            }
             let open = size.contentHeight > 0
             return Silhouette(
                 width: size.width,
@@ -191,7 +194,7 @@ public struct HudNotchSurface: View {
     private var look: HudNotchLook {
         let appearance = controller.configuration.appearance
         if showsScene, let scene = controller.scene {
-            return scene.size.contentHeight > 0 ? appearance.card : appearance.pill
+            return scene.size(for: controller.renderStyle).contentHeight > 0 ? appearance.card : appearance.pill
         }
         return showsCard ? appearance.card : appearance.pill
     }
@@ -488,6 +491,7 @@ public struct HudNotchSurface: View {
         if let scene = controller.scene ?? controller.lastScene {
             HudNotchSceneLayout(
                 scene: scene,
+                renderStyle: controller.renderStyle,
                 notchGap: controller.notchGap,
                 shellHeight: controller.shellHeight,
                 reduceMotion: reduceMotion,
