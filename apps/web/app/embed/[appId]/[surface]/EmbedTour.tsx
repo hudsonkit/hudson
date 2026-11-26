@@ -75,16 +75,51 @@ function canvasRect(): Rect | null {
   return { top, left: 0, width: window.innerWidth, height: Math.max(0, bottom - top) };
 }
 
+/**
+ * Prefer the natural-sounding voices browsers ship (Apple premium/enhanced,
+ * Microsoft "Natural", Google's network voices) over the robotic default.
+ */
+const PREFERRED_VOICES = [
+  /\b(Ava|Zoe|Evan|Nathan|Samantha|Allison)\b.*\((Premium|Enhanced)\)/i,
+  /Microsoft (Aria|Jenny|Guy|Ava|Andrew).*Natural/i,
+  /^Google US English$/i,
+  /\b(Samantha|Ava|Allison|Serena|Daniel)\b/i,
+  /Google UK English (Female|Male)/i,
+];
+
+function pickVoice(): SpeechSynthesisVoice | undefined {
+  const voices = window.speechSynthesis.getVoices().filter(v => v.lang.toLowerCase().startsWith('en'));
+  for (const pattern of PREFERRED_VOICES) {
+    const hit = voices.find(v => pattern.test(v.name));
+    if (hit) return hit;
+  }
+  return voices.find(v => !v.localService) ?? voices.find(v => v.default) ?? voices[0];
+}
+
 function speak(text: string) {
   try {
     if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
+    const synth = window.speechSynthesis;
+    synth.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.rate = 1.02;
-    window.speechSynthesis.speak(u);
+    const voice = pickVoice();
+    if (voice) {
+      u.voice = voice;
+      u.lang = voice.lang;
+    }
+    u.rate = 0.98;
+    u.pitch = 1;
+    synth.speak(u);
   } catch {
     /* speech is a nicety; the transcript carries the reply */
   }
+}
+
+// Voices load asynchronously in Chrome; touch the list early so the first
+// reply doesn't fall back to the default voice.
+if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.addEventListener?.('voiceschanged', () => window.speechSynthesis.getVoices());
 }
 
 const STEPS: TourStep[] = [
