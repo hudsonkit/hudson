@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { useFx, type FxState } from './FxContext';
+import { useTunable } from '../useTunable';
 
 type ToolToggleKey = 'lens' | 'caliper' | 'cursor' | 'plotter';
 
@@ -84,7 +85,14 @@ export type InlineDraftingToolbarProps = {
   style?: CSSProperties;
 };
 
-export function InlineDraftingToolbar({ className, style }: InlineDraftingToolbarProps) {
+export function InlineDraftingToolbar(props: InlineDraftingToolbarProps) {
+  const tunable = useTunable();
+  // Dev / ?tune only. Keep an empty slot so the header grid stays balanced.
+  if (!tunable) return <span className={props.className} aria-hidden="true" />;
+  return <DraftingToolbarPanel {...props} />;
+}
+
+function DraftingToolbarPanel({ className, style }: InlineDraftingToolbarProps) {
   const { fx, setFx } = useFx();
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);

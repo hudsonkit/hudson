@@ -1829,15 +1829,15 @@
   content: '';
   position: absolute;
   left: 0; right: 0; top: 9px;
-  border-top: 1px solid var(--accent-line);
+  border-top: 1px solid color-mix(in oklch, var(--line) 80%, transparent);
 }
 .hudson-site .dim__h::after {
   content: '';
   position: absolute;
-  left: 0; right: 0; top: 3px;
-  height: 13px;
-  border-left: 1px solid var(--accent);
-  border-right: 1px solid var(--accent);
+  left: 0; right: 0; top: 5px;
+  height: 9px;
+  border-left: 1px solid var(--line-strong);
+  border-right: 1px solid var(--line-strong);
 }
 .hudson-site .dim__v {
   position: absolute;
@@ -1860,7 +1860,7 @@
   font-family: var(--font-mono);
   font-size: 9.5px;
   letter-spacing: 0.16em;
-  color: var(--accent);
+  color: var(--ink-3);
   background: var(--paper);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
