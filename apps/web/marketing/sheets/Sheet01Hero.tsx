@@ -128,8 +128,11 @@ export function Sheet01Hero() {
               priority="eager"
               collapse={['left', 'right']}
               workspaces={['developer-mode', 'document-lab', 'hero-studio']}
+              accent="ember"
+              apps={['hudson-docs']}
+              theme="dark"
             />
-            <EmbedReveal label="Hudson workspace" />
+            <EmbedReveal />
           </EmbedFrame>
           </LiveDimensions>
           </div>

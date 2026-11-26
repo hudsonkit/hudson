@@ -60,7 +60,14 @@ const LEGACY_QUIET_AMBER_DEFAULTS: StudioState = {
   gridMajor: 0.16,
 };
 
+/** Crisp radii + regular weight, still on amber (before the ember accent). */
+const LEGACY_CRISP_AMBER_DEFAULTS: StudioState = {
+  ...DEFAULTS,
+  accent: 'amber',
+};
+
 const REPLACED_BASELINES = [
+  LEGACY_CRISP_AMBER_DEFAULTS,
   LEGACY_QUIET_AMBER_DEFAULTS,
   LEGACY_EMERALD_DEFAULTS,
   LEGACY_AZURE_DEFAULTS,

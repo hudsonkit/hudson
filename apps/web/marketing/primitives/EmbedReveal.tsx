@@ -3,66 +3,58 @@
 import { useEffect, useRef, useState } from 'react';
 
 /**
- * EmbedReveal — the loading moment for a live embed.
+ * EmbedReveal — the first appearance of a live embed.
  *
- * Until the iframe reports `hudson:embed-ready`, the frame shows the shell as
- * a technical drawing (top bar, rails, status bar, a few window outlines)
- * that plots itself in over a fine grid. On ready, a single band of light
- * sweeps across; the drawing gives way to the live product behind it, and the
- * plate settles into a faint top rim and glow.
+ * The frame waits as a flat dark panel with one quiet loader: a hairline
+ * with a short segment gliding along it. When the embed reports it has
+ * actually painted (`hudson:embed-painted`: windows arranged, fonts ready),
+ * the product fades up out of a slight blur. No gradients, no glow.
  *
- * Mount it as a sibling of the iframe inside an `.embed-plate`.
- * Reduced motion → a plain crossfade. No ready message → reveal anyway after
- * a timeout, so the drawing can never stick.
+ * Mount it as a sibling of the iframe inside an `.embed-plate`. The iframe
+ * stays hidden while this reports `data-phase="waiting"` (CSS :has), so the
+ * shell never shows itself half-assembled.
+ *
+ * Fallbacks: `hudson:embed-ready` + a grace period (older embed bundles), and
+ * a hard timeout so the product can never stay hidden.
  */
 
-type Phase = 'drawing' | 'revealing' | 'live';
+type Phase = 'waiting' | 'revealing' | 'live';
 
-const READY_FALLBACK_MS = 6000;
-/** Ready fires as the embed's handshake mounts; give the shell a beat to paint. */
-const PAINT_GRACE_MS = 280;
 const REVEAL_MS = 900;
+const READY_GRACE_MS = 1400;
+const HARD_TIMEOUT_MS = 6000;
 
-// Window outlines in % of the frame: [left, top, width, height].
-const WINDOWS: Array<[number, number, number, number]> = [
-  [9, 16, 30, 44],
-  [43, 12, 34, 34],
-  [43, 51, 22, 30],
-  [69, 51, 22, 22],
-];
-
-export function EmbedReveal({ label = 'Workspace' }: { label?: string }) {
+export function EmbedReveal() {
   const ref = useRef<HTMLDivElement>(null);
-  const [phase, setPhase] = useState<Phase>('drawing');
+  const [phase, setPhase] = useState<Phase>('waiting');
 
   useEffect(() => {
-    const root = ref.current;
-    const plate = root?.parentElement;
+    const plate = ref.current?.parentElement;
     const iframe = plate?.querySelector('iframe');
-    if (!root || !plate) return;
+    if (!plate) return;
 
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let done = false;
     const timers: number[] = [];
+    let started = false;
 
     const reveal = () => {
-      if (done) return;
-      done = true;
-      timers.push(
-        window.setTimeout(() => {
-          setPhase('revealing');
-          plate.setAttribute('data-live', '');
-          timers.push(window.setTimeout(() => setPhase('live'), reduce ? 320 : REVEAL_MS));
-        }, PAINT_GRACE_MS),
-      );
+      if (started) return;
+      started = true;
+      // One frame so the "waiting" styles are committed before transitioning.
+      window.requestAnimationFrame(() => {
+        setPhase('revealing');
+        timers.push(window.setTimeout(() => setPhase('live'), reduce ? 350 : REVEAL_MS));
+      });
     };
 
     const onMessage = (e: MessageEvent) => {
       if (!iframe || e.source !== iframe.contentWindow) return;
-      if ((e.data as { type?: string } | null)?.type === 'hudson:embed-ready') reveal();
+      const type = (e.data as { type?: string } | null)?.type;
+      if (type === 'hudson:embed-painted') reveal();
+      else if (type === 'hudson:embed-ready') timers.push(window.setTimeout(reveal, READY_GRACE_MS));
     };
     window.addEventListener('message', onMessage);
-    timers.push(window.setTimeout(reveal, READY_FALLBACK_MS));
+    timers.push(window.setTimeout(reveal, HARD_TIMEOUT_MS));
 
     return () => {
       window.removeEventListener('message', onMessage);
@@ -73,42 +65,13 @@ export function EmbedReveal({ label = 'Workspace' }: { label?: string }) {
   return (
     <div ref={ref} className="embed-reveal" data-phase={phase} aria-hidden="true">
       {phase !== 'live' && (
-        <div className="embed-reveal__drawing">
-          <div className="embed-reveal__grid" />
-
-          {/* Chrome: drawn as single hairlines */}
-          <span className="embed-reveal__line embed-reveal__line--h" style={{ top: 48, left: 0, right: 0, ['--d' as string]: '0ms' }} />
-          <span className="embed-reveal__line embed-reveal__line--h" style={{ bottom: 34, left: 0, right: 0, ['--d' as string]: '120ms' }} />
-          <span className="embed-reveal__line embed-reveal__line--v" style={{ left: 44, top: 48, bottom: 34, ['--d' as string]: '220ms' }} />
-          <span className="embed-reveal__line embed-reveal__line--v" style={{ right: 44, top: 48, bottom: 34, ['--d' as string]: '260ms' }} />
-
-          <span className="embed-reveal__mark">HUDSONKIT</span>
-          <span className="embed-reveal__tabs">
-            <i /><i /><i /><i />
-          </span>
-
-          {/* Windows: outlines plot in, then a few "text" rules fill */}
-          {WINDOWS.map(([l, t, w, h], i) => (
-            <div
-              key={i}
-              className="embed-reveal__win"
-              style={{ left: `${l}%`, top: `${t}%`, width: `${w}%`, height: `${h}%`, ['--d' as string]: `${360 + i * 110}ms` }}
-            >
-              <svg width="100%" height="100%" preserveAspectRatio="none">
-                <rect x="0" y="0" width="100%" height="100%" rx="4" pathLength={1} />
-              </svg>
-              <span className="embed-reveal__bar" />
-              <span className="embed-reveal__rule" style={{ width: '58%' }} />
-              <span className="embed-reveal__rule" style={{ width: '42%' }} />
-              <span className="embed-reveal__rule" style={{ width: '50%' }} />
-            </div>
-          ))}
-
-          <span className="embed-reveal__caption">{label} · drawing</span>
+        <div className="embed-reveal__glass">
+          <div className="embed-reveal__loader">
+            <span className="embed-reveal__track" />
+            <span className="embed-reveal__label">Loading workspace</span>
+          </div>
         </div>
       )}
-
-      {phase === 'revealing' && <div className="embed-reveal__sweep" />}
     </div>
   );
 }

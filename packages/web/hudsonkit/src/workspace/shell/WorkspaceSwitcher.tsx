@@ -18,7 +18,7 @@ export function WorkspaceSwitcher({ workspaces, activeId, onSwitch }: WorkspaceS
   }
 
   return (
-    <div className="flex items-center gap-1 min-w-0 max-w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" data-workspace-switcher>
+    <div className="flex items-center gap-1 min-w-0 max-w-full overflow-x-auto" style={{ scrollbarWidth: 'none' }} data-workspace-switcher>
       {workspaces.map(ws => {
         const isActive = ws.id === activeId;
         return (

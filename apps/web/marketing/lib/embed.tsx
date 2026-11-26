@@ -65,6 +65,12 @@ export type HudsonEmbedProps = {
   collapse?: Array<'left' | 'right'>;
   /** Other workspace ids to offer in the embed's switcher. */
   workspaces?: string[];
+  /** Named accent preset for the embedded shell (e.g. 'ember'). */
+  accent?: 'ember';
+  /** Apps to open on first load (defaults to the workspace's own set). */
+  apps?: string[];
+  /** Force the embedded shell's color scheme (otherwise the consumer's, or system). */
+  theme?: 'dark' | 'light';
 };
 
 const DEFAULT_THEME_MAP: Record<string, string> = {
@@ -148,6 +154,9 @@ export function HudsonEmbed({
   priority = 'lazy',
   collapse,
   workspaces,
+  accent,
+  apps,
+  theme,
 }: HudsonEmbedProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [reportedHeight, setReportedHeight] = useState<number | null>(null);
@@ -175,10 +184,13 @@ export function HudsonEmbed({
     // When a consumerId is provided, defer theme to the registry entry
     // (light/dark drives `data-hudson-theme` and the tokens.css cascade).
     // Without a consumerId, fall back to dark — Hudson's native default.
-    if (!consumerId) url.searchParams.set('theme', 'dark');
+    if (theme) url.searchParams.set('theme', theme);
+    else if (!consumerId) url.searchParams.set('theme', 'dark');
     url.searchParams.set('palette', encodedPalette);
     if (collapse?.length) url.searchParams.set('collapse', collapse.join(','));
     if (workspaces?.length) url.searchParams.set('workspaces', workspaces.join(','));
+    if (accent) url.searchParams.set('accent', accent);
+    if (apps?.length) url.searchParams.set('apps', apps.join(','));
     return absolute ? url.toString() : url.pathname + url.search;
   })();
 

@@ -20,7 +20,7 @@
 
 import type { CSSProperties } from 'react';
 import { consumers, consumerThemeStyle } from '../../registry';
-import { parseWorkspaceIds, resolveEmbedInitialState, type EmbedSearchParams } from '../../initial-state';
+import { parseAccent, parseWorkspaceIds, resolveEmbedInitialState, type EmbedSearchParams } from '../../initial-state';
 import { getCoreWorkspaces } from '../../../apps/registry';
 import { EmbedHandshake } from './EmbedHandshake';
 import { EmbedWorkspace } from './EmbedWorkspace';
@@ -53,6 +53,7 @@ export default async function EmbedPage({ params, searchParams }: EmbedPageProps
         <EmbedWorkspace
           initialState={initialState}
           workspaceIds={parseWorkspaceIds(Array.isArray(sp.workspaces) ? sp.workspaces[0] : sp.workspaces)}
+          accent={parseAccent(Array.isArray(sp.accent) ? sp.accent[0] : sp.accent)}
         />
       </div>
     );

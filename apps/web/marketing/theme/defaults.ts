@@ -63,6 +63,18 @@ export const ACCENTS: readonly PaletteOption[] = [
     },
   },
   {
+    // Muted ember: one quiet warm accent, shared with the embedded workspace.
+    id: 'ember',
+    label: 'Ember',
+    swatch: 'oklch(0.70 0.11 42)',
+    vars: {
+      '--accent': 'oklch(0.70 0.11 42)',
+      '--accent-deep': 'oklch(0.58 0.11 38)',
+      '--accent-soft': 'oklch(0.70 0.11 42 / 0.10)',
+      '--accent-line': 'oklch(0.70 0.11 42 / 0.36)',
+    },
+  },
+  {
     id: 'cobalt',
     label: 'Cobalt',
     swatch: 'oklch(0.58 0.19 250)',
@@ -180,7 +192,7 @@ export const DEFAULTS = {
   display: 'newsreader',
   body: 'space-grotesk',
   mono: 'jetbrains',
-  accent: 'amber',
+  accent: 'ember',
   paper: 'slate',
   gridMinor: 0.08,
   gridMajor: 0.16,
