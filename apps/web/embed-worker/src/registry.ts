@@ -99,9 +99,9 @@ export const consumers: Record<string, ConsumerConfig> = {
       '--hud-ink-3':        'oklch(0.50 0.01 240)',
       '--hud-line':         'oklch(0.32 0.012 240)',
       '--hud-line-strong':  'oklch(0.48 0.012 240)',
-      '--hud-accent':       'oklch(0.72 0.18 162)',
-      '--hud-accent-soft':  'oklch(0.72 0.18 162 / 0.10)',
-      '--hud-accent-line':  'oklch(0.72 0.18 162 / 0.45)',
+      '--hud-accent':       'oklch(0.70 0.11 42)',
+      '--hud-accent-soft':  'oklch(0.70 0.11 42 / 0.10)',
+      '--hud-accent-line':  'oklch(0.70 0.11 42 / 0.36)',
       '--hud-border-width': '1px',
     },
     fonts: {

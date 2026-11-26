@@ -76,10 +76,10 @@ function fallbackTemplate(): ThemeTemplateRecord {
         '--foreground': '0.95 0 0',
         '--card': '0.18 0 0',
         '--card-foreground': '0.95 0 0',
-        '--accent': '0.72 0.18 162',
+        '--accent': '0.70 0.11 42',
         '--accent-foreground': '0.145 0 0',
         '--border': '0.28 0 0',
-        '--ring': '0.72 0.18 162',
+        '--ring': '0.70 0.11 42',
         '--radius': '8px',
       },
       light: {

@@ -111,7 +111,7 @@ export default async function EmbedPage({ params, searchParams }: EmbedPageProps
     >
       <EmbedHandshake surface={surface} />
       <div style={{ textAlign: 'center', display: 'grid', gap: 10 }}>
-        <div style={{ color: 'var(--hud-accent, oklch(0.72 0.18 162))' }}>
+        <div style={{ color: 'var(--hud-accent, oklch(0.70 0.11 42))' }}>
           surface · {surface}
         </div>
         <div style={{ fontSize: 10 }}>app · {appId}</div>

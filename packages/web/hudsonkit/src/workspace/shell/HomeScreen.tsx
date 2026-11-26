@@ -131,7 +131,7 @@ function InfoPopout({ appId, name, onClose }: { appId: string; name: string; onC
               <ul className="space-y-2">
                 {info.bullets.map((b) => (
                   <li key={b} className="flex items-start gap-2.5 text-[13px] font-mono text-neutral-400 leading-relaxed">
-                    <span className="mt-1.5 w-1 h-1 rounded-full bg-emerald-500/60 shrink-0" />
+                    <span className="mt-1.5 w-1 h-1 rounded-full bg-neutral-500 shrink-0" />
                     {b}
                   </li>
                 ))}
@@ -214,7 +214,7 @@ export function AppLauncher({ workspace, activatedAppIds, onActivateApp, onDismi
           </h1>
           {/* Breathing bar — pure CSS, GPU-composited via transform */}
           <div
-            className="h-px w-9 bg-emerald-400"
+            className="h-px w-9 bg-accent"
             style={{ animation: 'breathe 3s ease-in-out infinite', willChange: 'transform, opacity' }}
           />
           <span className="text-[12px] font-mono tracking-[0.2em] text-neutral-500">
@@ -249,28 +249,22 @@ export function AppLauncher({ workspace, activatedAppIds, onActivateApp, onDismi
                   scale: { duration: 0.15 },
                 }}
                 style={{
-                  background: isActive
-                    ? 'linear-gradient(170deg, rgba(16,185,129,0.10) 0%, rgba(16,185,129,0.03) 100%)'
-                    : 'linear-gradient(170deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+                  // Flat cards; the active one is marked by its border alone.
+                  background: isActive ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.03)',
                   border: isActive
-                    ? '1px solid rgba(16,185,129,0.4)'
+                    ? '1px solid oklch(var(--accent) / 0.55)'
                     : '1px solid rgba(255,255,255,0.10)',
-                  boxShadow: isActive
-                    ? '0 0 30px rgba(16,185,129,0.12), 0 0 60px rgba(16,185,129,0.06)'
-                    : 'none',
                 }}
                 whileTap={{ scale: 0.97 }}
               >
                 {/* Active indicator */}
                 {isActive && (
-                  <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-emerald-400" style={{
-                    boxShadow: '0 0 8px rgba(16,185,129,0.6)',
-                  }} />
+                  <div className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full" style={{ background: 'oklch(var(--accent))' }} />
                 )}
 
                 {/* App name */}
                 <h2 className={`text-[18px] font-mono font-semibold tracking-wide transition-colors ${
-                  isActive ? 'text-emerald-300' : 'text-neutral-100 group-hover:text-white'
+                  'text-neutral-100 group-hover:text-white'
                 }`}>
                   {app.name}
                 </h2>
@@ -292,21 +286,12 @@ export function AppLauncher({ workspace, activatedAppIds, onActivateApp, onDismi
                     More info
                   </span>
                   <span className={`text-[12px] font-mono transition-colors ${
-                    isActive ? 'text-emerald-400' : 'text-neutral-500 group-hover:text-emerald-400'
+                    isActive ? 'text-neutral-300' : 'text-neutral-500 group-hover:text-neutral-200'
                   }`}>
                     {isActive ? 'Active' : 'Open \u2192'}
                   </span>
                 </div>
 
-                {/* Hover glow */}
-                <div
-                  className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
-                  style={{
-                    boxShadow: isActive
-                      ? '0 0 40px rgba(16,185,129,0.12), inset 0 1px 0 rgba(16,185,129,0.15)'
-                      : '0 0 40px rgba(16,185,129,0.08), inset 0 1px 0 rgba(255,255,255,0.06)',
-                  }}
-                />
               </motion.button>
             );
           })}
@@ -357,14 +342,14 @@ export function AppLauncher({ workspace, activatedAppIds, onActivateApp, onDismi
                 onClick={handleDismiss}
                 className="px-6 py-2 rounded-lg font-mono text-[13px] tracking-[0.15em] uppercase cursor-pointer transition-colors"
                 style={{
-                  background: 'linear-gradient(170deg, rgba(16,185,129,0.15) 0%, rgba(16,185,129,0.06) 100%)',
-                  border: '1px solid rgba(16,185,129,0.3)',
-                  color: 'rgb(167, 243, 208)',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.16)',
+                  color: 'rgb(229, 229, 229)',
                 }}
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                whileHover={{ scale: 1.03, borderColor: 'rgba(16,185,129,0.5)' }}
+                whileHover={{ scale: 1.03, borderColor: 'rgba(255,255,255,0.32)' }}
                 whileTap={{ scale: 0.97 }}
                 transition={{ duration: 0.2 }}
               >

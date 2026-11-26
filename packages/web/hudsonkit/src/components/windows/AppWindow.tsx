@@ -336,7 +336,7 @@ const AppWindow: React.FC<AppWindowProps> = ({
 
   const titleBar = (
     <div
-      className="h-8 shrink-0 flex items-center px-3 gap-2 border-b border-border/70 bg-gradient-to-r from-background/70 via-card/95 to-background/70 cursor-grab active:cursor-grabbing select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+      className="h-8 shrink-0 flex items-center px-3 gap-2 border-b border-border/70 bg-card cursor-grab active:cursor-grabbing select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
       onMouseDown={handleDragStart}
       onKeyDown={handleTitleBarKeyDown}
       onFocus={onFocus}
@@ -419,8 +419,8 @@ const AppWindow: React.FC<AppWindowProps> = ({
       <div
         className={`w-full h-full flex flex-col rounded-lg overflow-hidden border transition-colors duration-200 ${
           isFocused
-            ? 'border-accent/60'
-            : 'border-border/80 shadow-[0_4px_18px_rgba(0,0,0,0.10)]'
+            ? 'border-foreground/20'
+            : 'border-border/80'
         }`}
         style={{ background: 'oklch(var(--card))' }}
       >

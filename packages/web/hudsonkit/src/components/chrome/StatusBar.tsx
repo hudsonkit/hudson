@@ -35,7 +35,8 @@ interface StatusBarProps {
 }
 
 const STATUS_COLORS = {
-  emerald: { dot: 'bg-success', ping: 'bg-success', text: 'text-success' },
+  // Healthy is quiet: muted label, no dot. Color is reserved for states that need attention.
+  emerald: { dot: '', ping: '', text: 'text-muted-foreground' },
   amber: { dot: 'bg-warning', ping: 'bg-warning', text: 'text-warning' },
   red: { dot: 'bg-destructive', ping: 'bg-destructive', text: 'text-destructive' },
   neutral: { dot: 'bg-muted-foreground', ping: 'bg-muted-foreground', text: 'text-muted-foreground' },
@@ -78,7 +79,7 @@ const StatusBar: React.FC<StatusBarProps> = ({
   const statusClassName = `shrink-0 flex items-center gap-2 ${colors.text}`;
   const statusContent = (
     <>
-      <span className={`inline-block h-1.5 w-1.5 rounded-full ${colors.dot}`} />
+      {colors.dot && <span className={`inline-block h-1.5 w-1.5 rounded-full ${colors.dot}`} />}
       <span className="font-light tracking-[0.18em] uppercase text-[9px]">{status.label}</span>
     </>
   );

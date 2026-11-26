@@ -24,9 +24,9 @@ export function DocsContent() {
         const hubPos = sheetPositions['hub'] ?? { x: 0, y: 0 };
         const isHubSelected = selectedCard === 'hub';
         const g = settings.glowIntensity / 100;
-        const hubShadow = isHubSelected
+        const hubShadow = isHubSelected && g > 0
           ? `0 0 40px color-mix(in srgb, oklch(var(--accent)) ${(0.3 * g * 100).toFixed(1)}%, transparent), 0 0 80px color-mix(in srgb, oklch(var(--accent)) ${(0.15 * g * 100).toFixed(1)}%, transparent), inset 0 1px 0 color-mix(in srgb, oklch(var(--accent)) ${(0.2 * g * 100).toFixed(1)}%, transparent)`
-          : '0 24px 60px color-mix(in srgb, oklch(var(--foreground)) 14%, transparent)';
+          : 'none';
         return (
           <div
             className="absolute pointer-events-none"
@@ -64,7 +64,7 @@ export function DocsContent() {
                     >
                       <div className="flex items-center gap-1.5 mb-0.5">
                         <Icon size={10} className={isOpen ? 'text-accent' : 'text-muted-foreground'} />
-                        <span className={`font-bold tracking-wider text-[10px] ${isOpen ? 'text-accent' : 'text-accent/70'}`}>{c.label}</span>
+                        <span className={`font-bold tracking-wider text-[10px] ${isOpen ? 'text-accent' : 'text-foreground/86'}`}>{c.label}</span>
                       </div>
                       <div className="text-muted-foreground text-[9px] font-mono leading-tight mb-0.5">{c.ns}</div>
                       <div className="text-foreground/76 text-[10px] leading-tight">{c.desc}</div>
@@ -92,7 +92,7 @@ export function DocsContent() {
                       >
                         <Bot size={10} className={isOpen ? 'text-accent' : 'text-muted-foreground'} />
                         <div className="min-w-0">
-                          <span className={`font-bold tracking-wider text-[10px] ${isOpen ? 'text-accent' : 'text-accent/70'}`}>{doc.title}</span>
+                          <span className={`font-bold tracking-wider text-[10px] ${isOpen ? 'text-accent' : 'text-foreground/86'}`}>{doc.title}</span>
                           <div className="text-foreground/76 text-[10px] leading-tight">{doc.description}</div>
                         </div>
                       </button>

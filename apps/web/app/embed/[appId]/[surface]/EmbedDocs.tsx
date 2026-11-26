@@ -106,7 +106,7 @@ export function EmbedDocs() {
                   aria-pressed={t.id === activeId}
                   style={topicButtonStyle(t.id === activeId)}
                 >
-                  <span style={{ color: 'var(--hud-accent, oklch(0.72 0.18 162))', marginRight: 10 }}>
+                  <span style={{ color: 'var(--hud-accent, oklch(0.70 0.11 42))', marginRight: 10 }}>
                     {t.num}
                   </span>
                   {t.title}
@@ -295,7 +295,7 @@ const ARTICLE_HEAD: CSSProperties = {
 const ARTICLE_NUM: CSSProperties = {
   fontFamily: 'var(--hud-font-display, "Times New Roman", serif)',
   fontSize: 30,
-  color: 'var(--hud-accent, oklch(0.72 0.18 162))',
+  color: 'var(--hud-accent, oklch(0.70 0.11 42))',
   lineHeight: 1,
 };
 
@@ -353,7 +353,7 @@ const LIST_DOT: CSSProperties = {
   flex: '0 0 6px',
   height: 6,
   borderRadius: '50%',
-  background: 'var(--hud-accent, oklch(0.72 0.18 162))',
+  background: 'var(--hud-accent, oklch(0.70 0.11 42))',
   opacity: 0.7,
 };
 
@@ -369,7 +369,7 @@ const READ_MORE: CSSProperties = {
   fontSize: 11,
   letterSpacing: '0.10em',
   textTransform: 'uppercase',
-  color: 'var(--hud-accent, oklch(0.72 0.18 162))',
+  color: 'var(--hud-accent, oklch(0.70 0.11 42))',
   textDecoration: 'none',
   marginTop: 4,
 };
@@ -392,7 +392,7 @@ const CTA_PRIMARY: CSSProperties = {
   justifyContent: 'center',
   width: '100%',
   padding: '10px 14px',
-  background: 'var(--hud-accent, oklch(0.72 0.18 162))',
+  background: 'var(--hud-accent, oklch(0.70 0.11 42))',
   color: 'var(--hud-bg, oklch(0.18 0.02 240))',
   fontFamily: 'var(--hud-font-mono, ui-monospace, monospace)',
   fontSize: 11,
@@ -400,5 +400,5 @@ const CTA_PRIMARY: CSSProperties = {
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
   textDecoration: 'none',
-  border: 'var(--hud-border-width, 1px) solid var(--hud-accent, oklch(0.72 0.18 162))',
+  border: 'var(--hud-border-width, 1px) solid var(--hud-accent, oklch(0.70 0.11 42))',
 };
