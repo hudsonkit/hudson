@@ -154,21 +154,21 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_ORIGIN),
-  title: "HudsonKit — Build the tool. Hudson provides the workspace.",
+  title: "HudsonKit — Hudson gives your tools a workspace",
   description:
-    "Canvas, side rails, commands, persistence, logging, and agent-ready infrastructure for application teams.",
+    "A spatial canvas for your apps, with the shell, commands, and persistence already built.",
   openGraph: {
-    title: "HudsonKit — Build the tool. Hudson provides the workspace.",
+    title: "HudsonKit — Hudson gives your tools a workspace",
     description:
-      "Build the product-specific tool. Hudson provides the workspace systems around it.",
+      "A spatial canvas for your apps, with the shell, commands, and persistence already built.",
     images: [{ url: "/og.png", width: 1200, height: 630 }],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "HudsonKit — Build the tool. Hudson provides the workspace.",
+    title: "HudsonKit — Hudson gives your tools a workspace",
     description:
-      "Build the product-specific tool. Hudson provides the workspace systems around it.",
+      "A spatial canvas for your apps, with the shell, commands, and persistence already built.",
     images: ["/og.png"],
   },
 };

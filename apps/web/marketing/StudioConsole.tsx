@@ -14,6 +14,7 @@ import {
   type Preset,
 } from '@/marketing/theme/defaults';
 import { useStudio } from '@/marketing/theme/StudioContext';
+import { useTunable } from '@/marketing/lib/useTunable';
 
 function applyVars(target: HTMLElement, vars: Record<string, string>) {
   for (const [k, v] of Object.entries(vars)) {
@@ -33,13 +34,7 @@ export function StudioConsole() {
   const [open, setOpen] = useState(false);
   // The tuner is a design tool, not a visitor feature: its button only shows
   // in dev or with ?tune in the URL. The effect below still applies the theme.
-  const [tunable, setTunable] = useState(false);
-  useEffect(() => {
-    setTunable(
-      process.env.NODE_ENV === 'development' ||
-        new URLSearchParams(window.location.search).has('tune'),
-    );
-  }, []);
+  const tunable = useTunable();
   const { state, setState, set, reset, hydrated } = useStudio();
 
   useEffect(() => {

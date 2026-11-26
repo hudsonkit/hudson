@@ -35,10 +35,38 @@ const LEGACY_INK_PRESET: StudioState = {
   accent: 'amber',
 };
 
+/* Pre-"quiet" baseline: slate + amber at full grid. Advanced to the quiet
+   azure baseline with the faint grid. */
+const LEGACY_AMBER_DEFAULTS: StudioState = {
+  ...LEGACY_INK_PRESET,
+  strokeW: 1.25,
+};
+
+/* First quiet pass: azure with the faintest grid. Superseded by the
+   softened amber plotter ink. */
+const LEGACY_QUIET_AZURE_DEFAULTS: StudioState = {
+  ...LEGACY_AMBER_DEFAULTS,
+  accent: 'azure',
+  gridMinor: 0.06,
+  gridMajor: 0.12,
+};
+
+/* Second quiet pass: amber plotter ink, square corners, light body
+   weight. Superseded by crisp radii and a 400 body weight. */
+const LEGACY_QUIET_AMBER_DEFAULTS: StudioState = {
+  ...LEGACY_QUIET_AZURE_DEFAULTS,
+  accent: 'amber',
+  gridMinor: 0.08,
+  gridMajor: 0.16,
+};
+
 const REPLACED_BASELINES = [
+  LEGACY_QUIET_AMBER_DEFAULTS,
   LEGACY_EMERALD_DEFAULTS,
   LEGACY_AZURE_DEFAULTS,
   LEGACY_INK_PRESET,
+  LEGACY_AMBER_DEFAULTS,
+  LEGACY_QUIET_AZURE_DEFAULTS,
 ] as const;
 
 function matchesSnapshot(state: Partial<StudioState>, snapshot: StudioState): boolean {

@@ -5,6 +5,7 @@ import { ThemeProvider } from 'hudsonkit';
 import { WorkspaceShell, type WorkspaceShellInitialState } from 'hudsonkit/workspace';
 import { coreWorkspaces } from '../../../apps/registry';
 import { hudsonShellEnvironment } from '../../../lib/hudsonShellEnvironment';
+import { EmbedTour } from './EmbedTour';
 
 export function EmbedWorkspace({ initialState }: { initialState: WorkspaceShellInitialState }) {
   const embedWorkspaces = coreWorkspaces.filter(workspace => workspace.id === initialState.activeWorkspaceId);
@@ -24,6 +25,7 @@ export function EmbedWorkspace({ initialState }: { initialState: WorkspaceShellI
           environment={hudsonShellEnvironment}
         />
       </Suspense>
+      <EmbedTour />
     </ThemeProvider>
   );
 }

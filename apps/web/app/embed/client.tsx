@@ -22,6 +22,7 @@ import { EmbedHandshake } from './[appId]/[surface]/EmbedHandshake';
 import { EmbedVoice } from './[appId]/[surface]/EmbedVoice';
 import { EmbedWorkspace } from './[appId]/[surface]/EmbedWorkspace';
 import type { WorkspaceShellInitialState } from 'hudsonkit/workspace';
+import { parseCollapse } from './initial-state';
 
 // ── Read initial state injected by the Worker ─────────────────────────────────
 
@@ -64,6 +65,10 @@ const initialState: WorkspaceShellInitialState = workerState
       theme: 'dark',
       template: 'hudson',
     };
+
+// URL-level overrides that also apply on the Worker path (static HTML shell).
+const collapse = parseCollapse(new URLSearchParams(window.location.search).get('collapse'));
+Object.assign(initialState, collapse);
 
 // ── Mount ─────────────────────────────────────────────────────────────────────
 

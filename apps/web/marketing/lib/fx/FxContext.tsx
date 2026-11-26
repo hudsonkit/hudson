@@ -33,7 +33,12 @@ function readFx(): FxState {
   if (typeof window === 'undefined') return { ...FX_DEFAULTS };
   try {
     const raw = window.localStorage.getItem(FX_KEY);
-    return raw ? { ...FX_DEFAULTS, ...JSON.parse(raw) } : { ...FX_DEFAULTS };
+    // Caliper, lens, and cursor are momentary instruments: keep their tuning
+    // (zoom, speed) but always start with them off so a page load never
+    // opens with overlays following the pointer.
+    return raw
+      ? { ...FX_DEFAULTS, ...JSON.parse(raw), caliper: false, lens: false, cursor: false }
+      : { ...FX_DEFAULTS };
   } catch {
     return { ...FX_DEFAULTS };
   }

@@ -1009,7 +1009,8 @@
 /* ─── Responsive ─── */
 
 @media (max-width: 1180px) {
-  .hudson-site .reflow-stack { grid-template-columns: 1fr !important; }
+  .hudson-site .reflow-stack { grid-template-columns: minmax(0, 1fr) !important; }
+  .hudson-site .reflow-stack > * { min-width: 0; max-width: 100%; }
   .hudson-site .reflow-hide-narrow { display: none !important; }
   .hudson-site .reflow-assembly { grid-template-columns: 1fr !important; gap: 32px !important; }
   .hudson-site .reflow-platforms { grid-column: span 1 !important; grid-template-columns: repeat(3, 1fr) !important; }
@@ -1566,6 +1567,462 @@
    sheet-body card borders read as 1.25px structural strokes around
    discrete content — that's the engineering-drawing intent and reads
    cleaner once the persistent chrome above is settled. */
+/* ─────────────────────────────────────────────────────────────
+   Quiet layer — the drafting identity, whispered.
+   The sheet metaphor stays (faint grid, sheet index, figure
+   captions) but the chrome steps back so the live product is the
+   brightest, sharpest thing on every screen. One rule of thumb:
+   only the product gets a hard edge and real depth.
+   ───────────────────────────────────────────────────────────── */
+
+/* Palette lives in theme/defaults.ts (slate) — it is applied inline, so
+   token overrides here would be dead. Only layout tokens belong here. */
+.hudson-site {
+  --sheet-header-h: 56px;
+}
+.hudson-site ::selection { background: var(--accent-soft); color: var(--ink); }
+
+/* Sheet edges + rulers: hairlines only, no tick rulers */
+.hudson-site .sheet--bordered,
+.hudson-site[data-paper='slate'] .sheet--bordered {
+  border-top: 1px solid color-mix(in oklch, var(--line) 70%, transparent);
+  border-bottom: 0;
+}
+.hudson-site .sheet__rule,
+.hudson-site .sheet__rule--left { display: none; }
+
+/* The tick ruler survives as a hairline scale under the header bar:
+   minor ticks every 12px, majors every 72px, both barely there. */
+.hudson-site .sheet-header__rule,
+.hudson-site[data-paper='slate'] .sheet-header__rule {
+  order: 2;
+  height: 6px;
+  border: 0;
+  background:
+    repeating-linear-gradient(to right,
+      transparent 0, transparent 11px,
+      color-mix(in oklch, var(--ink-3) 45%, transparent) 11px,
+      color-mix(in oklch, var(--ink-3) 45%, transparent) 12px) top / 100% 3px no-repeat,
+    repeating-linear-gradient(to right,
+      transparent 0, transparent 71px,
+      color-mix(in oklch, var(--ink-2) 60%, transparent) 71px,
+      color-mix(in oklch, var(--ink-2) 60%, transparent) 72px) top / 100% 6px no-repeat;
+}
+.hudson-site .sheet-header { display: flex; flex-direction: column; }
+.hudson-site .sheet-header__bar { order: 1; }
+
+/* The grid fades out toward the sheet edges so it reads as paper
+   texture behind the content, not a cage around it. */
+.hudson-site .sheet {
+  background-attachment: local;
+}
+.hudson-site .sheet::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 80% at 50% 30%, transparent 40%, var(--paper) 100%);
+  z-index: 0;
+}
+.hudson-site .sheet > * { position: relative; z-index: 1; }
+.hudson-site .sheet > .sheet-header { position: sticky; z-index: 20; }
+
+/* Sticky header: one slim index line instead of a title block */
+.hudson-site .sheet-header__bar,
+.hudson-site[data-paper='slate'] .sheet-header__bar {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 24px;
+  padding: 11px max(16px, calc(var(--sheet-pad-x, 64px) / 2));
+  background: color-mix(in oklch, var(--paper) 86%, transparent);
+  backdrop-filter: blur(14px) saturate(1.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  border-bottom: 1px solid color-mix(in oklch, var(--line) 55%, transparent);
+}
+.hudson-site .sheet-header__brand,
+.hudson-site[data-paper='slate'] .sheet-header__brand {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  justify-content: flex-start;
+  color: var(--ink-1);
+}
+.hudson-site .sheet-header__title,
+.hudson-site[data-paper='slate'] .sheet-header__title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  border: 0;
+  background: transparent;
+}
+.hudson-site .sheet-header__title-badge {
+  background: transparent;
+  color: var(--ink-3);
+  padding: 0;
+  gap: 10px;
+}
+.hudson-site .sheet-header__title-badge-num {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: 0.12em;
+}
+.hudson-site .sheet-header__title-badge-name {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  color: var(--ink-1);
+}
+/* Title block, unboxed: label/value pairs read as one drafting line,
+   separated by hairline rules instead of cell borders. */
+.hudson-site .sheet-header__title-cell,
+.hudson-site[data-paper='slate'] .sheet-header__title-cell {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0 0 0 14px;
+  border-left: 1px solid color-mix(in oklch, var(--line) 80%, transparent);
+}
+.hudson-site .sheet-header__title-label {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--ink-3);
+}
+.hudson-site .sheet-header__title-value {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--ink-2);
+}
+
+/* Instruments trigger: a quiet text control, not a boxed button */
+.hudson-site .drafting-tools__trigger,
+.hudson-site[data-paper='slate'] .drafting-tools__trigger {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-3);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  padding: 6px 10px;
+  height: auto;
+}
+.hudson-site .drafting-tools__trigger:hover {
+  background: transparent;
+  color: var(--ink-1);
+  border-color: color-mix(in oklch, var(--line) 70%, transparent);
+}
+.hudson-site .drafting-tools__trigger.is-open {
+  background: var(--paper-2);
+  color: var(--ink);
+  border-color: var(--line);
+}
+.hudson-site .drafting-tools__count {
+  background: transparent;
+  color: var(--ink-3);
+  border: 1px solid var(--line);
+  font-weight: 500;
+}
+
+/* Footer plate, unboxed: the sheet's sign-off line. Hairline above,
+   no frame, no fill — it closes the drawing without asking to be read. */
+.hudson-site .footer-plate,
+.hudson-site[data-paper='slate'] .footer-plate {
+  /* Positioned against .sheet-body (made relative by the quiet layer), so
+     drop it into the sheet's bottom padding rather than over content. */
+  left: 0;
+  right: 0;
+  bottom: calc(28px - var(--sheet-pad-bottom, 72px));
+  padding: 12px 0 0;
+  border: 0;
+  border-top: 1px solid color-mix(in oklch, var(--line) 70%, transparent);
+  background: transparent;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: var(--ink-3);
+}
+.hudson-site .footer-plate__divider { height: 9px; background: var(--line); }
+.hudson-site .footer-plate__strong { color: var(--ink-2); font-weight: 500; }
+.hudson-site .footer-plate span[style*='ink-2'] { color: var(--ink-3) !important; }
+.hudson-site .sheet-body { padding-top: 72px; }
+
+/* Typography: softer secondary voice, fewer shouting caps */
+.hudson-site .h-display { letter-spacing: -0.03em; }
+.hudson-site .h-display .boxed {
+  border: 1px solid color-mix(in oklch, var(--accent) 55%, transparent);
+  padding: 0 0.16em 0.04em;
+}
+/* Type contrast: three clear voices. Display serif in full ink, body in
+   ink-1 at a readable weight, mono labels in ink-3 — never all three
+   fighting at the same brightness. */
+.hudson-site .h-display,
+.hudson-site .h-section { color: var(--ink); text-wrap: balance; }
+.hudson-site .h-section { letter-spacing: -0.025em; }
+.hudson-site .h-display em,
+.hudson-site .h-section em { color: var(--ink-1); }
+.hudson-site .subhead { color: var(--ink-1); line-height: 1.6; text-wrap: pretty; }
+.hudson-site p { text-wrap: pretty; }
+.hudson-site .eyebrow { color: var(--ink-3); letter-spacing: 0.18em; }
+.hudson-site .eyebrow::before { background: var(--line-strong); }
+
+/* Buttons: primary is a calm light fill; accent only on hover/focus */
+.hudson-site .btn {
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  padding: 12px 20px;
+  border: 1px solid var(--ink-1);
+  background: var(--ink-1);
+  color: var(--paper);
+  border-radius: var(--radius-ui);
+  transition: background 0.2s cubic-bezier(0.25, 1, 0.5, 1), color 0.2s, border-color 0.2s;
+}
+.hudson-site .btn:hover { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.hudson-site .btn--ghost {
+  background: transparent;
+  color: var(--ink-2);
+  border-color: var(--line);
+}
+.hudson-site .btn--ghost:hover {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+/* The product: the one sharp, lit, elevated object on the page */
+.hudson-site .embed-plate,
+.hudson-site[data-paper='slate'] .embed-plate {
+  border: 1px solid color-mix(in oklch, var(--ink) 16%, transparent);
+  border-radius: 10px;
+  overflow: hidden;
+  background: oklch(0.145 0 0);
+  box-shadow:
+    0 1px 0 0 color-mix(in oklch, var(--ink) 8%, transparent) inset,
+    0 30px 80px -24px oklch(0.05 0.02 240 / 0.75),
+    0 8px 24px -8px oklch(0.05 0.02 240 / 0.5);
+}
+.hudson-site .embed-plate__corner { display: none; }
+.hudson-site .embed-plate__caption {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--ink-2);
+}
+.hudson-site .embed-plate__caption .live {
+  width: 6px; height: 6px;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* Hero embed breaks out of the text column so it owns the fold */
+.hudson-site .hero-stage {
+  width: min(1320px, calc(100vw - var(--sheet-pad-x, 64px) * 2));
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Live dimension lines — the drawing measures the product. Plotter ink
+   (accent) is reserved for marks like these, so it reads as annotation. */
+.hudson-site .dim { position: relative; }
+.hudson-site .dim__h {
+  position: relative;
+  height: 20px;
+  margin-top: 12px;
+}
+.hudson-site .dim__h::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 9px;
+  border-top: 1px solid color-mix(in oklch, var(--line) 80%, transparent);
+}
+.hudson-site .dim__h::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 5px;
+  height: 9px;
+  border-left: 1px solid var(--line-strong);
+  border-right: 1px solid var(--line-strong);
+}
+.hudson-site .dim__v {
+  position: absolute;
+  top: 0;
+  bottom: 32px;
+  right: -40px;
+  width: 13px;
+  border-top: 1px solid var(--accent);
+  border-bottom: 1px solid var(--accent);
+}
+.hudson-site .dim__v::before {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; left: 6px;
+  border-left: 1px solid var(--accent-line);
+}
+.hudson-site .dim__label {
+  position: absolute;
+  z-index: 1;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: var(--ink-3);
+  background: var(--paper);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.hudson-site .dim__h .dim__label {
+  left: 50%; top: 2px;
+  transform: translateX(-50%);
+  padding: 0 10px;
+}
+.hudson-site .dim__v .dim__label {
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  writing-mode: vertical-rl;
+  padding: 10px 0;
+}
+
+/* Figure callouts under the hero embed */
+.hudson-site .hero-tour {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  margin-top: 18px;
+}
+.hudson-site .hero-tour__start {
+  flex: none;
+  padding: 10px 14px 0 0;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.hudson-site .hero-tour__start:hover { color: var(--accent); }
+.hudson-site .hero-tour .hero-callouts { flex: 1; margin: 0; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.hudson-site .hero-callouts__step {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+.hudson-site .hero-callouts__step:hover { color: var(--ink-1); }
+.hudson-site .hero-callouts li:has([aria-current='step']) { border-top-color: var(--accent); }
+.hudson-site .hero-callouts__step[aria-current='step'] { color: var(--ink); }
+.hudson-site .hero-callouts__step[aria-current='step'] .hero-callouts__num { color: var(--accent); }
+.hudson-site .hero-callouts {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.hudson-site .hero-callouts li {
+  display: flex;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid color-mix(in oklch, var(--line) 60%, transparent);
+}
+.hudson-site .hero-callouts__num { color: var(--ink-1); }
+
+/* Hero on axis: copy, CTAs and stats center over the product. */
+/* First view: the intro is a compact band, the product starts high. */
+.hudson-site #hero .sheet-body { padding-top: 56px; }
+.hudson-site .hero-intro .subhead { max-width: 68ch; }
+.hudson-site #hero .dim__h { margin-top: 14px; }
+.hudson-site .hero-title { font-size: clamp(34px, 4.2vw, 60px); line-height: 1.04; letter-spacing: -0.025em; }
+.hudson-site .hero-intro { text-align: center; }
+.hudson-site .hero-intro .subhead { margin-left: auto; margin-right: auto; }
+.hudson-site .hero-intro [data-cal-label='hero CTAs'] { justify-content: center; }
+.hudson-site .hero-intro [data-cal-label='stats grid'] { margin: 0 auto; }
+.hudson-site .hero-stage { text-align: left; }
+.hudson-site .hero-stage .embed-plate__caption { justify-content: center !important; gap: 18px; }
+
+/* Crisp corners: small, exact radii on every framed surface. */
+.hudson-site .workspace-story-plate,
+.hudson-site .workspace-story-deck,
+.hudson-site .workspace-story-canvas,
+.hudson-site .spec,
+.hudson-site .part { border-radius: var(--radius-card); overflow: hidden; }
+.hudson-site [data-cal-label='multi-surface assembly'] { border-radius: var(--radius-card); }
+.hudson-site .workspace-story-node,
+.hudson-site .workspace-story-step,
+.hudson-site .workspace-story-command,
+.hudson-site .tag,
+.hudson-site .hudson-embed-popout { border-radius: var(--radius-ui); }
+
+/* Spec tables and parts: hairline structure, no hard frames */
+.hudson-site .spec,
+.hudson-site[data-paper='slate'] .spec,
+.hudson-site .part,
+.hudson-site[data-paper='slate'] .part { border-color: var(--line); }
+
+/* Code: recessed dark wells, not inverted light slabs. On slate the
+   light syntax family from the base tokens reads again. */
+.hudson-site[data-paper='slate'] {
+  --syntax-kw:  oklch(0.80 0.08 225);
+  --syntax-str: oklch(0.82 0.07 190);
+  --syntax-num: oklch(0.80 0.08 160);
+  --syntax-com: oklch(0.55 0.01 240);
+  --syntax-at:  oklch(0.78 0.08 205);
+}
+.hudson-site .code,
+.hudson-site[data-paper='slate'] .code {
+  background: color-mix(in oklch, var(--paper-edge) 70%, var(--paper));
+  color: var(--ink-1);
+  border: 1px solid color-mix(in oklch, var(--line) 80%, transparent);
+  box-shadow: none;
+  border-radius: var(--radius-ui);
+}
+.hudson-site .code .kw,
+.hudson-site .code .str,
+.hudson-site .code .at { font-weight: 500; }
+.hudson-site .implementation-cta {
+  border: 1px solid var(--line);
+  box-shadow: none;
+}
+
+/* Studio console trigger: present for the team, invisible to the eye */
+.studio-console__toggle { opacity: 0.55; transition: opacity 0.2s; }
+.studio-console__toggle:hover { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hudson-site .embed-plate__caption .live { animation: none; }
+}
+@media (max-width: 720px) {
+  .hudson-site .hero-stage .embed-plate__caption > span:last-child { display: none; }
+  .hudson-site .dim__v { display: none; }
+  /* The in-frame card carries the step count; the strip is just the start control. */
+  .hudson-site .hero-tour .hero-callouts { display: none; }
+  .hudson-site #hero .hero-intro { padding-bottom: 72px; }
+  .hudson-site .sheet-header__title-cell { display: none; }
+  /* Hero CTAs: one compact row, not two tall slabs */
+  .hudson-site .hero-intro [data-cal-label='hero CTAs'] { gap: 8px; }
+  .hudson-site .hero-intro [data-cal-label='hero CTAs'] .btn {
+    min-width: 0 !important;
+    min-height: 40px;
+    padding: 10px 14px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .hudson-site .hide-narrow { display: none; }
+}
+
 @media (max-width: 720px) {
   .hudson-site {
     /* 16px gutters — matches the iOS HIG margin and lets the headline

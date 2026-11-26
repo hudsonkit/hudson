@@ -1,6 +1,4 @@
-import { Eyebrow } from '@/marketing/primitives/Eyebrow';
 import { Sheet } from '@/marketing/primitives/Sheet';
-import { sheetNumber } from './order';
 import { WorkspaceSpecBox } from './_components/ManifestBox';
 import { PlatformFrame } from './_components/PlatformFrame';
 import { SurfaceMapBlock } from './_components/ShipBlock';
@@ -19,9 +17,6 @@ export function Sheet04Surfaces() {
       }}
     >
       <div style={{ maxWidth: 1300, margin: '96px auto 0' }}>
-        <div style={{ marginBottom: 24 }}>
-          <Eyebrow>{sheetNumber('surfaces')} / Consistent primitives</Eyebrow>
-        </div>
 
         <h2 className="h-section" style={{ marginBottom: 64 }}>
           Consistent primitives. <em>Native</em> implementations.
@@ -31,7 +26,7 @@ export function Sheet04Surfaces() {
           data-cal
           data-cal-label="multi-surface assembly"
           style={{
-            border: 'var(--stroke-w) solid var(--ink)',
+            border: '1px solid var(--line)',
             background: 'var(--paper)',
             padding: 40,
             marginBottom: 64,
@@ -41,18 +36,18 @@ export function Sheet04Surfaces() {
           <div
             style={{
               position: 'absolute',
-              top: -1,
-              left: -1,
-              background: 'var(--ink)',
-              color: 'var(--paper)',
-              padding: '6px 14px',
+              top: -8,
+              left: 24,
+              background: 'var(--paper)',
+              color: 'var(--ink-3)',
+              padding: '0 10px',
               fontFamily: 'var(--font-mono)',
               fontSize: 10,
               letterSpacing: '0.18em',
               textTransform: 'uppercase',
             }}
           >
-            FIG. 05-A · WORKSPACE VOCABULARY
+            FIG. 03 · WORKSPACE VOCABULARY
           </div>
 
           <div
