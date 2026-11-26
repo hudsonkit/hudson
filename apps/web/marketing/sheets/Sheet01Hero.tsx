@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { HudsonEmbed } from '@/marketing/lib/embed';
 import { EmbedFrame } from '@/marketing/primitives/EmbedFrame';
+import { EmbedReveal } from '@/marketing/primitives/EmbedReveal';
 import { LiveDimensions } from '@/marketing/primitives/LiveDimensions';
 import { Sheet } from '@/marketing/primitives/Sheet';
 import { REPOSITORY_URL } from '@/site/seo';
@@ -128,6 +129,7 @@ export function Sheet01Hero() {
               collapse={['left', 'right']}
               workspaces={['developer-mode', 'document-lab', 'hero-studio']}
             />
+            <EmbedReveal label="Hudson workspace" />
           </EmbedFrame>
           </LiveDimensions>
           </div>
