@@ -94,8 +94,8 @@
   --hud-shadow-minimap: 0 0 20px rgba(0, 0, 0, 0.7);
 
   /* Accent */
-  --hud-accent: rgb(16 185 129);          /* emerald-500 */
-  --hud-accent-soft: rgb(16 185 129 / 0.08);
+  --hud-accent: oklch(var(--accent));
+  --hud-accent-soft: oklch(var(--accent) / 0.08);
 
   /* Nav live signal (HudSideNav live dot / count / spine). Defaults to
    * accent so existing apps keep their look; consumers retint without
