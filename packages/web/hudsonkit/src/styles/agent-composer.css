@@ -11,8 +11,8 @@
   --hk-agent-muted: var(--hud-muted, #a3a3a3);
   --hk-agent-dim: var(--hud-dim, #737373);
   --hk-agent-line: var(--hud-border, rgb(64 64 64 / 0.55));
-  --hk-agent-accent: var(--hud-accent, #10b981);
-  --hk-agent-selection: var(--hud-accent-soft, rgb(16 185 129 / 0.1));
+  --hk-agent-accent: var(--hud-accent, oklch(0.70 0.11 42));
+  --hk-agent-selection: var(--hud-accent-soft, oklch(0.70 0.11 42 / 0.1));
   --hk-agent-font: var(--hud-font-sans, system-ui, sans-serif);
   --hk-agent-mono: var(--hud-font-mono, ui-monospace, monospace);
   box-sizing: border-box;
