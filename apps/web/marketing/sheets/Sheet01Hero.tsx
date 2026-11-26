@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Counter } from '@/marketing/lib/animate';
 import { HudsonEmbed } from '@/marketing/lib/embed';
 import { EmbedFrame } from '@/marketing/primitives/EmbedFrame';
 import { LiveDimensions } from '@/marketing/primitives/LiveDimensions';
@@ -12,13 +11,6 @@ const INSTALL_CMD = 'bun add hudsonkit';
 const GITHUB_URL = REPOSITORY_URL;
 
 const CALLOUTS = ['Capability map', 'Command dock', 'Status bar', 'Canvas · pan / zoom'];
-
-const STATS: Array<[string, string, string]> = [
-  ['Surfaces', '3', 'iOS · macOS · Web'],
-  ['Primitives', '8', 'Frame · Nav · Panel · Status · Canvas · Palette · Drawer · Assistant'],
-  ['Apps live', '5', 'Talkie · OpenScout · Linea · Lattices · Vox'],
-  ['License', 'Apache 2.0', 'free for commercial use'],
-];
 
 export function Sheet01Hero() {
   const [copied, setCopied] = useState(false);
@@ -44,31 +36,27 @@ export function Sheet01Hero() {
       sheetTitle="General Arrangement"
       style={{ minHeight: '100vh' }}
       footer={{
-        left: ['CLIENT', 'open-source'],
-        mid: 'BUILD THE TOOL · HUDSON PROVIDES THE WORKSPACE',
-        right: ['STATUS', 'shipped'],
+        left: ['LICENSE', 'Apache 2.0'],
+        mid: 'iOS · macOS · Web — Talkie · OpenScout · Linea · Lattices · Vox',
+        right: ['CLIENT', 'open-source'],
       }}
     >
-      <div className="hero-intro" style={{ maxWidth: 1100, margin: '96px auto 0', position: 'relative' }}>
+      <div className="hero-intro" style={{ maxWidth: 1100, margin: '72px auto 0', position: 'relative' }}>
 
         <h1
-          className="h-display"
-          style={{ marginBottom: 32, position: 'relative' }}
+          className="h-display hero-title"
+          style={{ marginBottom: 20, position: 'relative' }}
           data-cal
           data-cal-label="hero headline"
         >
-          Build the <em>tool</em>.
-          <br />
-          Hudson provides the <span className="boxed">workspace</span>.
+          Hudson gives your tools a <span className="boxed">workspace</span>.
         </h1>
 
-        <p className="subhead" style={{ marginBottom: 36, fontSize: 16 }}>
-          Canvas, side rails, commands, persistence, logging, and agent-ready infrastructure —
-          already working together. Your team owns the model, renderer, and interactions that make
-          the product yours.
+        <p className="subhead" style={{ marginBottom: 28, fontSize: 16 }}>
+          A spatial canvas for your apps, with the shell, commands, and persistence already built.
         </p>
 
-        <div style={{ display: 'flex', gap: 12, marginBottom: 72 }} data-cal data-cal-label="hero CTAs">
+        <div style={{ display: 'flex', gap: 12 }} data-cal data-cal-label="hero CTAs">
           <button
             type="button"
             className="btn"
@@ -89,74 +77,12 @@ export function Sheet01Hero() {
           </a>
         </div>
 
-        <div
-          data-cal
-          data-cal-label="stats grid"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: 0,
-            borderTop: '1px solid var(--line)',
-            borderBottom: '1px solid var(--line)',
-            maxWidth: 880,
-            overflow: 'hidden',
-          }}
-        >
-          {STATS.map((c, i) => (
-            <div
-              key={c[0]}
-              style={{
-                padding: '16px 20px',
-                borderRight: i < 3 ? '1px solid color-mix(in oklch, var(--line) 60%, transparent)' : 0,
-                fontFamily: 'var(--font-mono)',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 9,
-                  letterSpacing: '0.2em',
-                  color: 'var(--ink-2)',
-                  textTransform: 'uppercase',
-                }}
-              >
-                {c[0]}
-              </div>
-              <div
-                style={{
-                  fontSize: 24,
-                  color: 'var(--ink)',
-                  fontFamily: 'var(--font-display)',
-                  marginTop: 4,
-                  lineHeight: 1,
-                }}
-              >
-                {c[0] === 'License' ? c[1] : <Counter to={parseInt(c[1], 10)} />}
-              </div>
-              <div
-                style={{
-                  fontSize: 10,
-                  color: 'var(--ink-2)',
-                  marginTop: 6,
-                  letterSpacing: '0.04em',
-                  lineHeight: 1.4,
-                }}
-              >
-                {c[2]}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="hero-stage" style={{ marginTop: 112, position: 'relative' }}>
+        <div className="hero-stage" style={{ marginTop: 64, position: 'relative' }}>
           <div
             className="embed-plate__caption"
             style={{ position: 'static', marginBottom: 16, justifyContent: 'space-between' }}
           >
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-              <span className="live" />
-              Fig. 01 · live workspace
-            </span>
-            <span style={{ color: 'var(--ink-3)' }}>The real shell, rendered from the SDK</span>
+            <span>Fig. 01 · Hudson workspace</span>
           </div>
 
           <div data-cal data-cal-label="workspace embed · 760h">

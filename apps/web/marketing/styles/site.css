@@ -1900,6 +1900,7 @@
 .hudson-site .hero-callouts__num { color: var(--ink-1); }
 
 /* Hero on axis: copy, CTAs and stats center over the product. */
+.hudson-site .hero-title { font-size: clamp(34px, 4.2vw, 60px); line-height: 1.04; letter-spacing: -0.025em; }
 .hudson-site .hero-intro { text-align: center; }
 .hudson-site .hero-intro .subhead { margin-left: auto; margin-right: auto; }
 .hudson-site .hero-intro [data-cal-label='hero CTAs'] { justify-content: center; }
