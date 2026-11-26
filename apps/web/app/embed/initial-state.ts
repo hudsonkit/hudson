@@ -116,3 +116,12 @@ export function parseWorkspaceIds(value: string | null | undefined): string[] {
     .filter((id): id is string => Boolean(id))
     .slice(0, 8);
 }
+
+/** Named accent presets an embed can ask for (`accent=ember`), as oklch triplets. */
+const ACCENT_PRESETS: Record<string, string> = {
+  ember: '0.70 0.11 42',
+};
+
+export function parseAccent(value: string | null | undefined): string | undefined {
+  return value ? ACCENT_PRESETS[value.trim().toLowerCase()] : undefined;
+}

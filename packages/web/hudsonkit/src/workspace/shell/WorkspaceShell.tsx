@@ -83,6 +83,7 @@ import { DEFAULT_SHELL_SETTINGS, mergeHudsonSettings, normalizeHudsonSettings } 
 import { ActiveWorkspaceProvider } from '../context/ActiveWorkspaceContext';
 import { WorkspaceDecorProvider } from './decor/WorkspaceDecorContext';
 import { DecorationLayer } from './decor/DecorationLayer';
+import { arrangeForViewport } from './arrange';
 import {
   WorkspaceHostRoutesProvider,
   routeWithQuery,
@@ -581,6 +582,12 @@ interface WorkspaceShellProps {
   sideNavMode?: 'legacy' | 'anchored';
   /** Concrete bindings for app-specific surfaces (terminal, …). */
   environment?: WorkspaceShellEnvironment;
+  /** Tile the open windows into a clean grid and fit the canvas to them on
+   *  first load and on every workspace switch. Users can still drag freely.
+   *  Off by default; demos and embeds turn it on. */
+  autoArrange?: boolean;
+  /** Render the workspace's decoration placards behind the windows. */
+  showDecor?: boolean;
 }
 
 interface ProviderRuntimeState {
@@ -607,6 +614,8 @@ export function WorkspaceShell({
   initialState,
   sideNavMode = 'legacy',
   environment,
+  autoArrange = false,
+  showDecor = true,
 }: WorkspaceShellProps) {
   const routes = environment?.routes;
   // --- Session restore (hydration-safe: read localStorage in useEffect) ---
@@ -780,6 +789,8 @@ export function WorkspaceShell({
       initialState={activeInitialState}
       sideNavMode={sideNavMode}
       environment={environment}
+      autoArrange={autoArrange}
+      showDecor={showDecor}
     />
   );
 
@@ -912,6 +923,8 @@ function WorkspaceInner({
   initialState,
   sideNavMode,
   environment,
+  autoArrange,
+  showDecor,
 }: {
   workspace: HudsonWorkspace;
   /** Full workspace including disabled apps (for workspace editor) */
@@ -930,6 +943,8 @@ function WorkspaceInner({
   initialState?: WorkspaceShellInitialState;
   sideNavMode: 'legacy' | 'anchored';
   environment?: WorkspaceShellEnvironment;
+  autoArrange: boolean;
+  showDecor: boolean;
 }) {
   const routes = useWorkspaceHostRoutes();
   // Derived visibility flags from boot phase
@@ -1812,13 +1827,14 @@ function WorkspaceInner({
     setPanOffset(pos);
   }, []);
 
-  const handleFitAll = useCallback(() => {
+  const handleFitAll = useCallback((opts?: { silent?: boolean }) => {
+    const silent = opts?.silent === true;
     // Read live bounds from ref — no dependency on state, always fresh
     const allBounds = Object.values(windowBoundsRef.current);
     if (allBounds.length === 0) {
       setPanOffset({ x: 0, y: 0 });
       setScale(1);
-      playSound('blipUp');
+      if (!silent) playSound('blipUp');
       return;
     }
     const minX = Math.min(...allBounds.map(b => b.x));
@@ -1837,7 +1853,7 @@ function WorkspaceInner({
 
     setPanOffset({ x: -centerX, y: -centerY });
     setScale(fitScale);
-    playSound('blipUp');
+    if (!silent) playSound('blipUp');
   }, [viewport, playSound]);
 
   // Fire delayed fit-all after launcher dismiss (gives apps time to render + report bounds).
@@ -1902,6 +1918,35 @@ function WorkspaceInner({
     setTimeout(() => handleFitAll(), 100);
     playSound('blipUp');
   }, [activatedAppIds, tileWindowBounds, handleFitAll, playSound]);
+
+  // --- Auto-arrange on load: tidy grid + fit, once per workspace mount ---
+  // WorkspaceInner is keyed by workspace id, so this also runs on every
+  // workspace switch. Waits for the canvas to measure itself so the fit is
+  // computed against the real viewport, then announces it for hosts (the
+  // embed's reveal waits on `hudson:canvas-arranged`).
+  const arrangedRef = useRef(false);
+  const arrangeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const viewportReady = viewport.width > 0 && viewport.height > 0;
+  useEffect(() => {
+    if (!autoArrange || arrangedRef.current || !viewportReady) return;
+    arrangedRef.current = true;
+    const ids = workspace.apps
+      .filter(c => activatedAppIds.has(c.app.id) && c.canvasMode === 'windowed')
+      .map(c => c.app.id);
+    const arranged = arrangeForViewport(ids, viewport);
+    if (arranged) {
+      setWindowBoundsOverrides(previous => ({ ...previous, ...arranged.bounds }));
+      setWindowResetKey(k => k + 1);
+      setScale(arranged.scale);
+      setPanOffset(arranged.pan);
+    }
+    const workspaceId = workspace.id;
+    arrangeTimerRef.current = setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('hudson:canvas-arranged', { detail: { workspaceId } }));
+    }, 80);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once per workspace mount, as soon as the viewport is measured
+  }, [autoArrange, viewportReady]);
+  useEffect(() => () => clearTimeout(arrangeTimerRef.current), []);
 
   // --- Fullscreen app mode ---
   const enterFullscreen = useCallback((appId: string) => {
@@ -3300,6 +3345,7 @@ function WorkspaceInner({
         ) : focusedCanvasContentNode
       ) : (
         <MultiAppCanvas
+          showDecor={showDecor}
           workspace={workspace}
           focusedAppId={focusedAppId}
           onFocusApp={setFocusedAppId}
@@ -4048,6 +4094,7 @@ interface DynamicWindowEntry {
 }
 
 function MultiAppCanvas({
+  showDecor = true,
   workspace,
   focusedAppId,
   onFocusApp,
@@ -4073,6 +4120,7 @@ function MultiAppCanvas({
   windowBoundsOverrides,
   persistWindowState,
 }: {
+  showDecor?: boolean;
   workspace: HudsonWorkspace;
   focusedAppId: string;
   onFocusApp: (id: string) => void;
@@ -4135,7 +4183,7 @@ function MultiAppCanvas({
   return (
     <>
       {/* Workspace decoration layer — read-only placards behind app windows. */}
-      <DecorationLayer worldScale={worldScale} />
+      {showDecor && <DecorationLayer worldScale={worldScale} />}
       {/* Pipe connection arrows between apps */}
       <MountTrace label="PipeConnectorLayer">
         <PipeConnectorLayer pipes={pipes} windowBoundsMap={windowBoundsMap} />

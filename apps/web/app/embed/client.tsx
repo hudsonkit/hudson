@@ -22,7 +22,7 @@ import { EmbedHandshake } from './[appId]/[surface]/EmbedHandshake';
 import { EmbedVoice } from './[appId]/[surface]/EmbedVoice';
 import { EmbedWorkspace } from './[appId]/[surface]/EmbedWorkspace';
 import type { WorkspaceShellInitialState } from 'hudsonkit/workspace';
-import { parseCollapse, parseWorkspaceIds } from './initial-state';
+import { parseAccent, parseCollapse, parseWorkspaceIds } from './initial-state';
 
 // ── Read initial state injected by the Worker ─────────────────────────────────
 
@@ -70,6 +70,7 @@ const initialState: WorkspaceShellInitialState = workerState
 const urlParams = new URLSearchParams(window.location.search);
 const collapse = parseCollapse(urlParams.get('collapse'));
 const workspaceIds = parseWorkspaceIds(urlParams.get('workspaces'));
+const accent = parseAccent(urlParams.get('accent'));
 Object.assign(initialState, collapse);
 
 // ── Mount ─────────────────────────────────────────────────────────────────────
@@ -79,7 +80,7 @@ const rootEl = document.getElementById('hudson-embed-root');
 function EmbedSurface() {
   if (surface === 'voice') return <EmbedVoice />;
   if (surface === 'docs') return <EmbedDocs />;
-  if (surface === 'workspace') return <EmbedWorkspace initialState={initialState} workspaceIds={workspaceIds} />;
+  if (surface === 'workspace') return <EmbedWorkspace initialState={initialState} workspaceIds={workspaceIds} accent={accent} />;
 
   return (
     <div
