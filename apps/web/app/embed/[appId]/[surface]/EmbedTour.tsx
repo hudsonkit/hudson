@@ -130,6 +130,12 @@ const STEPS: TourStep[] = [
     target: canvasRect,
   },
   {
+    id: 'workspaces',
+    title: 'Workspaces',
+    body: 'A workspace is a set of apps arranged for one job. Switch between them from the top bar; try Developer Mode or Hero Studio.',
+    target: () => rectOf('[data-workspace-switcher]'),
+  },
+  {
     id: 'navigation',
     title: 'Navigation rail',
     body: 'The left rail holds the focused app’s navigation. The app fills a slot; the shell draws the chrome around it.',

@@ -58,7 +58,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
         }}
       >
         {/* Left: Branding */}
-        <div className="absolute left-4 bottom-0 h-12 z-10 flex items-center gap-3 select-none" onMouseDown={onInteractiveMouseDown}>
+        <div className="absolute left-4 bottom-0 h-12 z-10 flex items-center gap-3 select-none min-w-0" style={{ maxWidth: 'calc(100% - 9rem)' }} onMouseDown={onInteractiveMouseDown}>
           <button
             onClick={onTitleClick}
             aria-label={title}
@@ -73,7 +73,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
             )}
           </button>
           {subtitle && (
-            <span className="text-xs font-mono font-light text-muted-foreground">{subtitle}</span>
+            <span className="flex min-w-0 text-xs font-mono font-light text-muted-foreground">{subtitle}</span>
           )}
         </div>
 

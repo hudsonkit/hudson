@@ -30,11 +30,12 @@ export function ServicesContent() {
         const isSelected = selectedId === svc.id;
 
         return (
-          <button
+          // A card, not a <button>: it holds its own action buttons, and
+          // buttons can't nest. The service name is the keyboard target.
+          <div
             key={svc.id}
-            type="button"
             onClick={() => setSelectedId(svc.id)}
-            className={`w-full text-left rounded-lg border p-4 transition-colors ${
+            className={`w-full text-left cursor-pointer rounded-lg border p-4 transition-colors ${
               isSelected
                 ? 'border-cyan-500/40 bg-cyan-500/5'
                 : 'border-neutral-800 bg-neutral-900/50 hover:border-neutral-700'
@@ -43,7 +44,14 @@ export function ServicesContent() {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${STATUS_COLORS[status]}`} />
-                <span className="text-sm font-medium text-neutral-200">{svc.name}</span>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setSelectedId(svc.id); }}
+                  aria-pressed={isSelected}
+                  className="text-sm font-medium text-neutral-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 rounded"
+                >
+                  {svc.name}
+                </button>
                 {svc.version && (
                   <span className="text-[10px] text-neutral-500 font-mono">v{svc.version}</span>
                 )}
@@ -86,7 +94,7 @@ export function ServicesContent() {
             {record?.error && (
               <p className="mt-2 text-[10px] text-red-400 font-mono truncate">{record.error}</p>
             )}
-          </button>
+          </div>
         );
       })}
 

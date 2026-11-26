@@ -22,7 +22,7 @@ import { EmbedHandshake } from './[appId]/[surface]/EmbedHandshake';
 import { EmbedVoice } from './[appId]/[surface]/EmbedVoice';
 import { EmbedWorkspace } from './[appId]/[surface]/EmbedWorkspace';
 import type { WorkspaceShellInitialState } from 'hudsonkit/workspace';
-import { parseCollapse } from './initial-state';
+import { parseCollapse, parseWorkspaceIds } from './initial-state';
 
 // ── Read initial state injected by the Worker ─────────────────────────────────
 
@@ -67,7 +67,9 @@ const initialState: WorkspaceShellInitialState = workerState
     };
 
 // URL-level overrides that also apply on the Worker path (static HTML shell).
-const collapse = parseCollapse(new URLSearchParams(window.location.search).get('collapse'));
+const urlParams = new URLSearchParams(window.location.search);
+const collapse = parseCollapse(urlParams.get('collapse'));
+const workspaceIds = parseWorkspaceIds(urlParams.get('workspaces'));
 Object.assign(initialState, collapse);
 
 // ── Mount ─────────────────────────────────────────────────────────────────────
@@ -77,7 +79,7 @@ const rootEl = document.getElementById('hudson-embed-root');
 function EmbedSurface() {
   if (surface === 'voice') return <EmbedVoice />;
   if (surface === 'docs') return <EmbedDocs />;
-  if (surface === 'workspace') return <EmbedWorkspace initialState={initialState} />;
+  if (surface === 'workspace') return <EmbedWorkspace initialState={initialState} workspaceIds={workspaceIds} />;
 
   return (
     <div

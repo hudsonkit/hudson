@@ -20,7 +20,7 @@
 
 import type { CSSProperties } from 'react';
 import { consumers, consumerThemeStyle } from '../../registry';
-import { resolveEmbedInitialState, type EmbedSearchParams } from '../../initial-state';
+import { parseWorkspaceIds, resolveEmbedInitialState, type EmbedSearchParams } from '../../initial-state';
 import { getCoreWorkspaces } from '../../../apps/registry';
 import { EmbedHandshake } from './EmbedHandshake';
 import { EmbedWorkspace } from './EmbedWorkspace';
@@ -50,7 +50,10 @@ export default async function EmbedPage({ params, searchParams }: EmbedPageProps
         style={{ ...themeStyle, minHeight: '100vh' } as CSSProperties}
       >
         <EmbedHandshake surface={surface} />
-        <EmbedWorkspace initialState={initialState} />
+        <EmbedWorkspace
+          initialState={initialState}
+          workspaceIds={parseWorkspaceIds(Array.isArray(sp.workspaces) ? sp.workspaces[0] : sp.workspaces)}
+        />
       </div>
     );
   }

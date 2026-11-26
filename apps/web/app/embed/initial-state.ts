@@ -106,3 +106,13 @@ export function resolveEmbedInitialState(
     ...parseCollapse(firstParam(searchParams, 'collapse')),
   };
 }
+
+/** `workspaces=hudson-os,developer-mode` → the ids the embed may switch between (order kept). */
+export function parseWorkspaceIds(value: string | null | undefined): string[] {
+  if (!value) return [];
+  return value
+    .split(',')
+    .map(part => cleanId(part))
+    .filter((id): id is string => Boolean(id))
+    .slice(0, 8);
+}

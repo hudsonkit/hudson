@@ -7,8 +7,18 @@ import { coreWorkspaces } from '../../../apps/registry';
 import { hudsonShellEnvironment } from '../../../lib/hudsonShellEnvironment';
 import { EmbedTour } from './EmbedTour';
 
-export function EmbedWorkspace({ initialState }: { initialState: WorkspaceShellInitialState }) {
-  const embedWorkspaces = coreWorkspaces.filter(workspace => workspace.id === initialState.activeWorkspaceId);
+export function EmbedWorkspace({
+  initialState,
+  workspaceIds = [],
+}: {
+  initialState: WorkspaceShellInitialState;
+  /** Extra workspaces to offer in the switcher; the active one is always included. */
+  workspaceIds?: string[];
+}) {
+  const ids = [initialState.activeWorkspaceId, ...workspaceIds.filter(id => id !== initialState.activeWorkspaceId)];
+  const embedWorkspaces = ids
+    .map(id => coreWorkspaces.find(workspace => workspace.id === id))
+    .filter((workspace): workspace is (typeof coreWorkspaces)[number] => Boolean(workspace));
 
   return (
     <ThemeProvider

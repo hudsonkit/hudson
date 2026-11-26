@@ -63,6 +63,8 @@ export type HudsonEmbedProps = {
   priority?: 'eager' | 'lazy';
   /** Shell panels to start closed, e.g. ['left', 'right'] for canvas-first. */
   collapse?: Array<'left' | 'right'>;
+  /** Other workspace ids to offer in the embed's switcher. */
+  workspaces?: string[];
 };
 
 const DEFAULT_THEME_MAP: Record<string, string> = {
@@ -145,6 +147,7 @@ export function HudsonEmbed({
   themeFrom,
   priority = 'lazy',
   collapse,
+  workspaces,
 }: HudsonEmbedProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [reportedHeight, setReportedHeight] = useState<number | null>(null);
@@ -175,6 +178,7 @@ export function HudsonEmbed({
     if (!consumerId) url.searchParams.set('theme', 'dark');
     url.searchParams.set('palette', encodedPalette);
     if (collapse?.length) url.searchParams.set('collapse', collapse.join(','));
+    if (workspaces?.length) url.searchParams.set('workspaces', workspaces.join(','));
     return absolute ? url.toString() : url.pathname + url.search;
   })();
 
