@@ -15,7 +15,7 @@ export function AppCard({ app, index }: { app: AppCardData; index: number }) {
     <div
       className="hud-card"
       style={{
-        border: 'var(--stroke-w) solid var(--ink)',
+        border: '1px solid var(--line)',
         background: 'var(--paper)',
         display: 'grid',
         gridTemplateColumns: '180px 1fr',
@@ -26,7 +26,7 @@ export function AppCard({ app, index }: { app: AppCardData; index: number }) {
       <div
         style={{
           background: 'oklch(0.145 0 0)',
-          borderRight: '1px solid var(--ink)',
+          borderRight: '1px solid var(--line)',
           position: 'relative',
           overflow: 'hidden',
         }}

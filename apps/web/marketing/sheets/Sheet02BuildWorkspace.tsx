@@ -13,9 +13,7 @@ import {
   Waypoints,
 } from 'hudsonkit/icons';
 import type { HudsonIcon } from 'hudsonkit/icons';
-import { Eyebrow } from '@/marketing/primitives/Eyebrow';
 import { Sheet } from '@/marketing/primitives/Sheet';
-import { sheetNumber } from './order';
 
 type StoryStepId = 'surface' | 'app' | 'shell' | 'pipe' | 'workspace';
 
@@ -219,9 +217,6 @@ export function Sheet02BuildWorkspace() {
       }}
     >
       <div style={{ maxWidth: 1300, margin: '96px auto 0' }}>
-        <div style={{ marginBottom: 24 }}>
-          <Eyebrow>{sheetNumber('build-workspace')} / Story diagram · workspace grammar</Eyebrow>
-        </div>
 
         <div
           className="reflow-stack"
@@ -244,7 +239,7 @@ export function Sheet02BuildWorkspace() {
             <div className="workspace-story-plate" data-cal data-cal-label="build workspace diagram">
               <div className="embed-plate__caption">
                 <span className="live" />
-                FIG. 02-B · INTERACTIVE CONTRACT
+                FIG. 02 · INTERACTIVE CONTRACT
                 <span style={{ color: 'var(--ink-faint)' }}> · </span>
                 <span>{activeStep.verb}</span>
               </div>

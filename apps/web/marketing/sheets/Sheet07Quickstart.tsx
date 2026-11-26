@@ -1,9 +1,7 @@
 import { HudsonEmbed } from '@/marketing/lib/embed';
 import { EmbedFrame } from '@/marketing/primitives/EmbedFrame';
-import { Eyebrow } from '@/marketing/primitives/Eyebrow';
 import { Sheet } from '@/marketing/primitives/Sheet';
 import { REPOSITORY_URL } from '@/site/seo';
-import { sheetNumber } from './order';
 
 const STEPS = [
   {
@@ -51,9 +49,10 @@ const FOOTER_COLS: { h: string; links: { label: string; href: string }[] }[] = [
   {
     h: 'Apps',
     links: [
-      { label: 'Talkie', href: 'https://usetalkie.com' },
-      { label: 'Scout', href: 'https://github.com/arach/scout' },
-      { label: 'Lattices', href: 'https://github.com/arach/lattices' },
+      { label: 'Talkie', href: 'https://talkie.to' },
+      { label: 'OpenScout', href: 'https://openscout.app' },
+      { label: 'Linea', href: 'https://lineareads.com' },
+      { label: 'Lattices', href: 'https://lattices.dev' },
       { label: 'Vox', href: 'https://github.com/arach/vox' },
     ],
   },
@@ -80,9 +79,6 @@ export function Sheet07Quickstart() {
       }}
     >
       <div style={{ maxWidth: 1300, margin: '96px auto 0' }}>
-        <div style={{ marginBottom: 24 }}>
-          <Eyebrow>{sheetNumber('quickstart')} / Implementation · from spec to product</Eyebrow>
-        </div>
 
         <div
           style={{
@@ -118,7 +114,7 @@ export function Sheet07Quickstart() {
               key={s.n}
               className="hud-card"
               style={{
-                border: 'var(--stroke-w) solid var(--ink)',
+                border: '1px solid var(--line)',
                 background: 'var(--paper)',
                 padding: '20px 22px',
                 display: 'flex',
@@ -132,7 +128,7 @@ export function Sheet07Quickstart() {
                     fontFamily: 'var(--font-display)',
                     fontSize: 44,
                     lineHeight: 1,
-                    color: 'var(--accent-deep)',
+                    color: 'var(--ink-2)',
                   }}
                 >
                   {s.n}
@@ -215,7 +211,7 @@ export function Sheet07Quickstart() {
             </p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 240 }}>
-            <a className="btn btn--accent" href={WORKSPACE_URL} target="_blank" rel="noopener noreferrer">
+            <a className="btn" href={WORKSPACE_URL} target="_blank" rel="noopener noreferrer">
               ↗ Open the workspace
             </a>
             <a

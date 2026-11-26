@@ -1,6 +1,4 @@
-import { Eyebrow } from '@/marketing/primitives/Eyebrow';
 import { Sheet } from '@/marketing/primitives/Sheet';
-import { sheetNumber } from './order';
 import { AppCard, type AppCardData } from './_components/AppCard';
 
 const APPS: AppCardData[] = [
@@ -8,40 +6,44 @@ const APPS: AppCardData[] = [
     id: 'talkie',
     name: 'Talkie',
     tag: 'ios · macos',
-    lede: 'Voice notes, transcribed.',
-    body: 'A canvas of audio clips. Long-press to record, drag to arrange, ⌘K to find anything you said three weeks ago.',
-    accent: 'oklch(0.62 0.16 162)',
+    lede: 'Dictation, notes, and meeting capture.',
+    body: 'Dictate into Claude Code, Slack, or Mail, record memos, and transcribe meetings. Each capture keeps its screen, ready to search or hand to an agent.',
+    accent: 'oklch(0.74 0.12 262)',
     icon: '/marketing/apps/talkie.png',
     source: 'https://github.com/arach/usetalkie.com',
-    href: 'https://usetalkie.com',
+    href: 'https://talkie.to',
   },
   {
     id: 'scout',
-    name: 'Scout',
+    name: 'OpenScout',
     tag: 'macos · web',
-    lede: 'Field notes that file themselves.',
-    body: 'Local-first dictation built for agents. Speak, and the transcript lands wherever your tools are listening.',
-    accent: 'oklch(0.66 0.18 50)',
+    lede: 'Agents, software, and people, working together.',
+    body: 'Open-source software for putting agents to work. Every agent runs on one core runtime and connects through the OpenScout platform.',
+    accent: 'oklch(0.92 0.02 85)',
     icon: '/marketing/apps/scout.png',
     source: 'https://github.com/arach/scout',
+    href: 'https://openscout.app',
   },
   {
     id: 'linea',
     name: 'Linea',
     tag: 'macos · web',
-    lede: 'A line, finely drawn.',
-    body: 'A drafting surface for precise strokes — bezier curves, dimensions, and marks over a millimetric grid.',
-    accent: 'oklch(0.55 0.18 250)',
+    lede: 'Read more, more often.',
+    body: 'A visual reader for documents and papers. Open a PDF or a link and read it with highlights, notes, and drawn marks in place.',
+    accent: 'oklch(0.62 0.15 40)',
+    icon: '/marketing/apps/linea.png',
+    href: 'https://lineareads.com',
   },
   {
     id: 'lattices',
     name: 'Lattices',
     tag: 'macos',
-    lede: 'Structure, made visible.',
-    body: 'The agentic window manager. Tiles windows, runs tmux sessions, indexes screen text — a desktop API your AI can drive.',
-    accent: 'oklch(0.60 0.20 18)',
+    lede: 'Take control of your workspace.',
+    body: 'Windows, terminals, and projects under one control surface, with the same workspace controls for your agents on every computer you connect. Free and open source.',
+    accent: 'oklch(0.68 0.17 35)',
     icon: '/marketing/apps/lattices.png',
     source: 'https://github.com/arach/lattices',
+    href: 'https://lattices.dev',
   },
 ];
 
@@ -58,9 +60,6 @@ export function Sheet05Apps() {
       }}
     >
       <div style={{ maxWidth: 1300, margin: '96px auto 0' }}>
-        <div style={{ marginBottom: 24 }}>
-          <Eyebrow>{sheetNumber('apps')} / Apps gallery · in production</Eyebrow>
-        </div>
 
         <div
           style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, marginBottom: 72 }}

@@ -19,7 +19,7 @@ export function PlatformFrame({ kind, label, sub }: PlatformFrameProps) {
           width: W,
           height: H,
           background: 'oklch(0.145 0 0)',
-          border: 'var(--stroke-w) solid var(--ink)',
+          border: '1px solid var(--line)',
           borderRadius: radius,
           position: 'relative',
           overflow: 'hidden',

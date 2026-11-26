@@ -4,17 +4,19 @@ import { useState } from 'react';
 import { Counter } from '@/marketing/lib/animate';
 import { HudsonEmbed } from '@/marketing/lib/embed';
 import { EmbedFrame } from '@/marketing/primitives/EmbedFrame';
-import { Eyebrow } from '@/marketing/primitives/Eyebrow';
+import { LiveDimensions } from '@/marketing/primitives/LiveDimensions';
 import { Sheet } from '@/marketing/primitives/Sheet';
 import { REPOSITORY_URL } from '@/site/seo';
 
 const INSTALL_CMD = 'bun add hudsonkit';
 const GITHUB_URL = REPOSITORY_URL;
 
+const CALLOUTS = ['Capability map', 'Command dock', 'Status bar', 'Canvas · pan / zoom'];
+
 const STATS: Array<[string, string, string]> = [
   ['Surfaces', '3', 'iOS · macOS · Web'],
   ['Primitives', '8', 'Frame · Nav · Panel · Status · Canvas · Palette · Drawer · Assistant'],
-  ['Apps live', '5', 'Talkie · Scout · Linea · Lattices · Vox'],
+  ['Apps live', '5', 'Talkie · OpenScout · Linea · Lattices · Vox'],
   ['License', 'Apache 2.0', 'free for commercial use'],
 ];
 
@@ -47,10 +49,7 @@ export function Sheet01Hero() {
         right: ['STATUS', 'shipped'],
       }}
     >
-      <div style={{ maxWidth: 1100, margin: '96px auto 0', position: 'relative' }}>
-        <div style={{ marginBottom: 28 }}>
-          <Eyebrow>HudsonKit / open-source app shell + workspace</Eyebrow>
-        </div>
+      <div className="hero-intro" style={{ maxWidth: 1100, margin: '96px auto 0', position: 'relative' }}>
 
         <h1
           className="h-display"
@@ -69,10 +68,10 @@ export function Sheet01Hero() {
           the product yours.
         </p>
 
-        <div style={{ display: 'flex', gap: 12, marginBottom: 80 }} data-cal data-cal-label="hero CTAs">
+        <div style={{ display: 'flex', gap: 12, marginBottom: 72 }} data-cal data-cal-label="hero CTAs">
           <button
             type="button"
-            className="btn btn--accent"
+            className="btn"
             onClick={handleInstallClick}
             aria-label={copied ? 'Install command copied to clipboard' : `Copy install command: ${INSTALL_CMD}`}
             style={{ minWidth: 220 }}
@@ -91,15 +90,14 @@ export function Sheet01Hero() {
         </div>
 
         <div
-          className="hud-card"
           data-cal
           data-cal-label="stats grid"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
             gap: 0,
-            border: 'var(--stroke-w) solid var(--ink)',
-            background: 'var(--paper)',
+            borderTop: '1px solid var(--line)',
+            borderBottom: '1px solid var(--line)',
             maxWidth: 880,
             overflow: 'hidden',
           }}
@@ -108,8 +106,8 @@ export function Sheet01Hero() {
             <div
               key={c[0]}
               style={{
-                padding: '14px 16px',
-                borderRight: i < 3 ? '1px solid var(--line-strong)' : 0,
+                padding: '16px 20px',
+                borderRight: i < 3 ? '1px solid color-mix(in oklch, var(--line) 60%, transparent)' : 0,
                 fontFamily: 'var(--font-mono)',
               }}
             >
@@ -125,7 +123,7 @@ export function Sheet01Hero() {
               </div>
               <div
                 style={{
-                  fontSize: 28,
+                  fontSize: 24,
                   color: 'var(--ink)',
                   fontFamily: 'var(--font-display)',
                   marginTop: 4,
@@ -149,47 +147,21 @@ export function Sheet01Hero() {
           ))}
         </div>
 
-        <svg
-          style={{
-            position: 'absolute',
-            left: -32,
-            top: -20,
-            width: 24,
-            height: 200,
-            pointerEvents: 'none',
-          }}
-        >
-          <line x1="12" y1="0" x2="12" y2="200" stroke="var(--ink)" strokeWidth="0.75" />
-          <line x1="6" y1="0" x2="18" y2="0" stroke="var(--ink)" strokeWidth="0.75" />
-          <line x1="6" y1="200" x2="18" y2="200" stroke="var(--ink)" strokeWidth="0.75" />
-          <text
-            x="0"
-            y="105"
-            fontFamily="var(--font-mono)"
-            fontSize="9"
-            fill="var(--ink-2)"
-            transform="rotate(-90, 0, 105)"
-          >
-            200pt LEAD
-          </text>
-        </svg>
-
-        <div style={{ marginTop: 96, position: 'relative' }}>
+        <div className="hero-stage" style={{ marginTop: 112, position: 'relative' }}>
           <div
             className="embed-plate__caption"
-            style={{ position: 'static', marginBottom: 14, justifyContent: 'space-between' }}
+            style={{ position: 'static', marginBottom: 16, justifyContent: 'space-between' }}
           >
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
               <span className="live" />
-              FIG. 01-A · LIVE EMBED
+              Fig. 01 · live workspace
             </span>
-            <span style={{ color: 'var(--ink-3)', letterSpacing: '0.18em' }}>
-              workspace = self · <span style={{ color: 'var(--ink-1)' }}>live</span>
-            </span>
+            <span style={{ color: 'var(--ink-3)' }}>The real shell, rendered from the SDK</span>
           </div>
 
-          <div data-cal data-cal-label="workspace embed · 720h">
-          <EmbedFrame height={720}>
+          <div data-cal data-cal-label="workspace embed · 760h">
+          <LiveDimensions>
+          <EmbedFrame height={760}>
             <HudsonEmbed
               src="/embed/hudson/workspace"
               surface="workspace"
@@ -209,25 +181,17 @@ export function Sheet01Hero() {
               priority="eager"
             />
           </EmbedFrame>
+          </LiveDimensions>
           </div>
 
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              marginTop: 12,
-              fontFamily: 'var(--font-mono)',
-              fontSize: 10,
-              letterSpacing: '0.2em',
-              textTransform: 'uppercase',
-              color: 'var(--ink-3)',
-            }}
-          >
-            <span>① capability map</span>
-            <span>② command dock</span>
-            <span>③ status bar</span>
-            <span>④ canvas · pan/zoom</span>
-          </div>
+          <ol className="hero-callouts">
+            {CALLOUTS.map((label, i) => (
+              <li key={label}>
+                <span className="hero-callouts__num">{String(i + 1).padStart(2, '0')}</span>
+                {label}
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
     </Sheet>
