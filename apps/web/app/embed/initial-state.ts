@@ -28,6 +28,16 @@ function cleanApps(value: string | undefined): string[] | undefined {
   return ids.length > 0 ? [...new Set(ids)] : undefined;
 }
 
+/** `collapse=left,right` — start the embed with those shell panels closed. */
+export function parseCollapse(value: string | null | undefined): { leftCollapsed?: boolean; rightCollapsed?: boolean } {
+  if (!value) return {};
+  const parts = new Set(value.split(',').map(part => part.trim()));
+  return {
+    ...(parts.has('left') ? { leftCollapsed: true } : null),
+    ...(parts.has('right') ? { rightCollapsed: true } : null),
+  };
+}
+
 function workspaceById(workspaces: HudsonWorkspace[], id: string | undefined): HudsonWorkspace | undefined {
   return id ? workspaces.find(workspace => workspace.id === id) : undefined;
 }
@@ -93,5 +103,6 @@ export function resolveEmbedInitialState(
     tileWindowBounds: defaultBoundsForActivatedApps(workspace, activatedAppIds),
     theme,
     template,
+    ...parseCollapse(firstParam(searchParams, 'collapse')),
   };
 }

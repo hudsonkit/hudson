@@ -7,7 +7,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
  * is the element's real rendered width, re-measured on resize, so the
  * drawing annotates the product instead of decorating it.
  */
-export function LiveDimensions({ children }: { children: ReactNode }) {
+export function LiveDimensions({ children, label }: { children: ReactNode; label?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<{ w: number } | null>(null);
 
@@ -29,7 +29,7 @@ export function LiveDimensions({ children }: { children: ReactNode }) {
         {children}
       </div>
       <div className="dim__h" aria-hidden="true">
-        <span className="dim__label">{size ? `${size.w} px` : ' '}</span>
+        <span className="dim__label">{label ? `${label} — ` : ''}{size ? `${size.w} px` : ''}</span>
       </div>
     </div>
   );

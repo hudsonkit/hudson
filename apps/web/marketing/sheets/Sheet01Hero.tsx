@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { HudsonEmbed } from '@/marketing/lib/embed';
 import { EmbedFrame } from '@/marketing/primitives/EmbedFrame';
 import { LiveDimensions } from '@/marketing/primitives/LiveDimensions';
@@ -10,10 +10,37 @@ import { REPOSITORY_URL } from '@/site/seo';
 const INSTALL_CMD = 'bun add hudsonkit';
 const GITHUB_URL = REPOSITORY_URL;
 
-const CALLOUTS = ['Capability map', 'Command dock', 'Status bar', 'Canvas · pan / zoom'];
+/** Mirrors the steps of EmbedTour inside the iframe (same order). */
+const TOUR_STEPS = ['Canvas', 'Navigation', 'Inspector', 'Command palette', 'Status bar', 'Voice'];
+
+function heroFrame(): HTMLIFrameElement | null {
+  return document.querySelector<HTMLIFrameElement>('#hero iframe');
+}
 
 export function Sheet01Hero() {
   const [copied, setCopied] = useState(false);
+  const [tourStep, setTourStep] = useState(-1);
+
+  useEffect(() => {
+    const onMessage = (e: MessageEvent) => {
+      const frame = heroFrame();
+      if (!frame || e.source !== frame.contentWindow) return;
+      const data = e.data as { type?: string; step?: number } | null;
+      if (data?.type === 'hudson:tour-state' && typeof data.step === 'number') setTourStep(data.step);
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
+
+  const tour = useCallback((action: 'start' | 'stop', step?: number) => {
+    const frame = heroFrame();
+    if (!frame?.contentWindow) return;
+    if (action === 'start') {
+      const r = frame.getBoundingClientRect();
+      if (r.top < 0 || r.bottom > window.innerHeight) frame.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    frame.contentWindow.postMessage({ type: 'hudson:tour', action, step }, '*');
+  }, []);
 
   const handleInstallClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -41,7 +68,7 @@ export function Sheet01Hero() {
         right: ['CLIENT', 'open-source'],
       }}
     >
-      <div className="hero-intro" style={{ maxWidth: 1100, margin: '72px auto 0', position: 'relative' }}>
+      <div className="hero-intro" style={{ maxWidth: 1100, margin: '0 auto', position: 'relative' }}>
 
         <h1
           className="h-display hero-title"
@@ -73,21 +100,14 @@ export function Sheet01Hero() {
             rel="noopener noreferrer"
             onClick={() => window.__hudAudio?.tick?.({ cat: 'ui', gain: 0.08 })}
           >
-            View source · GitHub
+            <span className="hide-narrow">View source · </span>GitHub
           </a>
         </div>
 
-        <div className="hero-stage" style={{ marginTop: 64, position: 'relative' }}>
-          <div
-            className="embed-plate__caption"
-            style={{ position: 'static', marginBottom: 16, justifyContent: 'space-between' }}
-          >
-            <span>Fig. 01 · Hudson workspace</span>
-          </div>
-
-          <div data-cal data-cal-label="workspace embed · 760h">
-          <LiveDimensions>
-          <EmbedFrame height={760}>
+        <div className="hero-stage" style={{ marginTop: 48, position: 'relative' }}>
+          <div data-cal data-cal-label="workspace embed">
+          <LiveDimensions label="Fig. 01 · Hudson workspace">
+          <EmbedFrame height="clamp(560px, calc(100svh - 112px), 860px)">
             <HudsonEmbed
               src="/embed/hudson/workspace"
               surface="workspace"
@@ -105,19 +125,36 @@ export function Sheet01Hero() {
               }}
               title="Hudson workspace · live embed"
               priority="eager"
+              collapse={['left', 'right']}
             />
           </EmbedFrame>
           </LiveDimensions>
           </div>
 
-          <ol className="hero-callouts">
-            {CALLOUTS.map((label, i) => (
-              <li key={label}>
-                <span className="hero-callouts__num">{String(i + 1).padStart(2, '0')}</span>
-                {label}
-              </li>
-            ))}
-          </ol>
+          <div className="hero-tour">
+            <button
+              type="button"
+              className="hero-tour__start"
+              onClick={() => (tourStep >= 0 ? tour('stop') : tour('start', 0))}
+            >
+              {tourStep >= 0 ? 'End tour' : 'Take the tour →'}
+            </button>
+            <ol className="hero-callouts" aria-label="Tour steps">
+              {TOUR_STEPS.map((label, i) => (
+                <li key={label}>
+                  <button
+                    type="button"
+                    className="hero-callouts__step"
+                    aria-current={tourStep === i ? 'step' : undefined}
+                    onClick={() => tour('start', i)}
+                  >
+                    <span className="hero-callouts__num">{String(i + 1).padStart(2, '0')}</span>
+                    {label}
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </div>
         </div>
       </div>
     </Sheet>

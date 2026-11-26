@@ -61,6 +61,8 @@ export type HudsonEmbedProps = {
   // browser does anyway under bandwidth contention; 'lazy' just makes it
   // explicit and frees the hero to use the connection.
   priority?: 'eager' | 'lazy';
+  /** Shell panels to start closed, e.g. ['left', 'right'] for canvas-first. */
+  collapse?: Array<'left' | 'right'>;
 };
 
 const DEFAULT_THEME_MAP: Record<string, string> = {
@@ -142,6 +144,7 @@ export function HudsonEmbed({
   themeMap = DEFAULT_THEME_MAP,
   themeFrom,
   priority = 'lazy',
+  collapse,
 }: HudsonEmbedProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [reportedHeight, setReportedHeight] = useState<number | null>(null);
@@ -171,6 +174,7 @@ export function HudsonEmbed({
     // Without a consumerId, fall back to dark — Hudson's native default.
     if (!consumerId) url.searchParams.set('theme', 'dark');
     url.searchParams.set('palette', encodedPalette);
+    if (collapse?.length) url.searchParams.set('collapse', collapse.join(','));
     return absolute ? url.toString() : url.pathname + url.search;
   })();
 
