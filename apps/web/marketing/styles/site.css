@@ -1899,7 +1899,7 @@
   white-space: nowrap;
 }
 .hudson-site .hero-tour__start:hover { color: var(--accent); }
-.hudson-site .hero-tour .hero-callouts { flex: 1; margin: 0; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.hudson-site .hero-tour .hero-callouts { flex: 1; margin: 0; grid-template-columns: repeat(7, minmax(0, 1fr)); }
 .hudson-site .hero-callouts__step {
   display: flex;
   gap: 10px;

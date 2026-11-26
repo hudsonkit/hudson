@@ -11,7 +11,7 @@ const INSTALL_CMD = 'bun add hudsonkit';
 const GITHUB_URL = REPOSITORY_URL;
 
 /** Mirrors the steps of EmbedTour inside the iframe (same order). */
-const TOUR_STEPS = ['Canvas', 'Navigation', 'Inspector', 'Command palette', 'Status bar', 'Voice'];
+const TOUR_STEPS = ['Canvas', 'Workspaces', 'Navigation', 'Inspector', 'Command palette', 'Status bar', 'Voice'];
 
 function heroFrame(): HTMLIFrameElement | null {
   return document.querySelector<HTMLIFrameElement>('#hero iframe');
@@ -126,6 +126,7 @@ export function Sheet01Hero() {
               title="Hudson workspace · live embed"
               priority="eager"
               collapse={['left', 'right']}
+              workspaces={['developer-mode', 'document-lab', 'hero-studio']}
             />
           </EmbedFrame>
           </LiveDimensions>

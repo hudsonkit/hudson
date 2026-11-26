@@ -18,14 +18,14 @@ export function WorkspaceSwitcher({ workspaces, activeId, onSwitch }: WorkspaceS
   }
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1 min-w-0 max-w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" data-workspace-switcher>
       {workspaces.map(ws => {
         const isActive = ws.id === activeId;
         return (
           <button
             key={ws.id}
             onClick={() => onSwitch(ws.id)}
-            className={`px-2.5 py-1 rounded-md border text-[10px] font-mono transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background focus-visible:outline-none ${
+            className={`shrink-0 whitespace-nowrap px-2.5 py-1 rounded-md border text-[10px] font-mono transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background focus-visible:outline-none ${
               isActive
                 ? 'bg-accent/10 text-accent border-accent/30'
                 : 'border-border bg-card/40 text-foreground/80 hover:bg-muted hover:text-foreground hover:border-border'
