@@ -179,7 +179,8 @@ export function HudLoggerStatusItem({
       className={`inline-flex min-w-0 items-center gap-2 font-mono text-[9px] font-light uppercase tracking-[0.18em] ${statusItemToneClass(tone)} ${className}`}
       title={`${summary.total} events, ${summary.errors} errors, ${summary.activeSpans} active spans`}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${statusItemDotClass(tone)}`} />
+      {/* Healthy is quiet: the dot only appears when something needs attention. */}
+      {tone !== 'emerald' && <span className={`h-1.5 w-1.5 rounded-full ${statusItemDotClass(tone)}`} />}
       <span>{label}</span>
       {showCounts && summary.errors > 0 ? (
         <span className="tabular-nums font-semibold">{summary.errors} err</span>
@@ -1244,7 +1245,7 @@ function mergeReplayWithLive(
 function statusItemToneClass(tone: InspectorTone) {
   if (tone === 'red') return 'text-destructive';
   if (tone === 'amber') return 'text-warning';
-  return 'text-success';
+  return 'text-muted-foreground';
 }
 
 function statusItemDotClass(tone: InspectorTone) {

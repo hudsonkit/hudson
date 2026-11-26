@@ -77,7 +77,7 @@ function ResizeHandle({ onMouseDown }: { onMouseDown: (e: React.MouseEvent) => v
 // ---------------------------------------------------------------------------
 // Component doc sheet (floating card in world space)
 // ---------------------------------------------------------------------------
-export function ComponentSheet({ entry, onClose, isSelected, onSelect, onDragStart, glowIntensity = 30 }: {
+export function ComponentSheet({ entry, onClose, isSelected, onSelect, onDragStart, glowIntensity = 0 }: {
   entry: ComponentEntry;
   onClose: () => void;
   isSelected: boolean;
@@ -88,12 +88,12 @@ export function ComponentSheet({ entry, onClose, isSelected, onSelect, onDragSta
   const { size, onResizeStart } = useResize({ w: 340, h: 420 }, { w: 260, h: 200 });
   const Icon = entry.icon;
   const g = glowIntensity / 100;
-  const selectedShadow = `0 0 40px rgba(16,185,129,${(0.3*g).toFixed(3)}), 0 0 80px rgba(16,185,129,${(0.15*g).toFixed(3)}), inset 0 1px 0 rgba(16,185,129,${(0.2*g).toFixed(3)})`;
+  const selectedShadow = `0 0 40px color-mix(in srgb, oklch(var(--accent)) ${(0.3*g*100).toFixed(1)}%, transparent), 0 0 80px color-mix(in srgb, oklch(var(--accent)) ${(0.15*g*100).toFixed(1)}%, transparent), inset 0 1px 0 color-mix(in srgb, oklch(var(--accent)) ${(0.2*g*100).toFixed(1)}%, transparent)`;
   return (
     <div
       onClick={onSelect}
       onMouseDown={onDragStart}
-      style={{ boxShadow: isSelected ? selectedShadow : '0 24px 60px color-mix(in srgb, oklch(var(--foreground)) 14%, transparent)', width: size.w, height: size.h }}
+      style={{ boxShadow: isSelected && g > 0 ? selectedShadow : 'none', width: size.w, height: size.h }}
       className={`relative border rounded-lg bg-card/88 backdrop-blur-md overflow-hidden flex flex-col pointer-events-auto cursor-grab active:cursor-grabbing ${
         isSelected
           ? 'border-accent/80'
@@ -170,7 +170,7 @@ export function ComponentSheet({ entry, onClose, isSelected, onSelect, onDragSta
 // ---------------------------------------------------------------------------
 // Agent doc sheet (floating card in world space — fetches markdown content)
 // ---------------------------------------------------------------------------
-export function AgentDocSheet({ slug, onClose, isSelected, onSelect, onDragStart, glowIntensity = 30 }: {
+export function AgentDocSheet({ slug, onClose, isSelected, onSelect, onDragStart, glowIntensity = 0 }: {
   slug: string;
   onClose: () => void;
   isSelected: boolean;
@@ -203,13 +203,13 @@ export function AgentDocSheet({ slug, onClose, isSelected, onSelect, onDragStart
   }, [raw]);
 
   const g = glowIntensity / 100;
-  const selectedShadow = `0 0 40px rgba(16,185,129,${(0.3*g).toFixed(3)}), 0 0 80px rgba(16,185,129,${(0.15*g).toFixed(3)}), inset 0 1px 0 rgba(16,185,129,${(0.2*g).toFixed(3)})`;
+  const selectedShadow = `0 0 40px color-mix(in srgb, oklch(var(--accent)) ${(0.3*g*100).toFixed(1)}%, transparent), 0 0 80px color-mix(in srgb, oklch(var(--accent)) ${(0.15*g*100).toFixed(1)}%, transparent), inset 0 1px 0 color-mix(in srgb, oklch(var(--accent)) ${(0.2*g*100).toFixed(1)}%, transparent)`;
 
   return (
     <div
       onClick={onSelect}
       onMouseDown={onDragStart}
-      style={{ boxShadow: isSelected ? selectedShadow : '0 24px 60px color-mix(in srgb, oklch(var(--foreground)) 14%, transparent)', width: size.w, height: size.h }}
+      style={{ boxShadow: isSelected && g > 0 ? selectedShadow : 'none', width: size.w, height: size.h }}
       className={`relative border rounded-lg bg-card/88 backdrop-blur-md overflow-hidden flex flex-col pointer-events-auto cursor-grab active:cursor-grabbing ${
         isSelected
           ? 'border-accent/80'
@@ -465,13 +465,13 @@ export function TilesView({ components, openIds, onClose, glowIntensity, selecte
           const Icon = c.icon;
           const isSelected = selectedId === c.id;
           const tileShadow = isSelected
-            ? `0 0 40px rgba(16,185,129,${(0.3*g).toFixed(3)}), 0 0 80px rgba(16,185,129,${(0.15*g).toFixed(3)})`
-            : `0 0 30px rgba(16,185,129,${(0.15*g).toFixed(3)}), 0 0 60px rgba(16,185,129,${(0.08*g).toFixed(3)})`;
+            ? `0 0 40px color-mix(in srgb, oklch(var(--accent)) ${(0.3*g*100).toFixed(1)}%, transparent), 0 0 80px color-mix(in srgb, oklch(var(--accent)) ${(0.15*g*100).toFixed(1)}%, transparent)`
+            : 'none';
           return (
             <div
               key={c.id}
               onClick={() => onSelect(c.id)}
-              style={{ boxShadow: tileShadow }}
+              style={{ boxShadow: g > 0 ? tileShadow : 'none' }}
               className={`border rounded-lg bg-card/88 backdrop-blur-md overflow-hidden flex flex-col cursor-pointer transition-all ${
                 isSelected
                   ? 'border-accent/80 ring-1 ring-accent/20'

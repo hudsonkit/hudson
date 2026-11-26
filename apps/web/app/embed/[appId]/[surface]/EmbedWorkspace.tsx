@@ -97,10 +97,10 @@ function usePaintedSignal() {
 }
 
 /**
- * Demo theming for the embed: re-point the template's accent tokens (they are
- * defined on several nested [data-hudson-template] elements, so the override
- * is !important), quiet the status bar (no green "ready"/"logs" dots), and
- * calm window chrome: neutral focus border, flat title bar, no glows.
+ * Optional accent override for the embed (`accent=<preset>`). The template
+ * defines its accent tokens on several nested [data-hudson-template]
+ * elements, so the override is !important. Calm chrome (neutral focus
+ * border, flat title bars, quiet status bar) lives in hudsonkit itself.
  */
 function EmbedAccent({ triplet }: { triplet: string }) {
   const css = `
@@ -113,16 +113,6 @@ function EmbedAccent({ triplet }: { triplet: string }) {
   --hud-accent-line: oklch(${triplet} / 0.42) !important;
   --hud-nav-live: oklch(${triplet}) !important;
 }
-[data-frame-panel="status-bar"] .bg-success { display: none !important; }
-[data-frame-panel="status-bar"] .text-success { color: oklch(var(--muted-foreground)) !important; }
-
-/* Windows: neutral hairline when focused, flat title bar, no decorative
-   shadows or glows. Accent stays out of content; it marks state only. */
-[data-app-window] [class*="border-accent"] { border-color: oklch(var(--foreground) / 0.16) !important; }
-[data-app-window] .bg-gradient-to-r { background-image: none !important; background-color: oklch(var(--card)) !important; }
-[data-app-window] [class*="shadow"]:not(:focus-visible),
-[data-app-window] [style*="box-shadow"] { box-shadow: none !important; }
-[data-app-window] [class*="text-accent"] { color: oklch(var(--foreground) / 0.86) !important; }
 `;
   return <style data-embed-accent>{css}</style>;
 }

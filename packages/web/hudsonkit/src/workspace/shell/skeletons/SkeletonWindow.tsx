@@ -68,7 +68,7 @@ const SkeletonWindow: React.FC<SkeletonWindowProps> = ({
         }}
       >
         {/* Title bar — h-8, matching AppWindow exactly */}
-        <div className="h-8 shrink-0 flex items-center px-3 gap-2 border-b border-border/70 bg-gradient-to-r from-background/70 via-card/95 to-background/70 select-none">
+        <div className="h-8 shrink-0 flex items-center px-3 gap-2 border-b border-border/70 bg-card select-none">
           {/* Maximize placeholder dot */}
           <div className="w-[18px] h-[18px] rounded flex items-center justify-center">
             <div className="w-[11px] h-[11px] rounded-sm bg-muted-foreground/20" />

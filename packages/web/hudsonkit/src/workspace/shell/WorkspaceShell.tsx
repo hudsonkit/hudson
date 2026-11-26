@@ -260,7 +260,7 @@ function ServiceStatusIndicator({ registry, onOpenSettings, serviceIds }: {
 
   const running = serviceIds.filter(id => records[id]?.status === 'running').length;
   const hasError = serviceIds.some(id => records[id]?.status === 'error');
-  const color = hasError ? 'text-destructive' : running === total ? 'text-success' : 'text-muted-foreground';
+  const color = hasError ? 'text-destructive' : 'text-muted-foreground';
 
   return (
     <button
@@ -3536,7 +3536,7 @@ function WorkspaceInner({
           {showSaved && (
             <>
               <div className="h-3 w-px bg-border" />
-              <span className="text-[10px] font-semibold tracking-wider uppercase text-success animate-pulse">
+              <span className="text-[10px] font-semibold tracking-wider uppercase text-muted-foreground">
                 Saved
               </span>
             </>

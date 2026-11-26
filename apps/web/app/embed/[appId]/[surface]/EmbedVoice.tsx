@@ -151,7 +151,7 @@ function TopBar({ phase }: { phase: Phase }) {
               key={s.id}
               style={{
                 color: isActive
-                  ? 'var(--hud-accent, oklch(0.72 0.18 162))'
+                  ? 'var(--hud-accent, oklch(0.70 0.11 42))'
                   : isPast
                     ? 'var(--hud-ink-1, oklch(0.86 0.005 240))'
                     : 'var(--hud-ink-3, oklch(0.50 0.01 240))',
@@ -178,7 +178,7 @@ function BottomBar({
 }) {
   const dotColor =
     phase === 'ready'
-      ? 'var(--hud-accent, oklch(0.72 0.18 162))'
+      ? 'var(--hud-accent, oklch(0.70 0.11 42))'
       : 'var(--hud-ink-3, oklch(0.50 0.01 240))';
 
   const status =
@@ -354,8 +354,8 @@ function MenuBarIllustration() {
           y="-1"
           width="22"
           height="22"
-          fill="var(--hud-accent-soft, oklch(0.72 0.18 162 / 0.10))"
-          stroke="var(--hud-accent, oklch(0.72 0.18 162))"
+          fill="var(--hud-accent-soft, oklch(0.70 0.11 42 / 0.10))"
+          stroke="var(--hud-accent, oklch(0.70 0.11 42))"
           strokeWidth="1"
         />
         {/* mic */}
@@ -366,11 +366,11 @@ function MenuBarIllustration() {
           height="9"
           rx="3"
           fill="none"
-          stroke="var(--hud-accent, oklch(0.72 0.18 162))"
+          stroke="var(--hud-accent, oklch(0.70 0.11 42))"
           strokeWidth="1"
         />
-        <path d="M5 11 a5 5 0 0 0 10 0" fill="none" stroke="var(--hud-accent, oklch(0.72 0.18 162))" strokeWidth="1" />
-        <line x1="10" y1="16" x2="10" y2="18" stroke="var(--hud-accent, oklch(0.72 0.18 162))" strokeWidth="1" />
+        <path d="M5 11 a5 5 0 0 0 10 0" fill="none" stroke="var(--hud-accent, oklch(0.70 0.11 42))" strokeWidth="1" />
+        <line x1="10" y1="16" x2="10" y2="18" stroke="var(--hud-accent, oklch(0.70 0.11 42))" strokeWidth="1" />
       </g>
 
       {/* Time */}
@@ -390,10 +390,10 @@ function MenuBarIllustration() {
       <path
         d="M 300 70 L 280 96 L 200 96"
         fill="none"
-        stroke="var(--hud-accent, oklch(0.72 0.18 162))"
+        stroke="var(--hud-accent, oklch(0.70 0.11 42))"
         strokeWidth="0.8"
       />
-      <circle cx="300" cy="70" r="2" fill="var(--hud-accent, oklch(0.72 0.18 162))" />
+      <circle cx="300" cy="70" r="2" fill="var(--hud-accent, oklch(0.70 0.11 42))" />
       <text
         x="196"
         y="93"
@@ -401,7 +401,7 @@ function MenuBarIllustration() {
         fontFamily="var(--hud-font-mono, ui-monospace, monospace)"
         fontSize="9"
         letterSpacing="2"
-        fill="var(--hud-accent, oklch(0.72 0.18 162))"
+        fill="var(--hud-accent, oklch(0.70 0.11 42))"
       >
         HUDSON · MENU BAR
       </text>
@@ -563,7 +563,7 @@ function Ready({
     ? 'oklch(0.62 0.18 25)'
     : isBusy
       ? 'var(--hud-bg-3, oklch(0.28 0.005 240))'
-      : 'var(--hud-accent, oklch(0.72 0.18 162))';
+      : 'var(--hud-accent, oklch(0.70 0.11 42))';
 
   return (
     <Card>
@@ -770,7 +770,7 @@ function TranscriptPane({
             fontSize: 9,
             letterSpacing: '0.20em',
             textTransform: 'uppercase',
-            color: 'var(--hud-accent, oklch(0.72 0.18 162))',
+            color: 'var(--hud-accent, oklch(0.70 0.11 42))',
           }}
         >
           Transcript
@@ -805,7 +805,7 @@ function SmallStep({ n, t, b, href }: { n: string; t: string; b: string; href?: 
           fontFamily: 'var(--hud-font-mono, ui-monospace, monospace)',
           fontSize: 9,
           letterSpacing: '0.20em',
-          color: 'var(--hud-accent, oklch(0.72 0.18 162))',
+          color: 'var(--hud-accent, oklch(0.70 0.11 42))',
         }}
       >
         {n}
@@ -861,7 +861,7 @@ function Caption({ children, color }: { children: ReactNode; color?: 'accent' })
         textTransform: 'uppercase',
         color:
           color === 'accent'
-            ? 'var(--hud-accent, oklch(0.72 0.18 162))'
+            ? 'var(--hud-accent, oklch(0.70 0.11 42))'
             : 'var(--hud-ink-3, oklch(0.50 0.01 240))',
         marginBottom: 12,
       }}

@@ -21,7 +21,7 @@ export const DEFAULT_SETTINGS: HudsonSettings = {
   theme: 'system',
   template: 'hudson',
   contextMenuMode: 'hudson-first',
-  glowIntensity: 30,
+  glowIntensity: 0,
   gridOpacity: 60,
   connectorStyle: 'dashed',
   zoomSensitivity: 1.0,
