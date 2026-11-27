@@ -6,6 +6,9 @@ export type { HudsonApp, AppTool, StatusColor, StatusState, SearchConfig, AppMan
 export type { HudsonAppBackend } from './types/backend';
 export type { HudsonCodeChatMessage, HudsonCodeChatSurface, HudsonCodeObject, HudsonCodeSurfaceConfig, HudsonCodeSurfacePlacement, HudsonCodeSurfaceState, HudsonCodeWorkbenchSize } from './types/code';
 export type { HudsonWorkspace, WorkspaceAppConfig, CanvasParticipation, WorkspaceLeftNavigation, AppInstance } from './types/workspace';
+export type { TabGroupNode, TabSplitNode, TabLayoutNode, TabDock, DockState, TabLayoutSnapshot, ClosedTab, TabWorkspaceState, TabStoreKey, TabStore, OpenTabPlacement, OpenTabRequest, OpenTabOptions, TabStatus, TabSummary, TabSelectTarget, TabCycleScope, HudsonAppTabConfig } from './types/tabs';
+export type { ActivityRef, ActivityState, ActivityLifetime, ActivityControl, ActivitySnapshot, PlatformActivityBridge } from './types/activity';
+export { activityKey } from './types/activity';
 export type { AppIntent, IntentCategory, IntentParameter, ServerIntent, CatalogAppEntry, IntentCatalog } from './types/intent';
 export type { ServiceDefinition, ServiceDependency, ServiceRecord, ServiceAction, ServiceStatus } from './types/service';
 export type { AppOutput, AppInput, AppPorts, PipeDefinition } from './types/port';

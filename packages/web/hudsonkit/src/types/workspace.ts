@@ -44,6 +44,11 @@ export interface AppInstance {
   /** Persisted window bounds snapshot (authoring seed copies this from
    *  defaultWindowBounds; runtime spawns derive from the canvas centre). */
   bounds?: { x: number; y: number; w: number; h: number };
+  /** Serializable restore params, owned by the app (HUD-015). They name
+   *  durable objects, never live handles or content snapshots. */
+  params?: unknown;
+  /** The app's params version when `params` was written (HUD-015). */
+  paramsVersion?: number;
 }
 
 // ---------------------------------------------------------------------------
