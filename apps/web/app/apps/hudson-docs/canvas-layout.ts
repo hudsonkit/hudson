@@ -16,6 +16,9 @@ const MIN_SCALE = 0.45;
 export interface DocsLayout {
   positions: Record<string, { x: number; y: number }>;
   scale: number;
+  /** True when the frame is too small for the hub plus sheets: only the
+   *  sheets are shown (the left nav still lists everything the hub does). */
+  hubHidden: boolean;
 }
 
 function arrange(ids: string[], hubH: number, vertical: boolean) {
@@ -64,5 +67,27 @@ export function layoutDocsCanvas(
   const acrossScale = fit(across.w, across.h);
   const stackedScale = fit(stacked.w, stacked.h);
   const best = stackedScale > acrossScale + 0.02 ? { ...stacked, scale: stackedScale } : { ...across, scale: acrossScale };
-  return { positions: best.positions, scale: Math.max(MIN_SCALE, best.scale) };
+  if (best.scale >= MIN_SCALE || ids.length === 0) {
+    return { positions: best.positions, scale: Math.max(MIN_SCALE, best.scale), hubHidden: false };
+  }
+
+  // Too small for everything (a phone-sized window): show just the sheets,
+  // in whichever column count fits them largest.
+  let sheets: { positions: Record<string, { x: number; y: number }>; scale: number } | null = null;
+  for (let cols = 1; cols <= ids.length; cols++) {
+    const rows = Math.ceil(ids.length / cols);
+    const w = cols * SHEET_W + (cols - 1) * GAP;
+    const h = rows * SHEET_H + (rows - 1) * GAP;
+    const scale = fit(w, h);
+    if (sheets && scale <= sheets.scale) continue;
+    const positions: Record<string, { x: number; y: number }> = { hub: { x: 0, y: 0 } };
+    ids.forEach((id, i) => {
+      positions[id] = {
+        x: Math.round(-w / 2 + (i % cols) * (SHEET_W + GAP) + SHEET_W / 2),
+        y: Math.round(-h / 2 + Math.floor(i / cols) * (SHEET_H + GAP) + SHEET_H / 2),
+      };
+    });
+    sheets = { positions, scale };
+  }
+  return { positions: sheets!.positions, scale: Math.max(0.3, sheets!.scale), hubHidden: true };
 }
