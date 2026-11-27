@@ -1,6 +1,12 @@
-/** Host-provided command IDs are opaque to HudsonKit. */
+import type { PlatformActivityBridge } from '../types/activity';
+
+/**
+ * Host-provided command IDs are opaque to HudsonKit. Platform-neutral
+ * (HUD-015 §9): Electron feeds it from preload, a WKWebView host from a script
+ * message handler. `args` carries a payload, e.g. an OpenTabRequest.
+ */
 export interface PlatformCommandBridge {
-  subscribe: (listener: (command: string) => void) => () => void;
+  subscribe: (listener: (command: string, args?: unknown) => void) => () => void;
 }
 
 /** Capabilities for hosting remote guest content in a native shell. */
@@ -16,6 +22,8 @@ export interface PlatformGuestHosting {
 export interface PlatformAdapter {
   /** Subscribe to host commands (e.g. native menu actions), if provided. */
   commands?: PlatformCommandBridge;
+  /** Bridge to the host that owns long-running activities (HUD-015 §13), if any. */
+  activities?: PlatformActivityBridge;
   /** Host guest capability hint; this does not grant a guest any permissions. */
   guestHosting?: PlatformGuestHosting;
   /** Extra vertical inset above the nav bar for native title bars (0 for web). */

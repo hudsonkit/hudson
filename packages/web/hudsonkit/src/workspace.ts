@@ -120,3 +120,38 @@ export type {
 export { shellIntents } from './workspace/shell/intents';
 export { buildIntentCatalog } from './workspace/lib/intent-catalog';
 export type { BuildIntentCatalogOptions } from './workspace/lib/intent-catalog';
+
+// Tabs, splits and docks (HUD-015): pure layout operations
+export {
+  DEFAULT_DOCK_SIZE,
+  createLayout,
+  mainGroups,
+  allGroups,
+  visibleGroups,
+  findGroup,
+  dockOf,
+  locateTab,
+  allTabs,
+  focusedTab,
+  addTab,
+  removeTab,
+  moveTab,
+  activateTab,
+  focusGroup,
+  setDockVisible,
+  toggleDock,
+  setDockSize,
+  setSplitSizes,
+  equaliseSplit,
+  cycleTab,
+  selectByNumber,
+  repairLayout,
+} from './workspace/tabs/layout';
+export type {
+  NewId,
+  LayoutPlacement,
+  SplitEdge,
+  TabLocation,
+  AddTabOptions,
+  RepairResult,
+} from './workspace/tabs/layout';

@@ -7,6 +7,7 @@ import type { AppIntent } from './intent';
 import type { AppPorts } from './port';
 import type { ServiceDependency } from './service';
 import type { FeatureFlagGate } from '../flags/types';
+import type { HudsonAppTabConfig } from './tabs';
 
 // ---------------------------------------------------------------------------
 // App-level settings
@@ -166,6 +167,8 @@ export interface HudsonApp {
   /** Whether the shell is allowed to mount more than one live instance of this
    *  app inside a single workspace. Defaults to 'singleton'. */
   multiInstance?: MultiInstanceMode;
+  /** Tab behaviour when this app's instances are shown as tabs (HUD-015). */
+  tab?: HudsonAppTabConfig;
 
   /** Left panel header config */
   leftPanel?: { title: string; icon?: ReactNode; headerActions?: React.FC };
