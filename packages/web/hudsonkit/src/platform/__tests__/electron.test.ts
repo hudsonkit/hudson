@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test } from 'vitest';
 import { ELECTRON_ADAPTER, ELECTRON_NO_DRAG_PROPS, createElectronAdapter } from '../electron';
 
 describe('Electron platform adapter', () => {
