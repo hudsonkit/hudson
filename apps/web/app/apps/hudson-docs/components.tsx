@@ -444,7 +444,8 @@ export function TilesView({ components, openIds, onClose, glowIntensity, selecte
   const count = tiled.length;
   const g = glowIntensity / 100;
 
-  const gridCols = count <= 1 ? 'grid-cols-1' : count === 2 ? 'grid-cols-1 md:grid-cols-2' : count <= 4 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3';
+  // Columns follow the window (container), not the browser viewport.
+  const gridCols = count <= 1 ? 'grid-cols-1' : count <= 4 ? 'grid-cols-1 @3xl:grid-cols-2' : 'grid-cols-1 @3xl:grid-cols-2 @6xl:grid-cols-3';
 
   if (count === 0) {
     return (
@@ -459,7 +460,7 @@ export function TilesView({ components, openIds, onClose, glowIntensity, selecte
   }
 
   return (
-    <div className="pt-16 pb-16 px-4">
+    <div className="@container pt-16 pb-16 px-4">
       <div className={`max-w-7xl mx-auto grid ${gridCols} gap-3 auto-rows-min`}>
         {tiled.map(c => {
           const Icon = c.icon;

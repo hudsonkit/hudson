@@ -138,7 +138,7 @@ function PrimitivePreview({ mode, split = false }: { mode: ThemeMode; split?: bo
       data-hudson-template={template?.id}
       data-hudson-theme={mode}
       style={styleFromTokens(tokens)}
-      className="min-h-full overflow-hidden rounded-xl border border-border bg-background text-foreground shadow-[var(--hud-shadow-panel)]"
+      className="@container min-h-full overflow-hidden rounded-xl border border-border bg-background text-foreground shadow-[var(--hud-shadow-panel)]"
     >
       <div
         className="relative min-h-full p-5"
@@ -178,7 +178,7 @@ function PrimitivePreview({ mode, split = false }: { mode: ThemeMode; split?: bo
           </div>
         </div>
 
-        <div className={`grid gap-4 ${split ? 'grid-cols-1' : 'xl:grid-cols-[1.2fr_0.8fr]'}`}>
+        <div className={`grid gap-4 ${split ? 'grid-cols-1' : '@5xl:grid-cols-[1.2fr_0.8fr]'}`}>
           <section className="rounded-xl border border-border bg-card/90 p-4 shadow-[0_16px_60px_-44px_oklch(var(--foreground))]">
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
@@ -196,7 +196,7 @@ function PrimitivePreview({ mode, split = false }: { mode: ThemeMode; split?: bo
               <PreviewButton label="Delete" token="--destructive" variant="destructive" />
             </div>
 
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div className="mt-4 grid gap-3 @lg:grid-cols-2">
               <div className="rounded-lg border border-border bg-background p-4">
                 <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground">Card</div>
                 <h3 className="mt-2 text-lg font-semibold text-foreground">Surface contrast</h3>
@@ -242,7 +242,7 @@ function PrimitivePreview({ mode, split = false }: { mode: ThemeMode; split?: bo
         </div>
 
         {!split && (
-          <section className="mt-4 grid gap-3 md:grid-cols-3">
+          <section className="mt-4 grid gap-3 @2xl:grid-cols-3">
             <ContrastPair label="foreground / background" fg="oklch(var(--foreground))" bg="oklch(var(--background))" />
             <ContrastPair label="accent foreground / accent" fg="oklch(var(--accent-foreground))" bg="oklch(var(--accent))" />
             <ContrastPair label="card foreground / card" fg="oklch(var(--card-foreground))" bg="oklch(var(--card))" />
@@ -259,7 +259,7 @@ export function ThemeDesignerContent() {
   const modes = useMemo<ThemeMode[]>(() => splitPreview ? ['dark', 'light'] : [designer.selectedMode], [designer.selectedMode, splitPreview]);
 
   return (
-    <div className="h-full overflow-y-auto bg-background p-4 text-foreground frame-scrollbar">
+    <div className="@container h-full overflow-y-auto bg-background p-4 text-foreground frame-scrollbar">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Theme Designer</div>
@@ -276,7 +276,7 @@ export function ThemeDesignerContent() {
         </button>
       </div>
 
-      <div className={splitPreview ? 'grid gap-4 xl:grid-cols-2' : 'grid gap-4'}>
+      <div className={splitPreview ? 'grid gap-4 @6xl:grid-cols-2' : 'grid gap-4'}>
         {modes.map(mode => <PrimitivePreview key={mode} mode={mode} split={splitPreview} />)}
       </div>
     </div>
