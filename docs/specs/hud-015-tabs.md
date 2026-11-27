@@ -696,8 +696,11 @@ The Electron window setup, preload bridge and menu move to
 3. Pure layout module: the split tree, docks, moves, repairs and import. Full
    unit tests, no DOM.
 4. `<Docks>`, `<TabArea>`, `<TabShell>` v1, including edge-drop and lazy
-   restore. A Hudson example workspace runs at `/app?shell=tabs`, and an
-   `AppShell` example mounts `<TabArea>` in its content.
+   restore. A Hudson example workspace runs at `/demo/tabs`, and an
+   `AppShell` example mounts `<TabArea>` in its content at
+   `/demo/tabs-in-appshell`. (The first draft said `/app?shell=tabs`; a
+   static page can't read the query until hydration, so `/app` would mount
+   the canvas shell first.)
 5. The platform-neutral command and activity bridges, with Electron and
    WKWebView adapters, and the status-bar activity indicator.
 6. Linea migration, as one change (Linea repo).

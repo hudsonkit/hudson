@@ -42,7 +42,7 @@ import {
   type HudsonAgentActionInput,
   type HObservation,
 } from '../../observability';
-import type { HudsonWorkspace, WorkspaceAppConfig, CommandOption, StatusColor, StatusState, SearchConfig, HudsonCodeSurfaceState, HudsonCodeWorkbenchSize } from '../../index';
+import type { HudsonWorkspace, WorkspaceAppConfig, CommandOption, StatusColor, HudsonCodeWorkbenchSize } from '../../index';
 import { Volume2, VolumeX, Settings, Maximize2, Minimize2, RotateCcw, BookOpen, TerminalSquare, PanelLeftOpen, PanelLeftClose, PanelRightOpen, PanelRightClose, Activity, Sparkles, Camera, Loader2, LayoutGrid, Mic, Square, CornerDownLeft, Code2, ExternalLink, Keyboard, MousePointer2, ScanSearch, X, Home } from '../../icons';
 import { HudsonKitMark } from '../../components/brand';
 import {
@@ -70,6 +70,7 @@ import { HudsonAIRuntimeProvider } from './HudsonAIRuntimeContext';
 import { useAgentActionLog } from './useAgentActionLog';
 import type { HudsonAIToolContext } from './HudsonAIRuntimeContext';
 import { DataBusProvider, usePortBridge, useDataBus } from '../context/DataBusContext';
+import { AppProviderStack, useAppHooks, type AppHookData } from '../shared/appHost';
 import { PipeConnectorLayer } from './PipeConnectorLayer';
 import { PortInspector } from './PortInspector';
 import { WindowPorts } from './WindowPorts';
@@ -792,6 +793,7 @@ export function WorkspaceShell({
   // Nest ALL app Providers (including disabled) to keep the tree stable.
   // Removing a Provider from the nesting chain causes React to remount
   // everything below it, losing all state (modal open, fetched templates, etc.).
+  const workspaceApps = workspace.apps.map((c) => c.app);
   let tree: ReactNode = (
     <WorkspaceInner
       key={workspace.id}
@@ -816,19 +818,21 @@ export function WorkspaceShell({
     />
   );
 
-  for (let i = workspace.apps.length - 1; i >= 0; i--) {
-    const { app } = workspace.apps[i];
-    const isDisabled = disabledAppIds.has(app.id);
-    tree = (
-      <app.Provider
-        disabled={isDisabled}
-        visible={!isDisabled && providerVisibleAppIds.has(app.id)}
-        focused={providerRuntime.focusedAppId === app.id}
-      >
-        {tree}
-      </app.Provider>
-    );
-  }
+  tree = (
+    <AppProviderStack
+      apps={workspaceApps}
+      state={(app) => {
+        const isDisabled = disabledAppIds.has(app.id);
+        return {
+          disabled: isDisabled,
+          visible: !isDisabled && providerVisibleAppIds.has(app.id),
+          focused: providerRuntime.focusedAppId === app.id,
+        };
+      }}
+    >
+      {tree}
+    </AppProviderStack>
+  );
 
   // DataBusProvider wraps above all app Providers so port hooks can register.
   // WorkspaceDecorProvider sits at the same level so the stage-design app and
@@ -864,44 +868,7 @@ export function WorkspaceShell({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Merged hook data from a single app
-// ---------------------------------------------------------------------------
-interface AppHookData {
-  appId: string;
-  appName: string;
-  commands: CommandOption[];
-  status: StatusState;
-  statusLeft: ReactNode | null;
-  statusRight: ReactNode | null;
-  search: SearchConfig | null;
-  navCenter: ReactNode | null;
-  navActions: ReactNode | null;
-  layoutMode: 'canvas' | 'panel' | 'focus';
-  activeToolHint: string | null;
-  codeSurface: HudsonCodeSurfaceState | null;
-}
-
-// ---------------------------------------------------------------------------
-// Bridge — calls hooks for one app (must be inside that app's Provider)
-// ---------------------------------------------------------------------------
-function useAppHooks(config: WorkspaceAppConfig): AppHookData {
-  const { app } = config;
-  return {
-    appId: app.id,
-    appName: app.name,
-    commands: app.hooks.useCommands(),
-    status: app.hooks.useStatus(),
-    statusLeft: app.hooks.useStatusLeft?.() ?? null,
-    statusRight: app.hooks.useStatusRight?.() ?? null,
-    search: app.hooks.useSearch?.() ?? null,
-    navCenter: app.hooks.useNavCenter?.() ?? null,
-    navActions: app.hooks.useNavActions?.() ?? null,
-    layoutMode: app.hooks.useLayoutMode?.() ?? app.mode,
-    activeToolHint: app.hooks.useActiveToolHint?.() ?? null,
-    codeSurface: app.hooks.useCodeSurface?.() ?? null,
-  };
-}
+// AppHookData and useAppHooks (the Bridge) live in ../shared/appHost.
 
 // Empty settings config used as stable default for apps without settings
 const EMPTY_SETTINGS = { sections: [] };
