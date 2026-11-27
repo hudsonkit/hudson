@@ -429,10 +429,13 @@ function useTab(): {
 | `tabs.next` / `tabs.previous` | ⌃⇥ / ⌃⇧⇥ | Cycle tabs |
 | `tabs.split-right` / `tabs.split-below` | — | Move the focused tab to a new split |
 | `tabs.dock.right` / `tabs.dock.bottom` | — | Toggle a dock |
-| `tabs.focus-group.N` | — | Focus group N. ⌘1–⌘9 conventionally selects tab N instead, so no default yet. |
+| `tabs.select.N` | ⌘1–⌘9 | Select tab N, or group N if the app sets `selectTarget: 'group'` |
 | `tabs.switch` | — | Searchable list of open tabs |
 | `tabs.open` | — | Open a tab; takes an `OpenTabRequest` and options |
 
+- **⌘1–⌘9 target tabs or groups.** The app chooses with
+  `selectTarget: 'tab' | 'group'` on `TabArea` or `TabShell`; the default is
+  `'tab'`, as in browsers and editors. Apps can also rebind the keys.
 - **Cycling scope** is configurable: `'workspace'` (every tab, in layout
   order) or `'group'`. The default is `'workspace'`, which is what Linea does.
 - **The web has no default key bindings.** Browsers reserve ⌘W, ⌘T, ⌘⇧T,
@@ -582,14 +585,19 @@ interface PlatformActivityBridge {
 - **Web:** no adapter bridge, so all work is session work unless the app
   supplies a bridge over its own server. Scout's broker is in effect a host,
   so Scout supplies one.
-- **Electron:** the bridge runs over the preload script. The main process
-  survives closing a window but not ⌘Q, so a host that promises `'host'`
-  lifetime keeps a tray process that intercepts quit, or runs a separate
-  helper. The host decides; HudsonKit does not.
+- **Electron is a UI, never a host.** No long-running work runs in
+  Electron's main process, and there is no background Electron: ⌘Q quits
+  everything Electron started, and that work is session work. Long-running
+  work lives in a separate host process written in Rust, Swift or
+  TypeScript on Bun. Electron's main process only relays the bridge between
+  the renderer (over the preload script) and that host, and stays in sync
+  with it.
 - **WKWebView:** a script message handler in, `evaluateJavaScript` out. This
   is the strongest case for the bridge, because the web content process can
-  be reloaded or killed at any time. The owner is the native app or its
-  menu-bar agent.
+  be reloaded or killed at any time. The owner is the native app's
+  menu-bar agent or another host process.
+- **Hosts** are Rust, Swift or TypeScript on Bun, whichever suits the app.
+  The bridge contract is the same for all of them.
 
 **What stays out of HudsonKit:** process supervision, login items, the IPC
 transport, media and recording engines, storage of activity records, the
@@ -631,21 +639,18 @@ shell learns that an activity's owner is unreachable.
 | Terminal cleanup on close | `onClose`, plus `holdWork` while a process runs |
 | `shell:command` → `runCommand` | Adapter `commands` bridge → `TabShell` |
 
-The migration order:
+The migration is one change, with the shell owner's agreement. It replaces
+dockview with `TabShell` and ships with:
 
-1. **Adapter first.** Linea keeps dockview and gains a thin layer that speaks
-   the HudsonKit contracts: commands through the bridge, tab props through
-   `useTab()`, and the store format.
-2. **Importer.** Convert saved dockview JSON, the `ws.pane.*` prefs (running
-   `adoptPanes` logic for pre-pane layouts), open tabs and the closed-tab
-   history (old `{ kind, title, params }` entries) into a `TabWorkspaceState`.
-   Keep the original file for rollback. Import only after validation passes.
-3. **Compatibility suite.** Run `TabShell` against real saved Linea layouts:
-   pre-pane snapshots, hidden docks, closed history, book and canvas
-   placement, background guest links, favicon failures, terminal close and
-   reset, and restart.
-4. **Switch.** Replace dockview with `TabShell` in one bounded change, with
-   the shell owner's agreement.
+- **An importer.** It converts saved dockview JSON, the `ws.pane.*` prefs (running
+  `adoptPanes` logic for pre-pane layouts), open tabs and the closed-tab
+  history (old `{ kind, title, params }` entries) into a `TabWorkspaceState`.
+  It keeps the original file for rollback and imports only after validation
+  passes.
+- **A compatibility suite.** It runs `TabShell` against real saved Linea
+  layouts: pre-pane snapshots, hidden docks, closed history, book and canvas
+  placement, background guest links, favicon failures, terminal close and
+  reset, and restart.
 
 The webview guest, the terminal and the reading context stay Linea app code.
 The Electron window setup, preload bridge and menu move to
@@ -665,7 +670,7 @@ The Electron window setup, preload bridge and menu move to
    `AppShell` example mounts `<TabArea>` in its content.
 5. The platform-neutral command and activity bridges, with Electron and
    WKWebView adapters, and the status-bar activity indicator.
-6. Linea migration, in the order above (Linea repo).
+6. Linea migration, as one change (Linea repo).
 7. v2 items as needed.
 
 Every step ships with vitest tests. Step 4 also ships a browser check at
@@ -673,17 +678,7 @@ desktop and phone widths.
 
 ## Open questions
 
-The four questions from the first draft are settled, and so are the three
-from the second (see Review). These remain:
-
-1. **⌘1–⌘9 on native hosts.** Focus group N, or select tab N as browsers and
-   editors do? (Fable)
-2. **Linea migration step 1.** The dockview adapter layer is deleted at
-   step 4. Fable would drop it; the Linea reviewer asked for a staged
-   rollout. The Linea shell owner decides.
-3. **Electron quit for `'host'` activities.** Tray process or separate
-   helper? This spec leaves it to each host; Linea will be the first to
-   choose.
+None. Every question from the three review rounds is settled (see Review).
 
 ## Review
 
@@ -747,3 +742,11 @@ Fable.
 - Smaller cuts: `besideTabWith` became `find` plus `{ beside }`; params
   versioning is optional; host data in the store goes under `hostState`; no
   default for ⌘1–⌘9; phone sheets wait for a phone consumer.
+
+**Third round (operator):**
+
+| Question | Outcome |
+| --- | --- |
+| ⌘1–⌘9 on native hosts? | Select tab N by default; the app can target groups instead or rebind (section 9). |
+| Keep the Linea adapter step? | No. The migration is one change, with the importer and compatibility suite in it. |
+| Electron quit for long-running work? | No background Electron. Long-running work lives in a Rust, Swift or Bun host; Electron is only a UI that stays in sync with it, and ⌘Q quits it fully (section 13). |
