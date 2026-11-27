@@ -55,16 +55,26 @@ Prior art in the other reviewers' code is listed in [Reuse](#reuse).
 
 These came out of review and hold across every section.
 
-1. **A tab is a view onto a resource, not the resource.** Closing, hiding or
-   unmounting a tab never stops a recording, cancels a flight, kills an agent
-   or deletes history. The app decides what close means through
-   `onClose` (section 7).
+1. **A tab is a view. What it views has one of two lifetimes** (section 13).
+   - *Session work* is owned by the UI process. It stops when its tab closes
+     and when the UI quits, the way closing Chrome stops everything in it. A
+     terminal the renderer spawned, a web guest and an in-page preview are
+     session work.
+   - An *activity* is owned by a host that outlives the UI: a menu-bar agent,
+     a daemon, a broker. Closing, hiding, unmounting or quitting never changes
+     it, and the UI can be shut down entirely and pick it back up. A
+     recording, a transcription and an agent flight are activities. A tab
+     holds an activity's ref, never the activity.
+
+   The app declares which one each kind of work is. Recording is always an
+   activity. Playback may be either.
 2. **The shell never closes a tab on its own.** A tab whose target has ended or
    vanished stays open and shows its final state or a tombstone. A tab whose
    host is offline restores in an offline state.
-3. **Hidden does not mean paused.** `visible: false` tells the app it is not on
-   screen, so it can stop rendering work. Playback, streams and attention
-   tracking may continue, and status keeps updating in the tab strip.
+3. **Hidden does not mean paused, and mounted does not mean alive.**
+   `visible: false` only tells the app to stop rendering work. Session work
+   continues while its tab exists. An activity continues whether or not any
+   tab exists, and its status comes from its host, not from the tab.
 4. **The shell does not move focus on its own** while an editable element has
    it. Dictation, composers and terminals must not lose their target.
 5. **Layout logic is pure.** Split-tree operations are plain functions over
@@ -133,7 +143,10 @@ Rules for params:
 - Params may be a URL path. An app with a URL-addressable route union, like
   Scout's `Route` (`lib/router.ts`), can store `routePath(route)` and get
   deep links, restore and "open in tab" from one format.
-- An app declares its current params version and a migration:
+- An app may declare a params version and a migration (Scout asked for
+  this because its routes change often). Both are optional: an app can also
+  version inside its own params, and the shell only needs to know when the
+  app rejects params, which restores the tab as a tombstone.
 
 ```ts
 export interface HudsonApp {
@@ -150,13 +163,16 @@ export interface HudsonAppTabConfig {
   migrateParams?: (params: unknown, fromVersion: number) => unknown | null;
   /** Canonical identity for reuse (section 6). Same key = same resource. */
   reuseKey?: (params: unknown) => string | null;
+  /** The activity this tab views, if any (section 13). Pure, like reuseKey,
+   *  so the shell can match unmounted tabs to activities. */
+  activityRef?: (params: unknown) => ActivityRef | null;
   /** Where a new tab of this app goes when the caller gives no placement. */
   defaultPlacement?: OpenTabOptions['placement'];
   /** Preferred share of a new split or dock, 0–1. */
   defaultSize?: number;
   /** Text glyph for the strip when no icon is set. */
   glyph?: string;
-  /** Unmount when hidden and idle (v2, section 8). Default false. */
+  /** Unmount when hidden and not holding work (v2, section 8). Default false. */
   sleeps?: boolean;
 }
 ```
@@ -240,9 +256,9 @@ export interface ClosedTab {
   other's layout. Whether two windows may share one workspace's instances is
   out of scope for v1: each window has its own.
 - The default store uses the same localStorage backing as
-  `usePersistentState()`. Electron passes a file-backed store. Hosts may add
-  fields of their own (Linea's `windowBounds`) to the same file; the store
-  must preserve fields it does not own.
+  `usePersistentState()`. Electron passes a file-backed store. Host data
+  that shares the file (Linea's `windowBounds`) goes under a named
+  `hostState` key that the tab store reads and writes back untouched.
 - Saves are debounced by 300 ms. The store also flushes on `pagehide`,
   `beforeunload` and the native quit command, so a quit inside the debounce
   window loses nothing.
@@ -251,9 +267,11 @@ export interface ClosedTab {
 
 Restore is lazy and tolerant:
 
-- On relaunch, only the active tab of each visible group mounts. Other tabs
-  mount on first focus. Their strip entries still show title, icon and the
-  last saved status.
+- On relaunch, the shell first asks the activity bridge for current
+  activities (section 13). Then only the active tab of each visible group
+  mounts; other tabs mount on first focus. Their strip entries show the
+  saved title and icon, and status from the bridge. Status is never
+  persisted, so a strip never shows a stale "live".
 - Each tab is validated on its own. An unknown `appId`, failed
   `migrateParams`, or missing instance restores as a tombstone tab with the
   saved title, and the rest of the workspace restores normally.
@@ -282,7 +300,7 @@ interface OpenTabOptions {
     | 'right' | 'below'           // split the focused group
     | { dock: TabDock }
     | { group: string }
-    | { besideTabWith: { appId: string; reuseKey: string }; split?: 'right' | 'below' };
+    | { beside: string; split?: 'right' | 'below' }; // another tab's instanceId
   /** Open without focusing it, and without moving focus (⌘-click). */
   inactive?: boolean;
   /** If a tab with the same reuseKey exists, focus it instead. */
@@ -297,6 +315,8 @@ interface TabsApi {
   reopen(): void;
   focus(instanceId: string): void;
   move(instanceId: string, to: OpenTabOptions['placement']): void;
+  /** The open tab for this app and reuse key, if any. */
+  find(appId: string, reuseKey: string): TabSummary | undefined;
   /** Read-only list for palettes, sidebars and switchers. */
   tabs: ReadonlyArray<TabSummary>;
 }
@@ -309,7 +329,8 @@ interface TabSummary {
   detail?: string;
   group: string;
   active: boolean;
-  activity: TabActivity | null;
+  status: TabStatus | null;
+  badge: number | null;
 }
 ```
 
@@ -317,9 +338,9 @@ interface TabSummary {
   `tab.reuseKey(params)`. Linea's "one canvas per book" is a key of
   `bookId`. Scout's key is `routeKey`, which already treats a flight, its
   session and its conversation as one thread.
-- **Placing relative to another tab.** `besideTabWith` opens next to a
-  specific tab, for example a canvas beside its book, rather than beside
-  whichever tab is focused.
+- **Placing relative to another tab.** `find` plus `{ beside, split }` opens
+  next to a specific tab, for example a canvas beside its book, rather than
+  beside whichever tab is focused.
 - **Opening into a hidden dock** shows the dock. With `inactive: true` it
   shows the dock but does not move focus.
 - **Opening from outside the tree.** `TabArea` and `TabShell` accept a
@@ -336,40 +357,46 @@ README, not its code.
 ### 7. A tab controls its own strip entry
 
 ```ts
-type TabActivity =
-  | 'live'          // recording, streaming, running
-  | 'playing'
-  | 'unread'
-  | 'needs-input'   // waiting on the operator
-  | 'error';
+/** UI-only states. Activity state (recording, playing) comes from the bridge. */
+type TabStatus = 'needs-input' | 'error';
 
 function useTab(): {
   instanceId: string;
-  /** On screen right now. Not a signal to stop work (principle 3). */
+  /** On screen right now. Only a rendering hint (principle 3). */
   visible: boolean;
   setTitle(title: string): void;
   setIcon(url: string | null): void;       // null restores the glyph
-  setActivity(activity: TabActivity | null): void;
+  setStatus(status: TabStatus | null): void;
+  /** Unread count. Unread means badge > 0. */
   setBadge(count: number | null): void;
   params: unknown;
   setParams(params: unknown): void;
   /** Close this tab, e.g. after the user deletes its resource. */
   close(): void;
-  /** Run when the user closes the tab, not when it unmounts. */
-  onClose(handler: () => void | Promise<void>): () => void;
+  /** Hold session work. Returns a release function. */
+  holdWork(label: string): () => void;
+  /** Runs when the user closes the tab, and only then. */
+  onClose(handler: () => void): () => void;
 };
 ```
 
-- **Activity and badges update while the tab is hidden.** The strip, the
-  palette's tab list and the dock toggle show them. An app can also report
-  activity for a tab that has not mounted yet (lazy restore) through
-  `useTabs`, so a background thread can mark itself unread.
-- **Closing a busy tab asks first.** If a tab's activity is `live` or
-  `playing`, ⌘W and the close button ask before closing. Closing still does
-  not stop the resource (principle 1) unless the app's `onClose` does.
-- **`onClose` is the cleanup hook.** Linea kills a terminal's process in
-  `onClose`, not on unmount, so a remount after a move does not kill it.
-  Tabs with `persists: false` are not saved and not added to the reopen
+- **Activity status is derived, not pushed.** A tab whose `activityRef`
+  matches an activity shows that activity's state (recording, playing,
+  running, ended, unreachable) from the bridge, mounted or not. `setStatus`
+  and `setBadge` are for UI-only states. No status is persisted.
+- **Closing a tab attached to an activity never asks and never stops it.**
+  The activity stays in the status-bar indicator (section 13), where it can
+  be controlled or reopened.
+- **Session work can hold its tab.** While a `holdWork` hold is active, ⌘W
+  and the close button ask first, the tab does not sleep, and quitting shows
+  one prompt listing all held work ("2 terminals have running processes").
+  On the web the quit prompt is `beforeunload`. Playback that is session
+  work does not hold: stopping on close is the expected behaviour.
+- **`onClose` runs when the user closes the tab.** It does not run on
+  unmount, move, window close or quit. Linea kills a terminal's process
+  there. Session work must be safe to end by process death; a host cleans up
+  after a UI that disconnects.
+- Tabs with `persists: false` are not saved and not added to the reopen
   stack.
 - **Icons** fall back to the app's `glyph` when `setIcon` is null or the
   image fails to load (Linea's favicon behaviour).
@@ -378,15 +405,18 @@ function useTab(): {
 
 ### 8. Hidden tabs and sleeping
 
-- v1 never unmounts a mounted tab because it is hidden. Terminals, webview
-  guests and players keep running. Lazy restore (section 5) is the only v1
+- v1 never unmounts a mounted tab because it is hidden. Session work keeps
+  running because its tab exists. Lazy restore (section 5) is the only v1
   memory saving.
-- v2 adds `tab.sleeps`. A sleeping app's hidden tab may unmount after a delay,
-  but never while its activity is `live` or `playing`, and never while it
-  holds focus.
-- Audio is owned outside tabs. A shell-level "now playing" owner across tabs
-  is out of scope for this spec; apps that play audio keep it in their
-  Provider or a host process.
+- v2 adds `tab.sleeps`. A hidden tab may unmount after a delay unless it
+  holds session work or has focus. A tab attached only to an activity can
+  always sleep; its strip status keeps updating from the bridge.
+- Audio follows the same rule as everything else. Playback an app declares
+  as session work lives in its Provider and stops on close and quit.
+  Playback declared as an activity lives in the host, is controlled through
+  the bridge, and appears in the status-bar indicator. Recording is always
+  an activity. HudsonKit does not own a player or the system Now Playing
+  entry.
 
 ### 9. Commands
 
@@ -394,12 +424,12 @@ function useTab(): {
 
 | ID | Native default | Action |
 | --- | --- | --- |
-| `tabs.close` | ⌘W | Close the focused tab (asks if busy) |
+| `tabs.close` | ⌘W | Close the focused tab (asks first if it holds session work) |
 | `tabs.reopen` | ⌘⇧T | Reopen the last closed tab |
 | `tabs.next` / `tabs.previous` | ⌃⇥ / ⌃⇧⇥ | Cycle tabs |
 | `tabs.split-right` / `tabs.split-below` | — | Move the focused tab to a new split |
 | `tabs.dock.right` / `tabs.dock.bottom` | — | Toggle a dock |
-| `tabs.focus-group.N` | ⌘1–⌘9 | Focus group N |
+| `tabs.focus-group.N` | — | Focus group N. ⌘1–⌘9 conventionally selects tab N instead, so no default yet. |
 | `tabs.switch` | — | Searchable list of open tabs |
 | `tabs.open` | — | Open a tab; takes an `OpenTabRequest` and options |
 
@@ -461,8 +491,8 @@ v2:
 ### 11. Look
 
 Hudson owns the visual register. The tab strip uses existing chrome tokens,
-and the active tab uses the existing accent. Activity uses the existing status
-colours (emerald live, amber needs-input, red error). No purple. No new
+and the active tab uses the existing accent. Status uses the existing status
+colours (emerald recording or running, amber needs-input, red error). No purple. No new
 library: tabs, splits, docks and drag are custom, and
 `@base-ui-components/react` is used only for the tab context menu and the
 overflow menu.
@@ -473,11 +503,101 @@ On phone-width web:
 
 - `TabArea` shows one group at a time, with a tab switcher in the navigation
   bar. The split tree is kept unchanged, so a wider screen restores it.
-- Docks open as sheets, not as hidden groups.
-- An app can mark controls that must stay reachable (Talkie's record
-  button); the switcher never covers them.
+- Later, when a phone-width consumer needs them: docks open as sheets
+  instead of hidden groups, and an app can mark controls that must stay
+  reachable (Talkie's record button) so the switcher never covers them.
 
 Native iOS apps are out of scope.
+
+### 13. Activities: work that outlives the UI
+
+This section came from the operator's direction and Fable's review. Long-running
+work is separate from the UI layer, so the UI can shut down entirely and pick
+the work back up with nothing lost. Recording must not stop on quit; that is
+why these apps keep a menu-bar or background process. The UI shows that work
+and controls it remotely. Work tied to the UI really stops on quit.
+
+**Who owns what:**
+
+| | Owner | On tab close | On UI quit | Examples |
+| --- | --- | --- | --- | --- |
+| View state | The tab (`params`) | Goes to the reopen stack | Saved and restored | Scroll position, book location, route |
+| Session work | The UI process: Provider, renderer, or a child the UI spawned | Stops (asks first if held) | Stops | Web guest, renderer-spawned terminal, in-page preview, unsent draft |
+| Activity | A host that outlives the UI: menu-bar agent, daemon, broker, server | Nothing happens | Nothing happens | Recording, transcription, agent flight, host-run playback |
+
+Playback is the app's choice, per kind, and two questions are separate:
+
+- *Where it runs*: in the UI process, or in the host.
+- *When it stops*: `lifetime: 'ui'` means the host stops it when the last UI
+  detaches; `lifetime: 'host'` means it survives quit.
+
+Recording is always `'host'`. Playback defaults to `'ui'`. An activity may be
+`'host'` only if its host can stop it without the UI (a menu-bar item or
+tray); otherwise audio could keep playing with no visible control.
+
+**What HudsonKit provides:**
+
+```ts
+interface ActivityRef { kind: string; id: string }   // serializable; lives in params
+
+interface ActivitySnapshot {
+  ref: ActivityRef;
+  state: 'starting' | 'running' | 'paused' | 'ended' | 'failed' | 'unreachable';
+  lifetime: 'ui' | 'host';
+  title?: string;
+  progress?: { position: number; duration?: number };
+  /** Commands that apply now: 'pause' | 'resume' | 'stop' | 'seek' | 'rate' | app-defined. */
+  controls: string[];
+  error?: string;
+}
+
+interface PlatformActivityBridge {
+  list(): Promise<ActivitySnapshot[]>;
+  subscribe(listener: (snapshot: ActivitySnapshot) => void): () => void;
+  send(ref: ActivityRef, command: string, args?: unknown): Promise<void>;
+}
+
+// PlatformAdapter.activities?: PlatformActivityBridge   (an app may supply its own)
+// HudsonAppTabConfig.activityRef?: (params) => ActivityRef | null
+// useActivity(ref) → { snapshot, send }
+// useActivities() → ActivitySnapshot[]
+```
+
+- The shell subscribes once and derives strip status for every tab whose
+  `activityRef` matches, mounted or not.
+- **The status bar shows an activity indicator** ("1 recording · 1
+  playing"). It lists every activity, including those with no open tab, with
+  "open its tab" and the standard controls. HudsonKit ships a plain
+  `<ActivityControls>` for the standard verbs; apps can draw richer ones.
+- **Quit:** the shell ends session work and leaves activities alone.
+  **Relaunch:** `list()` runs before restore, tabs re-attach by ref, and
+  activities with no tab appear in the indicator. An ended activity's tab
+  shows its final state (principle 2). An unreachable host shows
+  `unreachable`, not a tombstone.
+- Two windows can attach to the same activity. That is how two views share
+  live work; instances themselves are never shared (section 5).
+
+**Per platform:**
+
+- **Web:** no adapter bridge, so all work is session work unless the app
+  supplies a bridge over its own server. Scout's broker is in effect a host,
+  so Scout supplies one.
+- **Electron:** the bridge runs over the preload script. The main process
+  survives closing a window but not ⌘Q, so a host that promises `'host'`
+  lifetime keeps a tray process that intercepts quit, or runs a separate
+  helper. The host decides; HudsonKit does not.
+- **WKWebView:** a script message handler in, `evaluateJavaScript` out. This
+  is the strongest case for the bridge, because the web content process can
+  be reloaded or killed at any time. The owner is the native app or its
+  menu-bar agent.
+
+**What stays out of HudsonKit:** process supervision, login items, the IPC
+transport, media and recording engines, storage of activity records, the
+menu-bar UI itself, system Now Playing integration, and each kind's lifetime
+choice. Activities are also separate from the existing `services` types
+(`types/service.ts`): a service is a daemon that is installed or running; an
+activity is one unit of work inside it. The service registry is only how the
+shell learns that an activity's owner is unreachable.
 
 ## Reuse
 
@@ -503,12 +623,12 @@ Native iOS apps are out of scope.
 | `TabDescriptor.params` | `AppInstance.params`, read through `useTab()` |
 | `open(kind, title, params, placement, { pane })` | `useTabs().open({ appId, title, params }, { placement: { dock } })` |
 | Guest links into the right pane, ⌘-click in background | `{ placement: { dock: 'right' }, inactive: true }` |
-| `openCanvas` one-per-book check | `reuseKey: p => p.bookId`, `besideTabWith` the book |
+| `openCanvas` one-per-book check | `reuseKey: p => p.bookId`, then `find` the book and open `{ beside }` it |
 | `ws.pane.right` / `ws.pane.bottom` prefs, `adoptPanes` | `TabLayoutSnapshot.docks`, set by the importer |
-| `workspace:save-layout` IPC | A file-backed `TabStore` on the same IPC that keeps `windowBounds` |
+| `workspace:save-layout` IPC | A file-backed `TabStore` on the same IPC, with `windowBounds` under `hostState` |
 | `reopenTab` routing by kind | `ClosedTab.from`, falling back to the app's `defaultPlacement` if that group or dock is gone |
 | Cycling `api.panels` | `tabs.next` with scope `'workspace'` |
-| Terminal cleanup on close | `onClose` |
+| Terminal cleanup on close | `onClose`, plus `holdWork` while a process runs |
 | `shell:command` → `runCommand` | Adapter `commands` bridge → `TabShell` |
 
 The migration order:
@@ -534,14 +654,17 @@ The Electron window setup, preload bridge and menu move to
 ## Delivery
 
 1. Extract shared shell parts from `WorkspaceShell`. No change in behaviour.
-2. `AppInstance.params`, `HudsonApp.tab`, `useTab()`, `useTabs()`. Works in
-   `WorkspaceShell` too.
+2. `AppInstance.params`, `HudsonApp.tab`, `useTab()`, `useTabs()`, and the
+   activity types (`ActivityRef`, `activityRef`, `useActivity`,
+   `useActivities`), since they shape `useTab()`. Works in `WorkspaceShell`
+   too.
 3. Pure layout module: the split tree, docks, moves, repairs and import. Full
    unit tests, no DOM.
 4. `<Docks>`, `<TabArea>`, `<TabShell>` v1, including edge-drop and lazy
    restore. A Hudson example workspace runs at `/app?shell=tabs`, and an
    `AppShell` example mounts `<TabArea>` in its content.
-5. The platform-neutral command bridge, with Electron and WKWebView adapters.
+5. The platform-neutral command and activity bridges, with Electron and
+   WKWebView adapters, and the status-bar activity indicator.
 6. Linea migration, in the order above (Linea repo).
 7. v2 items as needed.
 
@@ -550,21 +673,24 @@ desktop and phone widths.
 
 ## Open questions
 
-The four questions from the first draft are settled (see Review). These
-remain:
+The four questions from the first draft are settled, and so are the three
+from the second (see Review). These remain:
 
-1. **Shared instances across windows.** v1 gives each window its own layout
-   and instances. Should two windows ever share a workspace's instances?
-   (OpenScout)
-2. **A shell-level "now playing" owner.** Talkie suggested one owner for
-   audio across tabs. This spec leaves audio to apps. Is that enough?
-3. **User-defined tab kinds.** Talkie defines tabs as user-owned files. Is
-   that worth a HudsonKit feature, or app-specific?
+1. **⌘1–⌘9 on native hosts.** Focus group N, or select tab N as browsers and
+   editors do? (Fable)
+2. **Linea migration step 1.** The dockview adapter layer is deleted at
+   step 4. Fable would drop it; the Linea reviewer asked for a staged
+   rollout. The Linea shell owner decides.
+3. **Electron quit for `'host'` activities.** Tray process or separate
+   helper? This spec leaves it to each host; Linea will be the first to
+   choose.
 
 ## Review
 
 Reviewed on 2026-11-27 by agents in OpenScout (this Mac), Linea (this Mac,
-as the LIN-063 shell owner), Talkie (mini) and Scout (arts-mini).
+as the LIN-063 shell owner), Talkie (mini) and Scout (arts-mini). A second
+round added the operator's direction on long-running work and a review by
+Fable.
 
 **First-draft open questions, all settled:**
 
@@ -597,3 +723,27 @@ as the LIN-063 shell owner), Talkie (mini) and Scout (arts-mini).
 - Docks as sheets on phone-width web; native iOS out of scope (section 12).
 - Corrected the guest-link behaviour and expanded the Linea migration into an
   adapter, importer, compatibility suite and switch.
+
+**Second round (operator and Fable):**
+
+| Question | Outcome |
+| --- | --- |
+| Shared instances across windows? | No. Two windows attach to the same activity instead (section 13). |
+| A shell-level "now playing" owner? | No player in HudsonKit. Activities plus a status-bar indicator cover it (section 13). |
+| User-defined tab kinds? | App-specific; cut. |
+
+- Principle 1 split work into session work (dies with the UI) and
+  activities (owned by a host, survive quit). The first draft's principle
+  contradicted itself: "closing never stops a recording", yet `onClose`
+  killed terminals.
+- New section 13: `ActivityRef`, `ActivitySnapshot`, an activity bridge on
+  the platform adapter, `useActivity`, and a status-bar indicator.
+- Section 7: activity status is derived from the host, never pushed or
+  persisted. Closing a tab attached to an activity never asks.
+  `holdWork` replaces "confirm before closing a busy tab". `onClose` runs on
+  user close only. `unread` became `badge > 0`.
+- Section 8: sleeping is blocked by held session work, not by activity; audio
+  follows the same lifetime rule.
+- Smaller cuts: `besideTabWith` became `find` plus `{ beside }`; params
+  versioning is optional; host data in the store goes under `hostState`; no
+  default for ⌘1–⌘9; phone sheets wait for a phone consumer.
