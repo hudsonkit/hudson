@@ -45,8 +45,8 @@ export function SidebarSection({
   const showToggle = onToggleVisibility !== undefined;
 
   return (
-    <div className={`border-b border-border/60 last:border-b-0 ${isVisible === false ? 'opacity-50' : ''}`}>
-      <div className="flex items-center">
+    <div className="border-b border-border/60 last:border-b-0">
+      <div className={`flex items-center ${isVisible === false && !expanded ? 'opacity-50' : ''}`}>
         <button
           onClick={() => {
             setExpanded(e => !e);
@@ -107,6 +107,19 @@ export function SidebarSection({
       {expanded && isVisible !== false && (
         <div className="animate-in slide-in-from-top-1 duration-150">
           {children}
+        </div>
+      )}
+      {/* A closed app's section explains itself and offers a deliberate open,
+          so expanding it is never a dead click. */}
+      {expanded && isVisible === false && showToggle && (
+        <div className="flex items-center gap-2 px-3 pb-2.5 pl-[30px] text-[11px] text-muted-foreground animate-in slide-in-from-top-1 duration-150">
+          <span className="flex-1">Not on the canvas</span>
+          <button
+            onClick={onToggleVisibility}
+            className="rounded-sm border border-border/80 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-foreground/80 transition-colors hover:border-accent/50 hover:text-foreground"
+          >
+            Open
+          </button>
         </div>
       )}
     </div>

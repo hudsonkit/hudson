@@ -32,17 +32,17 @@ const CanvasToolDock: React.FC<CanvasToolDockProps> = ({
   className = '',
 }) => (
   <div
-    className={`absolute z-20 flex flex-col items-center gap-2 ${className}`}
+    className={`absolute z-20 flex flex-row items-center gap-2 ${className}`}
     style={{
       right,
       bottom,
       transition: 'right 200ms ease, bottom 200ms ease',
     }}
   >
-    <div className="pointer-events-auto flex flex-col overflow-hidden rounded-none border border-border bg-card shadow-[var(--hud-shadow-panel)]">
+    <div className="pointer-events-auto flex flex-row overflow-hidden rounded-md border border-border bg-card shadow-[var(--hud-shadow-panel)]">
       <button
         onClick={() => onHandModeChange(!handMode)}
-        className={`flex h-8 w-9 items-center justify-center transition-colors ${
+        className={`flex h-7 w-7 items-center justify-center transition-colors ${
           handMode
             ? 'bg-accent/10 text-accent-foreground'
             : 'text-muted-foreground hover:bg-accent/10 hover:text-foreground'
@@ -53,7 +53,7 @@ const CanvasToolDock: React.FC<CanvasToolDockProps> = ({
       </button>
       <button
         onClick={onResetView}
-        className="flex h-8 w-9 items-center justify-center border-t border-border text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground"
+        className="flex h-7 w-7 items-center justify-center border-l border-border text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground"
         title="Reset preview view"
       >
         <RotateCcw size={13} />
