@@ -22,6 +22,8 @@ const staticRoutes = [
   'demo',
   'demo/side-nav',
   'demo/multi-theme',
+  'demo/tabs',
+  'demo/tabs-in-appshell',
   'license',
   'docs',
   'theme-preview',

@@ -155,3 +155,20 @@ export type {
   AddTabOptions,
   RepairResult,
 } from './workspace/tabs/layout';
+
+// Tabs, splits and docks (HUD-015): components, hooks and persistence
+export { TabArea, TabAreaView, DEFAULT_TAB_KEY_BINDINGS } from './workspace/tabs/TabArea';
+export type { TabAreaProps, TabAreaViewProps } from './workspace/tabs/TabArea';
+export { TabShell } from './workspace/tabs/TabShell';
+export type { TabShellProps } from './workspace/tabs/TabShell';
+export { Docks, usePersistentDocks } from './workspace/tabs/Docks';
+export type { DocksProps, DockSlot, PersistentDockState } from './workspace/tabs/Docks';
+export { useTabs, useOptionalTabs, useTab, useTabsController } from './workspace/tabs/controller';
+export type { TabsApi, TabsHandle, TabHandle, TabsController, TabsControllerOptions } from './workspace/tabs/controller';
+export { useActivities, useActivity } from './workspace/tabs/activities';
+export { createLocalTabStore, createMemoryTabStore, createTabSaver, tabStorageKey } from './workspace/tabs/store';
+export type { TabSaver } from './workspace/tabs/store';
+export { restoreTabState, migrateInstance, resolvePlacement, reopenPlacement } from './workspace/tabs/restore';
+export type { RestoredTabs, TombstoneReason } from './workspace/tabs/restore';
+export { AppProviderStack, useAppHooks } from './workspace/shared/appHost';
+export type { AppHookData, AppProviderState } from './workspace/shared/appHost';
