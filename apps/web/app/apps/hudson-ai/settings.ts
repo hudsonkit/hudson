@@ -1,9 +1,11 @@
 import type { AppSettingsConfig } from 'hudsonkit';
-import { AI_MODEL_OPTIONS, AI_PROVIDER_OPTIONS, type AISelectOption } from '../../lib/ai-models';
+import { AI_MODEL_OPTIONS, AI_PROVIDER_OPTIONS, modelOptionsForProvider, type AISelectOption } from '../../lib/ai-models';
 
 export function createHudsonAISettings(
   modelOptions: AISelectOption[] = AI_MODEL_OPTIONS,
+  scope?: { provider: string; model?: string },
 ): AppSettingsConfig {
+  const options = scope ? modelOptionsForProvider(modelOptions, scope.provider, scope.model) : modelOptions;
   return {
     sections: [
       {
@@ -20,10 +22,10 @@ export function createHudsonAISettings(
           {
             key: 'model',
             label: 'Model',
-            description: 'Default model for Hudson-level chat, voice replies, and workspace actions.',
+            description: 'Default model for Hudson-level chat, voice replies, and workspace actions. Changing the provider resets this to that provider\'s default.',
             type: 'select',
             default: 'gemini-3-flash-preview',
-            options: modelOptions,
+            options,
           },
         ],
       },

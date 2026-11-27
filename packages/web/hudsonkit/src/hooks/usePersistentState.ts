@@ -117,24 +117,53 @@ export function usePersistentState<T>(
   // After hydration, synchronously swap in the persisted value (single commit,
   // no flash). Restore is one-shot: if `enabled` starts false it fires on the
   // first render after it flips true.
-  const didRestore = useRef(false);
-  // eslint-disable-next-line react-hooks/refs -- one-time hydration-restore guard read during render is intentional; enables a single synchronous commit of the persisted value with no post-mount flash
-  if (hydrated && enabled && !didRestore.current) {
-    didRestore.current = true;
+  //
+  // The "restored" flag lives in state, not a ref. Both render-phase updates
+  // below then commit or get discarded together. With a ref, a discarded
+  // render (React 19 StrictMode double render) kept the flag but dropped the
+  // restored value, and the write effect then saved the initial value over
+  // the user's stored setting.
+  const [restored, setRestored] = useState(false);
+  if (hydrated && enabled && !restored) {
+    setRestored(true);
     const saved = readStorage<T>(scopedKey, options);
     if (saved !== undefined) {
-      // Direct state mutation before render — React 19 allows this in render phase
-      // via the "if state changed during render, re-render with new state" path
+      // Render-phase update: React re-renders with the new state before commit.
       setState(saved);
     }
   }
 
-  // Persist changes to localStorage. Restore happens during render, before
-  // this effect ever runs, so nothing is written until restore has completed.
+  // Persist changes to localStorage. Nothing is written until restore has
+  // committed, so storage is never clobbered with the initial value.
   useEffect(() => {
-    if (!hydrated || !enabled) return;
+    if (!hydrated || !enabled || !restored) return;
     writeStorage(scopedKey, state, version);
-  }, [scopedKey, state, hydrated, enabled, version]);
+  }, [scopedKey, state, hydrated, enabled, restored, version]);
+
+  // Same-tab sync. Two hooks can own one key (an app window and the shell
+  // both read `hudson.app.<id>.settings`). Without this, the copy that did
+  // not change keeps its stale value and writes it back on its next update.
+  // `storage` events only fire across tabs, so listen to Hudson's own
+  // `hudson:saved` event. Equal values are ignored, so instances never echo.
+  const stateRef = useRef(state);
+  useEffect(() => { stateRef.current = state; }, [state]);
+  const optionsRef = useRef(options);
+  useEffect(() => { optionsRef.current = options; });
+  useEffect(() => {
+    if (!hydrated || !enabled || !restored) return;
+    const onSaved = (event: Event) => {
+      if ((event as CustomEvent<{ key?: string }>).detail?.key !== scopedKey) return;
+      const saved = readStorage<T>(scopedKey, optionsRef.current);
+      if (saved === undefined) return;
+      let same = false;
+      try {
+        same = JSON.stringify(saved) === JSON.stringify(stateRef.current);
+      } catch { /* unserializable state: adopt the stored value */ }
+      if (!same) setState(saved);
+    };
+    window.addEventListener('hudson:saved', onSaved);
+    return () => window.removeEventListener('hudson:saved', onSaved);
+  }, [scopedKey, hydrated, enabled, restored]);
 
   return [state, setState];
 }

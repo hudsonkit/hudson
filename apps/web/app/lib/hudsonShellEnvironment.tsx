@@ -34,10 +34,17 @@ function useHudsonAISettingsEntry(
   const { modelOptions } = useAIModelOptions();
   const settingsConfig = useMemo(() => createHudsonAISettings(modelOptions), [modelOptions]);
   const scoped = useHudsonAISettings(workspaceId, settingsConfig);
+  const provider = String(scoped.resolvedSettings.provider || 'copilot');
+  const model = String(scoped.resolvedSettings.model || '');
+  // The form shows only models the selected provider can route.
+  const scopedConfig = useMemo(
+    () => createHudsonAISettings(modelOptions, { provider, model }),
+    [model, modelOptions, provider],
+  );
   return {
     appId: config?.app.id ?? 'hudson-ai',
     appName: config?.app.name ?? 'Hudson AI',
-    config: settingsConfig,
+    config: scopedConfig,
     values: scoped.resolvedSettings,
     onUpdate: scoped.updateWorkspaceOverride,
   };

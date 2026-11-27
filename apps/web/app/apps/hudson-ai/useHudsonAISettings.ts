@@ -3,6 +3,7 @@
 import { useCallback, useMemo } from 'react';
 import { useAppSettings, usePersistentState } from 'hudsonkit';
 import type { AppSettingsConfig, AppSettingsValues } from 'hudsonkit';
+import { withProviderDefaultModel } from '../../lib/ai-models';
 
 interface HudsonAISettingsScope {
   resolvedSettings: AppSettingsValues;
@@ -24,7 +25,12 @@ export function useHudsonAISettings(
   workspaceId: string,
   config: AppSettingsConfig,
 ): HudsonAISettingsScope {
-  const [globalSettings, updateGlobalSettings, resetGlobalSettings] = useAppSettings('hudson-ai', config);
+  const [globalSettings, setGlobalSettings, resetGlobalSettings] = useAppSettings('hudson-ai', config);
+  const globalProvider = String(globalSettings.provider || 'copilot');
+  const updateGlobalSettings = useCallback(
+    (patch: Partial<AppSettingsValues>) => setGlobalSettings(withProviderDefaultModel(patch, globalProvider)),
+    [globalProvider, setGlobalSettings],
+  );
   const [workspaceOverrideSettings, setWorkspaceOverrideSettings] = usePersistentState<Partial<AppSettingsValues>>(
     `hudson.ws.${workspaceId}.app.hudson-ai.settings`,
     {},
@@ -49,7 +55,8 @@ export function useHudsonAISettings(
       setWorkspaceOverrideSettings(prev => {
         const base = hasValues(prev) ? prev : resolvedSettings;
         const next = { ...base };
-        for (const [key, value] of Object.entries(patch)) {
+        const scopedPatch = withProviderDefaultModel(patch, String(base.provider || 'copilot'));
+        for (const [key, value] of Object.entries(scopedPatch)) {
           if (value !== undefined) next[key] = value;
         }
         return next;
