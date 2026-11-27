@@ -486,6 +486,12 @@ function resultText(result: unknown): string {
   return JSON.stringify(result);
 }
 
+// pi-ai 1.x types tool arguments and result details as JSON. Hudson tool
+// inputs are validated objects and results are JSON-serialisable, so these
+// casts only restate what the runtime already guarantees.
+type PiToolResultDetails = Extract<PiAiMessage, { role: 'toolResult' }>['details'];
+type PiToolArguments = ToolCall['arguments'];
+
 function appendToolResult(
   messages: PiAiMessage[],
   toolCall: ToolCall,
@@ -497,7 +503,7 @@ function appendToolResult(
     toolCallId: toolCall.id,
     toolName: toolCall.name,
     content: [{ type: 'text', text: resultText(result) }],
-    details: result,
+    details: result as PiToolResultDetails,
     isError,
     timestamp: Date.now(),
   });
@@ -620,7 +626,7 @@ function streamUI(req: PiAiUIRequest): Response {
                 dynamic: true,
               });
               const result = { error: validation.errorText };
-              pendingToolResults.push({ toolCall: { ...toolCall, id: toolCallId, arguments: validation.input }, result, isError: true });
+              pendingToolResults.push({ toolCall: { ...toolCall, id: toolCallId, arguments: validation.input as PiToolArguments }, result, isError: true });
               continue;
             }
 
@@ -648,7 +654,7 @@ function streamUI(req: PiAiUIRequest): Response {
                 dynamic: true,
               });
             }
-            pendingToolResults.push({ toolCall: { ...toolCall, id: toolCallId, arguments: validation.input }, result, isError });
+            pendingToolResults.push({ toolCall: { ...toolCall, id: toolCallId, arguments: validation.input as PiToolArguments }, result, isError });
           } else if (event.type === 'done') {
             finalMessage = event.message;
           } else if (event.type === 'error') {

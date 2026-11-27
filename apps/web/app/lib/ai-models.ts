@@ -29,6 +29,7 @@ export const AI_PROVIDER_OPTIONS: AISelectOption[] = [
  * lists them. Listed here so labels resolve everywhere.
  */
 export const AI_LOCAL_PROVIDER_OPTIONS: AISelectOption[] = [
+  { label: 'ChatGPT plan', value: 'chatgpt' },
   { label: 'Codex (ChatGPT plan)', value: 'codex' },
 ];
 
@@ -54,6 +55,8 @@ export const AI_PROVIDER_DEFAULT_MODELS = {
   // Codex lists the models its signed-in account may run; this is only the
   // fallback before that list loads.
   codex: 'gpt-6.1-terra',
+  // Same: the signed-in account's own list replaces this once it loads.
+  chatgpt: 'gpt-6.1-terra',
 } as const;
 
 export type AIProviderName = keyof typeof AI_PROVIDER_DEFAULT_MODELS;
@@ -69,6 +72,7 @@ export const AI_PROVIDER_ENV_KEYS: Record<AIProviderName, string> = {
   google: 'GOOGLE_GENERATIVE_AI_API_KEY',
   copilot: 'GitHub Copilot sign-in',
   codex: 'Codex sign-in (run `codex login`)',
+  chatgpt: 'Continue with ChatGPT (Hudson AI settings)',
 };
 
 export function defaultModelForProvider(provider: string): string {

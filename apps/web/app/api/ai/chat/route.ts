@@ -4,6 +4,7 @@ import { DEFAULT_MODELS, loadCredentials } from '../providers';
 import { loadToolset } from '../toolsets';
 import { appCredentials, compileAppToolset } from '../app-toolset';
 import { CODEX_PROVIDER, streamCodexChat } from '../codex';
+import { CHATGPT_PROVIDER, chatGPTAccessToken } from '../chatgpt';
 
 function log(msg: string) {
   const ts = new Date().toISOString().slice(11, 23);
@@ -78,19 +79,40 @@ export async function POST(req: Request) {
     return streamCodexChat({ messages, system, model, effort, signal: req.signal });
   }
 
+  // ChatGPT plan: pi-ai's openai provider with the signed-in access token.
+  // pi-ai sees a non-API-key token and switches to ChatGPT-plan requests.
+  let piProvider = provider;
+  let piCredentials = credentials;
+  if (provider === CHATGPT_PROVIDER) {
+    let accessToken: string | null;
+    try {
+      accessToken = await chatGPTAccessToken();
+    } catch (err) {
+      return new Response(err instanceof Error ? err.message : String(err), { status: 401, headers: { 'Content-Type': 'text/plain' } });
+    }
+    if (!accessToken) {
+      return new Response('Not signed in to ChatGPT. Use Continue with ChatGPT in Hudson AI settings.', {
+        status: 401,
+        headers: { 'Content-Type': 'text/plain' },
+      });
+    }
+    piProvider = 'openai';
+    piCredentials = { ...credentials, openai: accessToken };
+  }
+
   try {
     return piBackend.streamUI({
       messages,
       toolset,
       context,
-      provider,
+      provider: piProvider,
       model,
       effort,
       // Hudson's loadToolset returns Zod-schema-bearing tools shaped like
       // HudsonTool at runtime; the extra `toolPrompt` field is unused by
       // streamUI. Cast through unknown to bridge the structural mismatch.
       loadToolset: (appToolset ? () => appToolset : loadToolset) as never,
-      loadCredentials: () => credentials,
+      loadCredentials: () => piCredentials,
       defaultModels: DEFAULT_MODELS,
     });
   } catch (err) {

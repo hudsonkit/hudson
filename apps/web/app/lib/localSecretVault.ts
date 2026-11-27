@@ -1,6 +1,6 @@
 import { execFileSync } from 'child_process';
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'crypto';
-import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'fs';
+import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'fs';
 import { homedir, platform } from 'os';
 import { basename, dirname, join } from 'path';
 import { REPO_ROOT } from './repoRoot';
@@ -229,6 +229,41 @@ export function deleteHudsonLocalSecret(key: string) {
   if (!(key in vault.entries)) return;
   delete vault.entries[key];
   writeVaultFile(vault);
+}
+
+// ---------------------------------------------------------------------------
+// Sealed documents: secrets that are not environment variables (OAuth
+// credentials). Same key and cipher as the vault, but a separate file per
+// document, so they never reach process.env or the Environment editor.
+// ---------------------------------------------------------------------------
+
+function sealedDocumentPath(name: string): string {
+  if (!/^[a-z0-9-]+$/.test(name)) throw new Error(`Invalid sealed document name: ${name}`);
+  return join(dirname(getHudsonLocalSecretVaultPath()), `hudson-${name}.sealed.json`);
+}
+
+export function readHudsonSealedDocument<T>(name: string): T | null {
+  const path = sealedDocumentPath(name);
+  if (!existsSync(path)) return null;
+  const sealed = JSON.parse(readFileSync(path, 'utf-8')) as SealedSecret;
+  return JSON.parse(open(sealed)) as T;
+}
+
+export function writeHudsonSealedDocument(name: string, value: unknown) {
+  const path = sealedDocumentPath(name);
+  mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
+  const tmpPath = `${path}.${process.pid}.tmp`;
+  writeFileSync(tmpPath, JSON.stringify(seal(JSON.stringify(value))), { mode: 0o600 });
+  renameSync(tmpPath, path);
+  try {
+    chmodSync(path, 0o600);
+  } catch {
+    // Best-effort on platforms without POSIX chmod semantics.
+  }
+}
+
+export function deleteHudsonSealedDocument(name: string) {
+  rmSync(sealedDocumentPath(name), { force: true });
 }
 
 export function clearHudsonLocalSecretVaultCacheForTests() {

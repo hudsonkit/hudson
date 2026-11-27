@@ -25,6 +25,7 @@ import { useHudsonAIRuntime } from 'hudsonkit/workspace';
 import { useWorkspaceManager } from 'hudsonkit/workspace';
 import { HudsonVoiceSettingsEditor } from 'hudsonkit/workspace';
 import { HudsonEnvironmentEditor } from 'hudsonkit/workspace';
+import { ChatGPTSignIn } from './ChatGPTSignIn';
 import {
   getHudsonSpokenReplyStyleLabel,
   getHudsonVoiceBehaviorPreset,
@@ -621,6 +622,7 @@ export function HudsonAIContent() {
               <div className="text-[11px] leading-relaxed text-foreground/64">
                 Provider credentials also live at the Hudson level. Edit them here when you want this workspace to access OpenAI, ElevenLabs, Groq, or other local integrations.
               </div>
+              <ChatGPTSignIn />
               <HudsonEnvironmentEditor
                 intro="API keys and tokens are stored in Hudson’s encrypted local vault. Non-secret runtime values stay in .env.local, and both back shell-wide AI and voice integrations."
               />
