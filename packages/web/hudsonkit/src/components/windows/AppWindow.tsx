@@ -419,10 +419,15 @@ const AppWindow: React.FC<AppWindowProps> = ({
       <div
         className={`w-full h-full flex flex-col rounded-lg overflow-hidden border transition-colors duration-200 ${
           isFocused
-            ? 'border-foreground/20'
+            ? 'border-accent/45'
             : 'border-border/80'
         }`}
-        style={{ background: 'oklch(var(--card))' }}
+        style={{
+          background: 'oklch(var(--card))',
+          // Depth, not glow: a contact shadow plus one soft drop. Neutral in both themes.
+          boxShadow: isFocused ? WINDOW_SHADOW_FOCUSED : WINDOW_SHADOW,
+          transition: 'box-shadow 200ms, border-color 200ms',
+        }}
       >
         {/* Title bar */}
         {withChromeContextMenu(titleBar)}
@@ -488,5 +493,10 @@ const AppWindow: React.FC<AppWindowProps> = ({
 
   return windowEl;
 };
+
+const WINDOW_SHADOW =
+  'inset 0 1px 0 oklch(1 0 0 / 0.03), 0 1px 2px oklch(0 0 0 / 0.22), 0 12px 32px -14px oklch(0 0 0 / 0.5)';
+const WINDOW_SHADOW_FOCUSED =
+  'inset 0 1px 0 oklch(1 0 0 / 0.04), 0 2px 4px oklch(0 0 0 / 0.28), 0 22px 52px -14px oklch(0 0 0 / 0.6)';
 
 export default AppWindow;

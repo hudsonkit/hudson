@@ -154,21 +154,21 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_ORIGIN),
-  title: "HudsonKit — Hudson gives your tools a workspace",
+  title: "HudsonKit — Hudson gives apps a shared workspace",
   description:
-    "A spatial canvas for your apps, with the shell, commands, and persistence already built.",
+    "A spatial canvas for your apps on iOS, macOS, and the web. The same primitives everywhere: a terminal, commands, and actions your agents can run.",
   openGraph: {
-    title: "HudsonKit — Hudson gives your tools a workspace",
+    title: "HudsonKit — Hudson gives apps a shared workspace",
     description:
-      "A spatial canvas for your apps, with the shell, commands, and persistence already built.",
+      "A spatial canvas for your apps on iOS, macOS, and the web. The same primitives everywhere: a terminal, commands, and actions your agents can run.",
     images: [{ url: "/og.png", width: 1200, height: 630 }],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "HudsonKit — Hudson gives your tools a workspace",
+    title: "HudsonKit — Hudson gives apps a shared workspace",
     description:
-      "A spatial canvas for your apps, with the shell, commands, and persistence already built.",
+      "A spatial canvas for your apps on iOS, macOS, and the web. The same primitives everywhere: a terminal, commands, and actions your agents can run.",
     images: ["/og.png"],
   },
 };

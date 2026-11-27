@@ -27,11 +27,13 @@
   --border: 0.28 0 0;
   --input: 0.28 0 0;
   --ring: 0.68 0.16 50;
-  --radius: 8px;
+  --radius: 6px;
   --hudson-font-size: 13px;
   --hudson-font-family: system-ui;
   --hud-font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --hud-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  /* JetBrains Mono is the product mono; set here (not only in @theme) because
+     hudsonkit/styles maps --font-mono to --hud-font-mono. */
+  --hud-font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --hud-font-serif: Georgia, "Times New Roman", serif;
   --hud-text-xxs: 10px;
   --hud-text-xs: 11px;
@@ -87,6 +89,10 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+  /* Larger radii stay close to the base so corners never get bubbly. */
+  --radius-xl: calc(var(--radius) + 2px);
+  --radius-2xl: calc(var(--radius) + 2px);
+  --radius-3xl: calc(var(--radius) + 4px);
 }
 
 .font-brand {

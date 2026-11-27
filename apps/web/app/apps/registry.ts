@@ -260,7 +260,8 @@ export function getHudsonKitWorkspace(): HudsonWorkspace {
     mode: 'canvas',
     apps: getCoreApps(),
     defaultFocusedAppId: 'hudson-docs',
-    defaultActivatedAppIds: ['hudson-docs', 'hudson-ai', 'intent-explorer', 'theme-designer'],
+    // Two windows to start; the rest open from the navigation and re-tile.
+    defaultActivatedAppIds: ['hudson-docs', 'hudson-ai'],
     defaultScale: 0.45,
     defaultPan: { x: -331, y: -222 },
     leftNavigation: 'on',

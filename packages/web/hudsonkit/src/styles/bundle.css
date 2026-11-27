@@ -34,6 +34,10 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+  /* Larger radii stay close to the base so corners never get bubbly. */
+  --radius-xl: calc(var(--radius) + 2px);
+  --radius-2xl: calc(var(--radius) + 2px);
+  --radius-3xl: calc(var(--radius) + 4px);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -70,7 +74,7 @@
   --border: 0.28 0 0;
   --input: 0.28 0 0;
   --ring: 0.70 0.11 42;
-  --radius: 8px;
+  --radius: 6px;
 
   /* Surfaces */
   --hud-bg: rgb(10 10 10);

@@ -75,6 +75,18 @@ export const ACCENTS: readonly PaletteOption[] = [
     },
   },
   {
+    // Harbor: a quiet steel blue. Pairs with the Frost paper.
+    id: 'harbor',
+    label: 'Harbor',
+    swatch: 'oklch(0.56 0.11 248)',
+    vars: {
+      '--accent': 'oklch(0.56 0.11 248)',
+      '--accent-deep': 'oklch(0.46 0.11 252)',
+      '--accent-soft': 'oklch(0.56 0.11 248 / 0.10)',
+      '--accent-line': 'oklch(0.56 0.11 248 / 0.34)',
+    },
+  },
+  {
     id: 'cobalt',
     label: 'Cobalt',
     swatch: 'oklch(0.58 0.19 250)',
@@ -168,6 +180,26 @@ export const PAPERS: readonly PaletteOption[] = [
     },
   },
   {
+    // Frost: cool, near-white paper with blue-grey ink.
+    id: 'frost',
+    label: 'Frost',
+    swatch: 'oklch(0.975 0.004 240)',
+    vars: {
+      '--paper': 'oklch(0.975 0.004 240)',
+      '--paper-2': 'oklch(0.955 0.005 240)',
+      '--paper-3': 'oklch(0.925 0.007 240)',
+      '--paper-edge': 'oklch(0.88 0.008 240)',
+      '--ink': 'oklch(0.22 0.02 250)',
+      '--ink-1': 'oklch(0.34 0.02 250)',
+      '--ink-2': 'oklch(0.50 0.016 250)',
+      '--ink-3': 'oklch(0.64 0.012 250)',
+      '--ink-faint': 'oklch(0.80 0.008 250)',
+      '--line': 'oklch(0.86 0.008 245)',
+      '--line-strong': 'oklch(0.62 0.014 250)',
+      '--line-grid': 'oklch(0.93 0.006 245)',
+    },
+  },
+  {
     id: 'slate',
     label: 'Slate',
     swatch: 'oklch(0.235 0.008 250)',
@@ -192,8 +224,8 @@ export const DEFAULTS = {
   display: 'newsreader',
   body: 'space-grotesk',
   mono: 'jetbrains',
-  accent: 'ember',
-  paper: 'slate',
+  accent: 'harbor',
+  paper: 'frost',
   gridMinor: 0.08,
   gridMajor: 0.16,
   strokeW: 1.25,

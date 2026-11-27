@@ -38,12 +38,14 @@ export const ARRANGE = {
   minH: 380,
   maxW: 980,
   maxH: 700,
-  gap: 28,
+  gap: 36,
   /** Below this zoom, text in windows stops being comfortably readable. */
   readableScale: 0.62,
   maxScale: 1,
   focusScale: 0.75,
   focusMinW: 360,
+  /** Widest cell aspect (w/h) before a layout is penalized. */
+  maxAspect: 2,
 } as const;
 
 export function arrangeInsets(viewport: { width: number; height: number }): ArrangeInsets {
@@ -68,7 +70,7 @@ export function arrangeForViewport(
   const offsetX = (insets.left - insets.right) / 2;
   const offsetY = (insets.top - insets.bottom) / 2;
 
-  let best: { cols: number; rows: number; scale: number } | null = null;
+  let best: { cols: number; rows: number; scale: number; score: number } | null = null;
   for (let cols = 1; cols <= n; cols++) {
     const rows = Math.ceil(n / cols);
     // Skip layouts that leave a whole empty row.
@@ -78,13 +80,17 @@ export function arrangeForViewport(
       availW / (cols * minW + (cols - 1) * gap),
       availH / (rows * minH + (rows - 1) * gap),
     );
+    // Apps read badly in thin strips: prefer cells no wider than ~2:1.
+    const cellW = Math.min(maxW, (availW / scale - (cols - 1) * gap) / cols);
+    const cellH = Math.min(maxH, (availH / scale - (rows - 1) * gap) / rows);
+    const score = scale * (cellW / cellH > ARRANGE.maxAspect ? 0.65 : 1);
     const balance = Math.abs(cols - Math.sqrt(n));
     if (
       !best ||
-      scale > best.scale + 0.001 ||
-      (Math.abs(scale - best.scale) <= 0.001 && balance < Math.abs(best.cols - Math.sqrt(n)))
+      score > best.score + 0.001 ||
+      (Math.abs(score - best.score) <= 0.001 && balance < Math.abs(best.cols - Math.sqrt(n)))
     ) {
-      best = { cols, rows, scale };
+      best = { cols, rows, scale, score };
     }
   }
 

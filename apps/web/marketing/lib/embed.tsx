@@ -61,12 +61,12 @@ export type HudsonEmbedProps = {
   // browser does anyway under bandwidth contention; 'lazy' just makes it
   // explicit and frees the hero to use the connection.
   priority?: 'eager' | 'lazy';
-  /** Shell panels to start closed, e.g. ['left', 'right'] for canvas-first. */
-  collapse?: Array<'left' | 'right'>;
+  /** Panels to start closed. `'right:narrow'` keeps it closed only on narrow frames. */
+  collapse?: Array<'left' | 'right' | 'left:narrow' | 'right:narrow'>;
   /** Other workspace ids to offer in the embed's switcher. */
   workspaces?: string[];
   /** Named accent preset for the embedded shell (e.g. 'ember'). */
-  accent?: 'ember';
+  accent?: 'ember' | 'harbor';
   /** Apps to open on first load (defaults to the workspace's own set). */
   apps?: string[];
   /** Force the embedded shell's color scheme (otherwise the consumer's, or system). */

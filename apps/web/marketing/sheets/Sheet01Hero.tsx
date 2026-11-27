@@ -77,11 +77,11 @@ export function Sheet01Hero() {
           data-cal
           data-cal-label="hero headline"
         >
-          Hudson gives your tools a <span className="boxed">workspace</span>.
+          Hudson gives apps a shared <span className="boxed">workspace</span>.
         </h1>
 
         <p className="subhead" style={{ marginBottom: 28, fontSize: 16 }}>
-          A spatial canvas for your apps, with the shell, commands, and persistence already built.
+          A spatial canvas for your apps on iOS, macOS, and the web. The same primitives everywhere: a terminal, commands, and actions your agents can run.
         </p>
 
         <div style={{ display: 'flex', gap: 12 }} data-cal data-cal-label="hero CTAs">
@@ -126,11 +126,11 @@ export function Sheet01Hero() {
               }}
               title="Hudson workspace · live embed"
               priority="eager"
-              collapse={['left', 'right']}
+              collapse={['left', 'right:narrow']}
               workspaces={['developer-mode', 'document-lab', 'hero-studio']}
-              accent="ember"
+              accent="harbor"
               apps={['hudson-docs']}
-              theme="dark"
+              theme="light"
             />
             <EmbedReveal />
           </EmbedFrame>

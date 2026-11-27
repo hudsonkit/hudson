@@ -124,7 +124,6 @@ const SidePanel: React.FC<SidePanelProps> = ({
         />
       )}
       {/* Top highlight */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-foreground/4 to-transparent z-10" />
 
       <div className="pointer-events-auto flex-1 flex flex-col overflow-hidden">
         {/* Header */}
