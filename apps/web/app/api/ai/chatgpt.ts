@@ -115,7 +115,11 @@ export async function startChatGPTSignIn(): Promise<{ url: string }> {
   if (state.pending && state.url) return { url: state.url };
 
   const abort = new AbortController();
-  const timeout = setTimeout(() => abort.abort(new Error('Sign-in timed out')), LOGIN_TIMEOUT_MS);
+  let timedOut = false;
+  const timeout = setTimeout(() => {
+    timedOut = true;
+    abort.abort(new Error('Sign-in timed out'));
+  }, LOGIN_TIMEOUT_MS);
   Object.assign(state, { pending: true, url: undefined, error: undefined, abort });
 
   let resolveUrl!: (url: string) => void;
@@ -154,7 +158,10 @@ export async function startChatGPTSignIn(): Promise<{ url: string }> {
       Object.assign(state, { pending: false, url: undefined, error: undefined, abort: undefined });
     })
     .catch((err: unknown) => {
-      const message = err instanceof Error ? err.message : String(err);
+      // pi-ai reports any abort as "Login cancelled"; say why when we know.
+      const message = timedOut
+        ? 'Sign-in timed out. Click Continue with ChatGPT to try again.'
+        : err instanceof Error ? err.message : String(err);
       Object.assign(state, { pending: false, url: undefined, error: message, abort: undefined });
       rejectUrl(err);
     })

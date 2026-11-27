@@ -1,6 +1,6 @@
 # OpenAI as a Hudson AI provider
 
-Status as of 2026-11-27. This note covers three paths: a pasted OpenAI API key, a ChatGPT plan through the Codex CLI (both work today), and Hudson's own "Sign in with ChatGPT", which is researched here but not built.
+Status as of 2026-11-27. This note covers three paths, all working: a pasted OpenAI API key, a ChatGPT plan through the Codex CLI, and a ChatGPT plan through Hudson's own **Continue with ChatGPT**. Section 4 is the research behind the third path.
 
 ## 1. OpenAI API key (works today)
 
@@ -37,7 +37,29 @@ Limits:
 - The reply arrives whole, not token by token. A cold turn takes about 4–5 seconds.
 - The read-only sandbox still lets Codex read files on the machine.
 
-## 3. Hudson's own "Sign in with ChatGPT": what OpenAI supports
+## 3. Continue with ChatGPT (works today, local Hudson only)
+
+Hudson signs in to the user's ChatGPT plan itself, through OpenAI's official **Sign in with ChatGPT** flow (section 4). Unlike the Codex path, replies stream token by token and Hudson's tools run.
+
+1. Open **Hudson AI → Settings → Environment Credentials** and click **Continue with ChatGPT**.
+2. In the OpenAI tab that opens ("Use ChatGPT to sign in to Hudson"), choose an account and approve. The tab comes back to `127.0.0.1:1455` and the card changes to **Using your ChatGPT plan**. The sign-in times out after 10 minutes; click the button again to retry.
+3. Under **Hudson Default**, set **AI Provider** to **ChatGPT plan**. The model list shows the account's models that pi-ai can route.
+4. Chat from the console AI tab.
+
+The card also has **Manage usage** (ChatGPT's per-app usage page) and **Sign out**. Sign out revokes the refresh token at OpenAI and deletes it locally. If OpenAI does not confirm the revocation, the card says so and points to ChatGPT settings.
+
+How it works:
+
+- **Flow.** pi-ai (1.5.2 or later) implements SIWC: dynamic client registration, PKCE, the `127.0.0.1:1455` loopback callback and `chatgpt.tokens.use.direct`. `apps/web/app/api/ai/chatgpt.ts` drives it through `openaiProvider().auth.oauth` with `agentName: "Hudson"` and a stable per-install device ID.
+- **Routes.** `/api/ai/chatgpt`: `GET` status, `POST` start, `DELETE` sign out (`?cancel=1` cancels a pending sign-in). All reject non-local requests.
+- **Storage.** The credential is a sealed file, `.data/hudson-chatgpt-credential.sealed.json`, encrypted with the local vault's key (AES-256-GCM, mode 0600). It is kept apart from the vault so it never reaches `process.env` or the Environment editor. The device ID is in `hudson-chatgpt-device.sealed.json`.
+- **Tokens.** A request with an expired access token refreshes it first. Refreshes run one at a time because each one rotates the refresh token. If OpenAI rejects the refresh token, Hudson deletes the credential and asks the user to sign in again.
+- **Chat.** `/api/ai/chat` with `provider: "chatgpt"` passes the access token to pi-ai's `openai` provider. pi-ai detects a ChatGPT token (not an `sk-` key) and sends the request in plan mode, dropping the parameters SIWC does not accept.
+- **Models.** `/api/ai/models` lists the provider only when the user is signed in. It reads `GET /v1/models` with the user's token and keeps `visibility == "list"` entries that are in pi-ai's OpenAI registry.
+
+Verified on 2026-11-27 with a real account: sign-in, a streamed reply, a tool call (`set_shell_setting` switched the shell to dark mode), and sign-out with revocation.
+
+## 4. Sign in with ChatGPT: what OpenAI supports
 
 OpenAI ships an official program for this: **Sign in with ChatGPT (SIWC)** with **ChatGPT plan usage** ([docs](https://developers.openai.com/siwc), [quickstart](https://developers.openai.com/siwc/quickstart), [help center](https://help.openai.com/en/articles/20001542-using-your-chatgpt-plan-in-other-apps-and-sites), [user page](https://learn.chatgpt.com/docs/sign-in-with-chatgpt)). It was expanded at DevDay 2026 ([The New Stack](https://thenewstack.io/sign-in-with-chatgpt/)).
 
@@ -63,16 +85,11 @@ OpenAI ships an official program for this: **Sign in with ChatGPT (SIWC)** with 
 **What is not allowed, or not documented**
 
 - No OpenAI page grants permission to reuse **Codex CLI's** login (`client_id app_EMoamEEZ73f0CkXaXp7hrann`) or to call `chatgpt.com/backend-api`. The inference docs say not to point requests at backend-api endpoints. The supported route is the app's own SIWC registration.
-- Hudson's current `openai-codex` provider does exactly that. `@earendil-works/pi-ai` 0.85.1 (`dist/auth/oauth/openai-codex.js`) logs in with Codex CLI's client ID on `localhost:1455` and calls `chatgpt.com/backend-api`. Pi is listed as an SIWC open-source partner, so a newer pi-ai release may already use SIWC. Check that before you build anything.
+- Hudson's current `openai-codex` provider does exactly that. `@earendil-works/pi-ai` 0.85.1 (`dist/auth/oauth/openai-codex.js`) logs in with Codex CLI's client ID on `localhost:1455` and calls `chatgpt.com/backend-api`. pi-ai 1.x adds the SIWC flow, which section 3 uses; the `openai-codex` path is still there.
 
 ## Recommendation
 
-1. **Ship the API-key path now.** It is done and verified.
-2. **Use Codex for ChatGPT plans on local Hudson.** It is done and verified (section 2).
-3. **Build Hudson's own "Continue with ChatGPT" only if Codex is not enough**, for example to run Hudson tools or to stream tokens. Use the official SIWC flow:
-   - Server route `POST /api/ai/chatgpt/sign-in` starts a one-shot listener on `127.0.0.1:<port>`, opens the authorize URL (dynamic registration with PKCE), exchanges the code, and stores `{client_id, access_token, refresh_token, id_token, ext_agent_host_id}` in the existing local vault, never in the browser.
-   - Add a `chatgpt-plan` provider in `providers.ts` / the Pi backend. It refreshes tokens under a lock and calls `api.openai.com/v1/responses` with `store:false, stream:true`. It omits the parameters listed in Limits, and it fetches models from `/v1/models` with the user's token.
-   - Add a **Continue with ChatGPT** button next to Environment Credentials, following the [UI/UX guidelines](https://developers.openai.com/siwc/ui-ux-guidelines), plus a sign-out action that revokes the tokens.
-   - First check pi-ai. Version 1.5.2 and later include `auth/oauth/openai-chatgpt.js`, which uses the SIWC flow (`dynamic_agent_client`, `chatgpt.tokens.use.direct`, `127.0.0.1` callback). Use pi-ai's flow rather than writing our own.
-4. **Do not offer ChatGPT sign-in on app.hudsonkit.com** until OpenAI approves an interest-form application. Production keeps Workers AI.
-5. **Retire or relabel the `openai-codex` path**, which relies on Codex CLI's client ID. Also note: the Pi backend maps provider `copilot` to `openai-codex` (`packages/web/ai-backends/src/adapters/pi-ai.ts:normalizeProvider`). With no Codex login, Hudson's default provider fails with `No API key for provider "openai-codex"`.
+1. **API key**: done and verified (section 1).
+2. **ChatGPT plan, local Hudson**: prefer **Continue with ChatGPT** (section 3). It streams and runs Hudson's tools. Keep the Codex path (section 2) for users who already use Codex and want no extra sign-in.
+3. **Do not offer ChatGPT sign-in on app.hudsonkit.com** until OpenAI approves an interest-form application. Production keeps Workers AI. The hosted site has no server routes, so the card does not render there.
+4. **Retire or relabel the `openai-codex` path**, which relies on Codex CLI's client ID. Also note: the Pi backend maps provider `copilot` to `openai-codex` (`packages/web/ai-backends/src/adapters/pi-ai.ts:normalizeProvider`). With no Codex login, Copilot fails with `No API key for provider "openai-codex"`. This predates the pi-ai upgrade.
