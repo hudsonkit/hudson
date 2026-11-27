@@ -11,7 +11,8 @@ describe('Electron platform adapter', () => {
   test('passes host command subscription through and declares guest hosting', () => {
     let listener: ((command: string) => void) | undefined;
     const commands = { subscribe: (callback: (command: string) => void) => { listener = callback; return () => { listener = undefined; }; } };
-    const adapter = createElectronAdapter(commands);
+    const adapter = createElectronAdapter(commands, { kind: 'electron-webview', persistentPartitions: true });
+    expect(createElectronAdapter().guestHosting).toBeUndefined();
     const received: string[] = [];
     const off = adapter.commands!.subscribe(command => received.push(command));
     listener?.('open'); off();
