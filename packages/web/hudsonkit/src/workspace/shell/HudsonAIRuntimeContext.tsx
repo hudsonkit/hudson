@@ -145,6 +145,8 @@ export interface HudsonAIRuntimeData {
   onToolCall: (name: string, args: Record<string, unknown>) => void | Promise<void>;
   voiceSettings: VoiceSettings;
   voiceTriggerNonce: number;
+  /** False when the host can't run voice capture (e.g. a public deployment). */
+  voiceEnabled?: boolean;
   toolContext: HudsonAIToolContext;
   queueConsolePrompt: (text: string, options?: { submit?: boolean }) => void;
   openWorkspaceSettings: (tab?: 'overview' | 'settings' | 'environment') => void;

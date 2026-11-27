@@ -562,6 +562,26 @@ export interface WorkspaceShellEnvironment {
    *  Keeping the tool body injectable lets Hudson own the chrome while a host
    *  opts into diagnostics without pulling them into every consumer. */
   useDeveloperTools?: () => readonly WorkspaceDeveloperTool[];
+  /**
+   * Where voice capture is offered. Voice needs a local runtime (Vox), so a
+   * public deployment usually can't use it. 'local-only' shows the Voice
+   * entry points on localhost, *.localhost and 127.0.0.1 only; 'off' hides
+   * them everywhere. Defaults to 'on'.
+   */
+  voice?: 'on' | 'local-only' | 'off';
+}
+
+function isLocalHost(hostname: string): boolean {
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]' || hostname.endsWith('.localhost');
+}
+
+/** Resolved after mount (the host isn't known during prerender). */
+function useVoiceEnabled(mode: WorkspaceShellEnvironment['voice']): boolean {
+  const [enabled, setEnabled] = useState(mode !== 'off' && mode !== 'local-only');
+  useEffect(() => {
+    setEnabled(mode === 'off' ? false : mode === 'local-only' ? isLocalHost(window.location.hostname) : true);
+  }, [mode]);
+  return enabled;
 }
 
 export interface WorkspaceDeveloperTool {
@@ -971,6 +991,7 @@ function WorkspaceInner({
   const allAppHooks = allAppHooksRaw.filter(h => !disabledAppIds.has(h.appId));
 
   const resolveDeveloperTools = environment?.useDeveloperTools ?? useNoDeveloperTools;
+  const voiceEnabled = useVoiceEnabled(environment?.voice);
   const developerTools = resolveDeveloperTools();
 
   // --- Port bridge (registers output/input hooks with DataBus) ---
@@ -2106,12 +2127,14 @@ function WorkspaceInner({
           openWorkspaceConsole(`developer:${tool.id}`);
         },
       })),
-      {
-        id: 'shell:start-voice',
-        label: 'Start Voice Prompt',
-        icon: <Mic size={14} />,
-        action: startVoicePrompt,
-      },
+      ...(voiceEnabled
+        ? [{
+          id: 'shell:start-voice',
+          label: 'Start Voice Prompt',
+          icon: <Mic size={14} />,
+          action: startVoicePrompt,
+        }]
+        : []),
       {
         id: 'shell:toggle-guides',
         label: showGuides ? 'Hide Crosshair Guides' : 'Show Crosshair Guides',
@@ -2214,6 +2237,7 @@ function WorkspaceInner({
       openWorkspaceManager,
       openWorkspaceConsole,
       startVoicePrompt,
+      voiceEnabled,
       enterFullscreen,
       exitFullscreen,
       focusedAppId,
@@ -3187,7 +3211,7 @@ function WorkspaceInner({
     </div>
   ) : null;
 
-  const terminalVoiceOverlay = consoleWorkspaceKind === 'terminal' ? (
+  const terminalVoiceOverlay = consoleWorkspaceKind === 'terminal' && voiceEnabled ? (
     <div
       data-hudson-terminal-voice-overlay="true"
       className={`group flex items-center rounded-full border px-1.5 py-1 shadow-lg backdrop-blur-md transition-all duration-150 ${
@@ -3258,6 +3282,7 @@ function WorkspaceInner({
       onToolCall={handleWorkspaceToolCall}
       voiceSettings={shellSettings.voice}
       voiceTriggerNonce={voiceTriggerNonce}
+      voiceEnabled={voiceEnabled}
       toolContext={workspaceAIToolContext}
       provider={hudsonAIProvider}
       model={hudsonAIModel}
@@ -3457,6 +3482,7 @@ function WorkspaceInner({
     onToolCall: handleWorkspaceToolCall,
     voiceSettings: shellSettings.voice,
     voiceTriggerNonce,
+    voiceEnabled,
     toolContext: workspaceAIToolContext,
     queueConsolePrompt: queueHudsonAIPrompt,
     openWorkspaceSettings: openSettings,
@@ -3465,6 +3491,7 @@ function WorkspaceInner({
     openSettings,
     queueHudsonAIPrompt,
     shellSettings.voice,
+    voiceEnabled,
     voiceTriggerNonce,
     workspace,
     workspaceAIToolContext,
@@ -3563,15 +3590,19 @@ function WorkspaceInner({
               <div className="h-3 w-px bg-border" />
             </>
           )}
-          <button
-            onClick={startVoicePrompt}
-            className="flex items-center gap-1.5 text-foreground/70 hover:text-accent transition-colors"
-            title="Start Voice Prompt"
-          >
-            <Mic size={10} />
-            <span className="uppercase text-[10px] font-semibold tracking-wider">Voice</span>
-          </button>
-          <div className="h-3 w-px bg-border" />
+          {voiceEnabled && (
+            <>
+            <button
+              onClick={startVoicePrompt}
+              className="flex items-center gap-1.5 text-foreground/70 hover:text-accent transition-colors"
+              title="Start Voice Prompt"
+            >
+              <Mic size={10} />
+              <span className="uppercase text-[10px] font-semibold tracking-wider">Voice</span>
+            </button>
+            <div className="h-3 w-px bg-border" />
+            </>
+          )}
           <button
             onClick={() => openSettings()}
             className="flex items-center gap-1.5 text-foreground/70 hover:text-foreground transition-colors"
@@ -3750,15 +3781,19 @@ function WorkspaceInner({
                     <div className="h-3 w-px bg-border" />
                   </>
                 )}
-                <button
-                  onClick={startVoicePrompt}
-                  className="flex items-center gap-1.5 text-foreground/70 hover:text-accent transition-colors"
-                  title="Start Voice Prompt"
-                >
-                  <Mic size={10} />
-                  <span className="uppercase text-[10px] font-semibold tracking-wider">Voice</span>
-                </button>
-                <div className="h-3 w-px bg-border" />
+                {voiceEnabled && (
+                  <>
+                  <button
+                    onClick={startVoicePrompt}
+                    className="flex items-center gap-1.5 text-foreground/70 hover:text-accent transition-colors"
+                    title="Start Voice Prompt"
+                  >
+                    <Mic size={10} />
+                    <span className="uppercase text-[10px] font-semibold tracking-wider">Voice</span>
+                  </button>
+                  <div className="h-3 w-px bg-border" />
+                  </>
+                )}
                 <button
                   onClick={() => openSettings()}
                   className="flex items-center gap-1.5 text-foreground/70 hover:text-foreground transition-colors"
