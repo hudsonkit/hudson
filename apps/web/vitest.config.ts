@@ -24,6 +24,8 @@ export default defineConfig({
       'packages/cloud/**',
       // Release-policy tests use Bun's native test runner in their workflow.
       'scripts/release/**/*.test.mjs',
+      // The Layers editor's suite is written for Bun's runner (bun:test).
+      'apps/lattices-editor/**',
       '**/.build/**',
       'packages/native/**/.build/**',
     ],
