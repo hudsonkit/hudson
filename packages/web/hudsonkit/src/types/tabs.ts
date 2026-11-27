@@ -123,6 +123,12 @@ export interface HudsonAppTabConfig {
   reuseKey?: (params: unknown) => string | null;
   /** The activity this tab views, if any. Pure, so unmounted tabs can match. */
   activityRef?: (params: unknown) => ActivityRef | null;
+  /**
+   * The inverse of activityRef: params for a tab that views this activity,
+   * or null if this app doesn't view it. Lets the activity indicator open a
+   * tab for an activity that has none (one started before relaunch, say).
+   */
+  paramsForActivity?: (ref: ActivityRef) => unknown | null;
   /** Where a new tab of this app goes when the caller gives no placement. */
   defaultPlacement?: OpenTabPlacement;
   /** Preferred share of a new split or dock, 0–1. */

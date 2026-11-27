@@ -182,6 +182,7 @@ public final class HudWebViewCoordinator: NSObject, WKNavigationDelegate, WKUIDe
     }
 
     func attach(to webView: WKWebView) {
+        integration?.attach(webView)
         webView.navigationDelegate = self
         webView.uiDelegate = self
         observe(webView)
@@ -210,6 +211,7 @@ public final class HudWebViewCoordinator: NSObject, WKNavigationDelegate, WKUIDe
     func tearDown(_ webView: WKWebView) {
         cancelOutstandingReplies()
         integration?.onReset?(.dismantled)
+        integration?.detach()
         uninstall(from: webView.configuration.userContentController)
         progressObservation?.invalidate()
         titleObservation?.invalidate()

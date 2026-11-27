@@ -102,6 +102,26 @@ public final class HudWebViewIntegration {
     public var onReset: ((HudWebViewResetReason) -> Void)?
     public var onOpenExternalURL: ((URL) -> Void)?
 
+    /// The web view this integration is installed in, while it is attached.
+    private weak var webView: WKWebView?
+
+    /// True while a web view is attached, so `evaluate` has somewhere to go.
+    public var isAttached: Bool { webView != nil }
+
+    /// Run a script in the page world. Dropped when no web view is attached,
+    /// or while the content process is being replaced.
+    public func evaluate(_ script: String) {
+        webView?.evaluateJavaScript(script, in: nil, in: .page) { _ in }
+    }
+
+    func attach(_ webView: WKWebView) {
+        self.webView = webView
+    }
+
+    func detach() {
+        webView = nil
+    }
+
     public init(
         userScripts: [HudWebViewUserScript] = [],
         messageHandlers: [HudWebViewMessageHandler] = [],

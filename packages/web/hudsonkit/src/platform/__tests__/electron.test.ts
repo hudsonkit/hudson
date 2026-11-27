@@ -21,3 +21,23 @@ describe('Electron platform adapter', () => {
     expect(adapter.guestHosting).toEqual({ kind: 'electron-webview', persistentPartitions: true });
   });
 });
+
+describe('Electron adapter options', () => {
+  test('takes commands, activities and guest hosting by name', () => {
+    const commands = { subscribe: () => () => {} };
+    const activities = { list: async () => [], subscribe: () => () => {}, send: async () => {} };
+    const adapter = createElectronAdapter({ commands, activities, titleBarInset: 0 });
+    expect(adapter.commands).toBe(commands);
+    expect(adapter.activities).toBe(activities);
+    expect(adapter.titleBarInset).toBe(0);
+    expect(adapter.guestHosting).toBeUndefined();
+    expect(createElectronAdapter({}).titleBarInset).toBe(28);
+  });
+
+  test('the positional form still works', () => {
+    const commands = { subscribe: () => () => {} };
+    const adapter = createElectronAdapter(commands);
+    expect(adapter.commands).toBe(commands);
+    expect(adapter.activities).toBeUndefined();
+  });
+});
