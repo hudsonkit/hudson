@@ -46,6 +46,7 @@ interface DocsContextValue {
   showSheets: (ids: string[]) => void;
   /** Scale that fits the auto-laid-out canvas into its frame (1 outside a window). */
   canvasScale: number;
+  hubHidden: boolean;
   setCanvasFrame: (frame: { width: number; height: number } | null) => void;
   setHubHeight: (h: number) => void;
   handleSheetDragStart: (id: string, e: React.MouseEvent) => void;
@@ -239,14 +240,14 @@ export function DocsProvider({ children }: { children: ReactNode }) {
     activeNav, setActiveNav,
     settings, updateSettings, resetSettings,
     sheetPositions, getSheetPos, showSheets, handleSheetDragStart, isDraggingRef,
-    canvasScale: autoLayout.scale, setCanvasFrame, setHubHeight,
+    canvasScale: autoLayout.scale, hubHidden: autoLayout.hubHidden, setCanvasFrame, setHubHeight,
     playSound, handleToggleMute,
     components: COMPONENTS,
   }), [
     viewMode, setViewMode, openSheets, toggleSheet, closeSheet, closeAllSheets,
     selectedCard, searchValue, activeNav, settings, updateSettings, resetSettings,
     sheetPositions, getSheetPos, handleSheetDragStart, playSound, handleToggleMute,
-    autoLayout.scale, showSheets,
+    autoLayout.scale, autoLayout.hubHidden, showSheets,
   ]);
 
   return <DocsContext.Provider value={value}>{children}</DocsContext.Provider>;

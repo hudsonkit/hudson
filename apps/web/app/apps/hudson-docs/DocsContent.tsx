@@ -6,12 +6,15 @@ import { COMPONENTS, AGENT_DOCS } from './data';
 import { Bot } from 'hudsonkit/icons';
 import { ComponentSheet, AgentDocSheet, ListView, TilesView } from './components';
 
+/** Latest mounted canvas instance; only it may report the frame size. */
+let frameOwnerSeq = 0;
+
 export function DocsContent() {
   const {
     viewMode, openSheets, selectedCard, setSelectedCard,
     searchValue, settings, sheetPositions, getSheetPos,
     handleSheetDragStart, isDraggingRef, toggleSheet, closeSheet,
-    canvasScale, setCanvasFrame, setHubHeight,
+    canvasScale, hubHidden, setCanvasFrame, setHubHeight,
   } = useDocs();
 
   // Measure the frame (only inside an app window: on the shell's own canvas
@@ -25,7 +28,12 @@ export function DocsContent() {
     // Window membership is checked on every measure (the frame may not sit
     // inside its window yet on the first run). No clearing on cleanup: an old
     // window instance can unmount after its replacement has measured.
+    // Re-tiling remounts the window; the outgoing instance can still report
+    // its old (larger) frame after the new one has measured. The most
+    // recently mounted canvas owns the measurement.
+    const owner = ++frameOwnerSeq;
     const observer = new ResizeObserver(() => {
+      if (owner !== frameOwnerSeq) return;
       setCanvasFrame(
         frame.closest('[data-app-window]') ? { width: frame.clientWidth, height: frame.clientHeight } : null,
       );
@@ -61,6 +69,8 @@ export function DocsContent() {
           <div
             className="absolute pointer-events-none"
             style={{
+              // visibility, not display: its height must stay measurable.
+              visibility: hubHidden ? 'hidden' : undefined,
               left: `calc(50% + ${hubPos.x}px)`,
               top: `calc(50% + ${hubPos.y}px)`,
               transform: 'translate(-50%, -50%)',
@@ -188,7 +198,7 @@ export function DocsContent() {
       })}
 
       {/* Connection lines from hub to open sheets */}
-      {isCanvasMode && <ConnectorLines />}
+      {isCanvasMode && !hubHidden && <ConnectorLines />}
       </div>
       </div>
       )}
