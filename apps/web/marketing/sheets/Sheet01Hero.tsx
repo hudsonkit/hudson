@@ -16,26 +16,29 @@ const STARS_API = 'https://api.github.com/repos/hudsonkit/hudson';
 /** Below this, a count reads as a weakness; show the call to action alone. */
 const SHOW_STARS_FROM = 10;
 
+async function loadStars(): Promise<number | null> {
+  try {
+    const cached = sessionStorage.getItem('hudson.gh-stars');
+    if (cached) return Number(cached);
+  } catch {
+    /* storage blocked */
+  }
+  const res = await fetch(STARS_API);
+  if (!res.ok) return null;
+  const data = (await res.json()) as { stargazers_count?: number };
+  if (typeof data.stargazers_count !== 'number') return null;
+  try { sessionStorage.setItem('hudson.gh-stars', String(data.stargazers_count)); } catch { /* noop */ }
+  return data.stargazers_count;
+}
+
 /** Public star count, cached for the session; null until known (or on failure). */
 function useGitHubStars(): number | null {
   const [stars, setStars] = useState<number | null>(null);
   useEffect(() => {
     let cancelled = false;
-    try {
-      const cached = sessionStorage.getItem('hudson.gh-stars');
-      if (cached) {
-        setStars(Number(cached));
-        return;
-      }
-    } catch {
-      /* storage blocked */
-    }
-    fetch(STARS_API)
-      .then(r => (r.ok ? r.json() : null))
-      .then((data: { stargazers_count?: number } | null) => {
-        if (cancelled || typeof data?.stargazers_count !== 'number') return;
-        setStars(data.stargazers_count);
-        try { sessionStorage.setItem('hudson.gh-stars', String(data.stargazers_count)); } catch { /* noop */ }
+    loadStars()
+      .then(count => {
+        if (!cancelled && count !== null) setStars(count);
       })
       .catch(() => undefined);
     return () => { cancelled = true; };

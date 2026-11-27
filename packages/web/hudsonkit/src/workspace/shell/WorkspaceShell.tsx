@@ -1,6 +1,6 @@
 'use client';
 
-import { isValidElement, useState, useCallback, useEffect, useRef, useMemo, type ReactNode } from 'react';
+import { isValidElement, useState, useCallback, useEffect, useRef, useMemo, useSyncExternalStore, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BootSplash, phaseAtLeast } from './BootSplash';
 import type { BootPhase } from './BootSplash';
@@ -575,13 +575,15 @@ function isLocalHost(hostname: string): boolean {
   return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]' || hostname.endsWith('.localhost');
 }
 
-/** Resolved after mount (the host isn't known during prerender). */
+const noSubscribe = () => () => {};
+
+/** The host isn't known during prerender: off there, resolved on hydration. */
 function useVoiceEnabled(mode: WorkspaceShellEnvironment['voice']): boolean {
-  const [enabled, setEnabled] = useState(mode !== 'off' && mode !== 'local-only');
-  useEffect(() => {
-    setEnabled(mode === 'off' ? false : mode === 'local-only' ? isLocalHost(window.location.hostname) : true);
-  }, [mode]);
-  return enabled;
+  return useSyncExternalStore(
+    noSubscribe,
+    () => (mode === 'off' ? false : mode === 'local-only' ? isLocalHost(window.location.hostname) : true),
+    () => mode !== 'off' && mode !== 'local-only',
+  );
 }
 
 export interface WorkspaceDeveloperTool {

@@ -100,12 +100,11 @@ function fakeContext(): AudioContextLike & { closed: boolean; captureReleased: b
     captureReleased: false,
     createMediaStreamSource: () => ({ connect() {}, disconnect() {} }),
     createScriptProcessor() {
-      const context = this;
       return {
         onaudioprocess: null,
         connect() {},
-        disconnect() {
-          context.captureReleased = true;
+        disconnect: () => {
+          this.captureReleased = true;
         },
       };
     },

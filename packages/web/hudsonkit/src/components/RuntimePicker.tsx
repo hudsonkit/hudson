@@ -652,10 +652,7 @@ export function RuntimePicker({
   // scroll — the composer relays under a raised keyboard and the panel has
   // to follow the chip, not where the chip used to be.
   useLayoutEffect(() => {
-    if (!isPicking) {
-      setPlacement(null);
-      return;
-    }
+    if (!isPicking) return;
     const measure = () => {
       const el = chipRef.current;
       if (!el) return;
@@ -701,7 +698,7 @@ export function RuntimePicker({
   }, [isPicking]);
 
   const canPortal = typeof document !== 'undefined';
-  const panelStyle: CSSProperties | undefined = placement
+  const panelStyle: CSSProperties | undefined = isPicking && placement
     ? {
         position: 'fixed',
         left: placement.left,
