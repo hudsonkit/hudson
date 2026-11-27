@@ -61,6 +61,11 @@ jobs:
     needs: verify-source
     runs-on: ubuntu-latest
     environment: npm-production
+    # Trusted publishing: npm exchanges this job's OIDC token for a
+    # short-lived publish credential, so no long-lived npm token is needed.
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -73,15 +78,24 @@ jobs:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
 
+      # Trusted publishing needs npm >= 11.5.1; Node 22 ships npm 10.
+      - name: Install npm with trusted publishing
+        run: npm install -g npm@11.21.1
+
       - name: Check publish authorization
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           ENABLE_NPM_PUBLISH: ${{ vars.ENABLE_NPM_PUBLISH }}
         run: |
           set -euo pipefail
-          if [ -z "${NPM_TOKEN:-}" ] || [ "${ENABLE_NPM_PUBLISH:-}" != "true" ]; then
-            echo "npm publish disabled — set NPM_TOKEN and ENABLE_NPM_PUBLISH=true"
+          if [ "${ENABLE_NPM_PUBLISH:-}" != "true" ]; then
+            echo "npm publish disabled — set ENABLE_NPM_PUBLISH=true"
             exit 1
+          fi
+          if [ -n "${NPM_TOKEN:-}" ]; then
+            echo "NPM_TOKEN is set: npm uses it only if the trusted-publisher exchange fails."
+          else
+            echo "No NPM_TOKEN: publishing through the npm trusted publisher only."
           fi
 
       - name: Install dependencies
@@ -126,8 +140,8 @@ jobs:
 
       - name: Publish planned artifacts
         env:
+          # Fallback only; trusted publishing takes precedence when configured.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
           HUDSONKIT_DIST_TAG: ${{ inputs.hudsonkit_dist_tag }}
         run: |
           set -euo pipefail
@@ -152,7 +166,9 @@ jobs:
             fi
 
             echo "PUBLISH $package_name@$local_version with dist-tag $dist_tag — $reason"
-            bun publish --tag "$dist_tag" "$tarball"
+            # npm, not bun: only the npm CLI performs the trusted-publishing
+            # OIDC exchange (and attaches provenance with it).
+            npm publish "$tarball" --tag "$dist_tag" --access public
           }
 
           publish_from_plan \
