@@ -5,6 +5,9 @@ import { AI_MODELS_PATH, type AISelectOption } from './ai-models';
 
 export function useAIModelOptions() {
   const [modelOptions, setModelOptions] = useState<AISelectOption[]>([]);
+  // Providers the local server adds when a harness is installed (Codex). The
+  // hosted site never reports any, so they stay hidden there.
+  const [localProviderOptions, setLocalProviderOptions] = useState<AISelectOption[]>([]);
   const [source, setSource] = useState<'registry' | 'live'>('registry');
 
   useEffect(() => {
@@ -18,6 +21,7 @@ export function useAIModelOptions() {
         const data = await response.json();
         if (!controller.signal.aborted && Array.isArray(data.options)) {
           setModelOptions(data.options);
+          setLocalProviderOptions(Array.isArray(data.providerOptions) ? data.providerOptions : []);
           setSource(data.source === 'live' ? 'live' : 'registry');
         }
       } catch { /* Retain the last successful catalog until the next refresh. */ }
@@ -27,5 +31,5 @@ export function useAIModelOptions() {
     return () => { controller.abort(); window.removeEventListener('focus', refresh); };
   }, []);
 
-  return { modelOptions, source };
+  return { modelOptions, localProviderOptions, source };
 }

@@ -5,7 +5,7 @@ import { Sparkles } from 'hudsonkit/icons';
 import { useHudsonAIApp } from './HudsonAIProvider';
 import { useHudsonAIRuntime } from 'hudsonkit/workspace';
 import { getHudsonVoiceBehaviorPreset, getHudsonVoiceBehaviorPresetLabel } from 'hudsonkit/workspace';
-import { AI_MODEL_OPTIONS, AI_PROVIDER_OPTIONS } from '../../lib/ai-models';
+import { AI_LOCAL_PROVIDER_OPTIONS, AI_MODEL_OPTIONS, AI_PROVIDER_OPTIONS } from '../../lib/ai-models';
 
 function SectionTitle({ children }: { children: ReactNode }) {
   return (
@@ -40,7 +40,7 @@ export function HudsonAILeftPanel() {
   const { resolvedProvider, resolvedModel, settingsSource } = useHudsonAIApp();
   const { voiceSettings } = useHudsonAIRuntime();
   const behaviorPreset = getHudsonVoiceBehaviorPreset(voiceSettings);
-  const resolvedProviderLabel = getOptionLabel(resolvedProvider, AI_PROVIDER_OPTIONS);
+  const resolvedProviderLabel = getOptionLabel(resolvedProvider, [...AI_PROVIDER_OPTIONS, ...AI_LOCAL_PROVIDER_OPTIONS]);
   const resolvedModelLabel = getOptionLabel(resolvedModel, AI_MODEL_OPTIONS);
   const voiceProviderLabel = formatVoiceProvider(voiceSettings.replyProvider);
 

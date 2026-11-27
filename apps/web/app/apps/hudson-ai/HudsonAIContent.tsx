@@ -32,6 +32,7 @@ import {
 } from 'hudsonkit/workspace';
 import { useHudsonAIApp } from './HudsonAIProvider';
 import { HUDSON_AI_ACTIONS } from './catalog';
+import { modelOptionsForProvider } from '../../lib/ai-models';
 
 type InspectorView = 'overview' | 'settings' | 'construction' | 'prompts';
 
@@ -657,7 +658,11 @@ export function HudsonAIContent() {
                 <SettingSelect
                   label="AI Model"
                   value={String(globalSettings.model || 'gemini-3-flash-preview')}
-                  options={modelOptions}
+                  options={modelOptionsForProvider(
+                    modelOptions,
+                    String(globalSettings.provider || 'copilot'),
+                    String(globalSettings.model || ''),
+                  )}
                   onChange={value => updateGlobalSettings({ model: value })}
                 />
               </div>
@@ -699,7 +704,7 @@ export function HudsonAIContent() {
                     <SettingSelect
                       label="AI Model"
                       value={workspaceModelValue}
-                      options={modelOptions}
+                      options={modelOptionsForProvider(modelOptions, workspaceProviderValue, workspaceModelValue)}
                       onChange={value => updateWorkspaceOverride({ model: value })}
                     />
                   </div>

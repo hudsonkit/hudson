@@ -12,19 +12,11 @@ import { homedir } from 'os';
 import { join } from 'path';
 import { readCachedCopilotChatToken } from './copilot-auth';
 import { loadHudsonLocalSecrets } from '@/app/lib/localSecretVault';
+import { AI_PROVIDER_DEFAULT_MODELS, AI_PROVIDER_ENV_KEYS } from '@/app/lib/ai-models';
 
 export type ProviderName = 'minimax' | 'anthropic' | 'openai' | 'groq' | 'xai' | 'github' | 'google' | 'copilot';
 
-export const DEFAULT_MODELS: Record<ProviderName, string> = {
-  minimax: 'MiniMax-M2.7',
-  anthropic: 'claude-sonnet-4-20250514',
-  openai: 'gpt-4o-mini',
-  groq: 'llama-3.3-70b-versatile',
-  xai: 'grok-4-1-fast',
-  github: 'gpt-4o',
-  google: 'gemini-2.0-flash',
-  copilot: 'gemini-3-flash-preview',
-};
+export const DEFAULT_MODELS: Record<ProviderName, string> = AI_PROVIDER_DEFAULT_MODELS;
 
 interface CredentialStore {
   minimax?: string;
@@ -169,7 +161,7 @@ export function resolveModel(provider?: string, model?: string) {
   if (!creds[p]) {
     const available = availableProviders();
     throw new Error(
-      `No API key for provider "${p}". Set ${p.toUpperCase()}_API_KEY in .env.local or ~/.lattices/inference.json. Available: ${available.length > 0 ? available.join(', ') : 'none'}`,
+      `No API key for provider "${p}". Add ${AI_PROVIDER_ENV_KEYS[p] ?? `${p.toUpperCase()}_API_KEY`} under Hudson AI → Environment Credentials (or .env.local / ~/.lattices/inference.json). Available: ${available.length > 0 ? available.join(', ') : 'none'}`,
     );
   }
   return getModel(p, m);

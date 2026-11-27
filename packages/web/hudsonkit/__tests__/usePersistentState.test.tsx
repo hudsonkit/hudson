@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
-import type { ReactNode } from 'react';
+import { StrictMode, type ReactNode } from 'react';
 import {
   usePersistentState,
   useDebouncedPersistentState,
@@ -49,10 +49,46 @@ describe('usePersistentState — hydration', () => {
     }
   });
 
+  it('keeps the stored value under StrictMode (no initial-value write-back)', () => {
+    seed('strict.key', { provider: 'openai' });
+    const { result } = renderHook(
+      () => usePersistentState('strict.key', { provider: 'copilot' }),
+      { wrapper: StrictMode },
+    );
+    expect(result.current[0]).toEqual({ provider: 'openai' });
+    expect(readRaw('strict.key')).toEqual({ provider: 'openai' });
+  });
+
   it('ignores corrupt stored JSON and uses the initial value', () => {
     localStorage.setItem('corrupt.key', '{not valid json');
     const { result } = renderHook(() => usePersistentState('corrupt.key', 'fallback'));
     expect(result.current[0]).toBe('fallback');
+  });
+});
+
+describe('usePersistentState — same-tab sync', () => {
+  it('adopts a value written by another instance of the same key', () => {
+    const a = renderHook(() => usePersistentState('shared.key', { provider: 'copilot' }));
+    const b = renderHook(() => usePersistentState('shared.key', { provider: 'copilot' }));
+    act(() => a.result.current[1]({ provider: 'openai' }));
+    expect(b.result.current[0]).toEqual({ provider: 'openai' });
+    expect(readRaw('shared.key')).toEqual({ provider: 'openai' });
+  });
+
+  it('keeps the latest write when the other instance updates next', () => {
+    const a = renderHook(() => usePersistentState('shared2.key', 1));
+    const b = renderHook(() => usePersistentState('shared2.key', 1));
+    act(() => a.result.current[1](2));
+    act(() => b.result.current[1](prev => prev + 1));
+    expect(a.result.current[0]).toBe(3);
+    expect(readRaw('shared2.key')).toBe(3);
+  });
+
+  it('ignores writes to other keys', () => {
+    const a = renderHook(() => usePersistentState('one.key', 'a'));
+    const b = renderHook(() => usePersistentState('two.key', 'b'));
+    act(() => a.result.current[1]('changed'));
+    expect(b.result.current[0]).toBe('b');
   });
 });
 
