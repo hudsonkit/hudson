@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react';
 import { AI_MODELS_PATH, type AISelectOption } from './ai-models';
 
+/** Dispatch on window to reload the catalog now (e.g. after a provider sign-in). */
+export const AI_MODELS_REFRESH_EVENT = 'hudson:ai-models-refresh';
+
 export function useAIModelOptions() {
   const [modelOptions, setModelOptions] = useState<AISelectOption[]>([]);
   // Providers the local server adds when a harness is installed (Codex). The
@@ -28,7 +31,12 @@ export function useAIModelOptions() {
     };
     void refresh();
     window.addEventListener('focus', refresh);
-    return () => { controller.abort(); window.removeEventListener('focus', refresh); };
+    window.addEventListener(AI_MODELS_REFRESH_EVENT, refresh);
+    return () => {
+      controller.abort();
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener(AI_MODELS_REFRESH_EVENT, refresh);
+    };
   }, []);
 
   return { modelOptions, localProviderOptions, source };
