@@ -297,7 +297,7 @@ export type { UseAppApiStatusResult } from './hooks/useAppApiStatus';
 
 // Platform adapter
 export type { PlatformAdapter, PlatformLayout } from './platform';
-export { WEB_ADAPTER, PlatformProvider, usePlatform, usePlatformLayout } from './platform';
+export { WEB_ADAPTER, ELECTRON_ADAPTER, ELECTRON_NO_DRAG_PROPS, PlatformProvider, usePlatform, usePlatformLayout } from './platform';
 
 // Reusable widgets
 export { HudsonKitLockup, HudsonKitMark } from './components/brand';
