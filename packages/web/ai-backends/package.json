@@ -64,7 +64,7 @@
     "test": "vitest run"
   },
   "peerDependencies": {
-    "@earendil-works/pi-ai": ">=0.85.1",
+    "@earendil-works/pi-ai": ">=1.5.2",
     "ai": ">=6.0.0",
     "@openscout/agent-sessions": ">=0.2.78"
   },
@@ -80,7 +80,7 @@
     }
   },
   "devDependencies": {
-    "@earendil-works/pi-ai": "latest",
+    "@earendil-works/pi-ai": "1.5.2",
     "ai": "^6.0.0",
     "tsup": "^8.0.0",
     "vitest": "^4.0.0"
