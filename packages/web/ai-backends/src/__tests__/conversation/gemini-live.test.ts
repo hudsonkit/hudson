@@ -1,3 +1,5 @@
+// @vitest-environment node
+// Server-side connector code: jsdom would trip the browser credential guard.
 import { describe, expect, it } from 'vitest';
 import { connectGeminiLive, validateGeminiLiveConfig } from '../../conversation/gemini-live';
 import { ConversationError, type ConversationConfig } from '../../conversation/types';
