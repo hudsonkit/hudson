@@ -45,6 +45,8 @@ export function Walkthrough({ frameSelector }: { frameSelector: string }) {
   const [sound, setSound] = useState(false);
   const [ready, setReady] = useState(false);
   const [visible, setVisible] = useState(false);
+  /** The visitor has used the narration toggle; stop pointing at it. */
+  const [soundTouched, setSoundTouched] = useState(false);
   const timers = useRef<number[]>([]);
   const audio = useRef<HTMLAudioElement | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -157,6 +159,7 @@ export function Walkthrough({ frameSelector }: { frameSelector: string }) {
   const toggleSound = () => {
     const next = !sound;
     setSound(next);
+    setSoundTouched(true);
     // Restart the current line so audio and motion stay in step.
     if (phase === 'playing') play(index, next);
   };
@@ -169,6 +172,8 @@ export function Walkthrough({ frameSelector }: { frameSelector: string }) {
 
   const step = WALKTHROUGH[index];
   const showing = phase !== 'waiting';
+  // Point out the narration early on, while it is still off.
+  const calloutOn = phase === 'playing' && !sound && !soundTouched && index <= 2;
 
   return (
     <div ref={rootRef} className="walkthrough" data-phase={phase}>
@@ -186,16 +191,24 @@ export function Walkthrough({ frameSelector }: { frameSelector: string }) {
           {showing ? step.say : 'A short walkthrough of the live workspace starts here.'}
         </p>
 
-        <button
-          type="button"
-          className="walkthrough__sound"
-          aria-pressed={sound}
-          onClick={toggleSound}
-          title={sound ? 'Mute narration' : 'Play narration'}
-        >
-          {sound ? <SoundOnIcon /> : <SoundOffIcon />}
-          <span>{sound ? 'Narration on' : 'Narration off'}</span>
-        </button>
+        <div className="walkthrough__sound-wrap">
+          <button
+            type="button"
+            className="walkthrough__sound"
+            aria-pressed={sound}
+            onClick={toggleSound}
+            title={sound ? 'Mute narration' : 'Play narration'}
+          >
+            {sound ? <SoundOnIcon /> : <SoundOffIcon />}
+            <span>{sound ? 'Narration on' : 'Narration off'}</span>
+          </button>
+          {/* A caliper on the toggle with a leader up to a note: it's narrated. */}
+          <span className="narration-callout" data-on={calloutOn || undefined} aria-hidden>
+            <span className="narration-callout__jaws" />
+            <span className="narration-callout__leader" />
+            <span className="narration-callout__note">Narrated · turn on to listen</span>
+          </span>
+        </div>
       </div>
 
       <ol className="walkthrough__steps" aria-label="Walkthrough steps">
