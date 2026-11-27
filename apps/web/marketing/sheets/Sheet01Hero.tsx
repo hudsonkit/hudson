@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Check, Copy } from 'hudsonkit/icons';
 import { HudsonEmbed } from '@/marketing/lib/embed';
 import { EmbedFrame } from '@/marketing/primitives/EmbedFrame';
 import { EmbedReveal } from '@/marketing/primitives/EmbedReveal';
@@ -11,9 +12,44 @@ import { Walkthrough } from '@/marketing/walkthrough/Walkthrough';
 
 const INSTALL_CMD = 'bun add hudsonkit';
 const GITHUB_URL = REPOSITORY_URL;
+const STARS_API = 'https://api.github.com/repos/hudsonkit/hudson';
+/** Below this, a count reads as a weakness; show the call to action alone. */
+const SHOW_STARS_FROM = 10;
+
+/** Public star count, cached for the session; null until known (or on failure). */
+function useGitHubStars(): number | null {
+  const [stars, setStars] = useState<number | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    try {
+      const cached = sessionStorage.getItem('hudson.gh-stars');
+      if (cached) {
+        setStars(Number(cached));
+        return;
+      }
+    } catch {
+      /* storage blocked */
+    }
+    fetch(STARS_API)
+      .then(r => (r.ok ? r.json() : null))
+      .then((data: { stargazers_count?: number } | null) => {
+        if (cancelled || typeof data?.stargazers_count !== 'number') return;
+        setStars(data.stargazers_count);
+        try { sessionStorage.setItem('hudson.gh-stars', String(data.stargazers_count)); } catch { /* noop */ }
+      })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
+  }, []);
+  return stars;
+}
+
+function formatStars(n: number): string {
+  return n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : String(n);
+}
 
 export function Sheet01Hero() {
   const [copied, setCopied] = useState(false);
+  const stars = useGitHubStars();
   const handleInstallClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     window.__hudAudio?.chime?.({ cat: 'ui' });
@@ -55,24 +91,35 @@ export function Sheet01Hero() {
           A spatial canvas for your apps on iOS, macOS, and the web. The same primitives everywhere: a terminal, commands, and actions your agents can run.
         </p>
 
-        <div style={{ display: 'flex', gap: 12 }} data-cal data-cal-label="hero CTAs">
+        <div className="hero-ctas" data-cal data-cal-label="hero CTAs">
           <button
             type="button"
-            className="btn"
+            className="cmd-copy"
             onClick={handleInstallClick}
             aria-label={copied ? 'Install command copied to clipboard' : `Copy install command: ${INSTALL_CMD}`}
-            style={{ minWidth: 220 }}
           >
-            {copied ? '✓ Copied to clipboard' : `$ ${INSTALL_CMD}`}
+            <span className="cmd-copy__prompt" aria-hidden>$</span>
+            <code className="cmd-copy__text">{INSTALL_CMD}</code>
+            <span className="cmd-copy__action" aria-hidden data-copied={copied || undefined}>
+              {copied ? <Check size={13} /> : <Copy size={13} />}
+              <span>{copied ? 'Copied' : 'Copy'}</span>
+            </span>
           </button>
           <a
-            className="btn btn--ghost"
+            className="gh-star"
             href={GITHUB_URL}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => window.__hudAudio?.tick?.({ cat: 'ui', gain: 0.08 })}
           >
-            <span className="hide-narrow">View source · </span>GitHub
+            <GitHubMark />
+            <span>Star on GitHub</span>
+            {stars !== null && stars >= SHOW_STARS_FROM && (
+              <span className="gh-star__count" aria-label={`${stars} stars`}>
+                <StarGlyph />
+                {formatStars(stars)}
+              </span>
+            )}
           </a>
         </div>
 
@@ -112,5 +159,21 @@ export function Sheet01Hero() {
         </div>
       </div>
     </Sheet>
+  );
+}
+
+function GitHubMark() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden fill="currentColor">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
+    </svg>
+  );
+}
+
+function StarGlyph() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 16 16" aria-hidden fill="currentColor">
+      <path d="M8 .9l2.2 4.6 5 .7-3.6 3.5.9 5L8 12.4l-4.5 2.3.9-5L.8 6.2l5-.7L8 .9Z" />
+    </svg>
   );
 }

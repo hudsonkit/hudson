@@ -1883,7 +1883,67 @@
 }
 
 /* Walkthrough: caption bar + step rail under the hero embed */
-.hudson-site .walkthrough { margin-top: 18px; }
+.hudson-site .walkthrough { margin-top: 34px; }
+.hudson-site .walkthrough__sound-wrap { position: relative; flex: none; }
+
+/* Narration callout: caliper jaws around the toggle, a leader line, a note.
+   Drawn like the rest of the sheet's instruments; fades in, never blocks. */
+.hudson-site .narration-callout {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 420ms ease;
+}
+.hudson-site .narration-callout[data-on] { opacity: 1; transition-delay: 900ms; }
+.hudson-site .narration-callout__jaws {
+  position: absolute;
+  inset: -5px -6px;
+  border-left: 1px solid var(--accent);
+  border-right: 1px solid var(--accent);
+  background:
+    linear-gradient(var(--accent), var(--accent)) left top / 5px 1px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) left bottom / 5px 1px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) right top / 5px 1px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) right bottom / 5px 1px no-repeat;
+}
+.hudson-site .narration-callout__leader {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 5px);
+  width: 1px;
+  height: 20px;
+  background: var(--accent);
+}
+/* Arrowhead resting on the top jaw. */
+.hudson-site .narration-callout__leader::after {
+  content: '';
+  position: absolute;
+  left: -3px;
+  bottom: -1px;
+  border: 3.5px solid transparent;
+  border-top: 5px solid var(--accent);
+  border-bottom: 0;
+}
+.hudson-site .narration-callout__note {
+  position: absolute;
+  right: -6px;
+  bottom: calc(100% + 27px);
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.hudson-site .narration-callout[data-on] .narration-callout__note { animation: narration-nudge 2.4s ease-in-out 1.4s 2; }
+@keyframes narration-nudge {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hudson-site .narration-callout[data-on] .narration-callout__note { animation: none; }
+}
 .hudson-site .walkthrough__bar {
   display: flex;
   align-items: center;
@@ -1977,10 +2037,90 @@
 .hudson-site .walkthrough__num { color: var(--ink-2); }
 .hudson-site .walkthrough__steps [aria-current='step'] .walkthrough__num { color: var(--accent); }
 @media (max-width: 760px) {
-  .hudson-site .walkthrough__steps { grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 10px; }
+  /* Phones get the caption bar alone; eight steps would crowd the sheet foot. */
+  .hudson-site .walkthrough__steps { display: none; }
   .hudson-site .walkthrough__sound span { display: none; }
   .hudson-site .walkthrough__caption { font-size: 13.5px; }
 }
+
+/* Hero CTAs: the install line reads as a command (copy it), GitHub as a
+   quiet outlined link. Same height, same 8px corners. */
+.hudson-site .hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+.hudson-site .cmd-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  height: 46px;
+  padding: 0 6px 0 16px;
+  border: 1px solid color-mix(in oklch, var(--ink) 22%, var(--line));
+  border-radius: 8px;
+  background: var(--paper-2, var(--paper));
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0;
+  text-transform: none;
+  cursor: copy;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+.hudson-site .cmd-copy:hover { border-color: color-mix(in oklch, var(--accent) 55%, var(--line)); }
+.hudson-site .cmd-copy:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.hudson-site .cmd-copy__prompt { color: var(--accent); user-select: none; }
+.hudson-site .cmd-copy__text { font: inherit; color: inherit; background: none; padding: 0; user-select: all; }
+.hudson-site .cmd-copy__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  margin-left: 6px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  transition: color 160ms ease, border-color 160ms ease;
+}
+.hudson-site .cmd-copy:hover .cmd-copy__action { color: var(--ink); }
+.hudson-site .cmd-copy__action[data-copied] { color: var(--accent); border-color: color-mix(in oklch, var(--accent) 45%, var(--line)); }
+
+.hudson-site .gh-star {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 46px;
+  padding: 0 16px;
+  border: 1px solid color-mix(in oklch, var(--ink) 22%, var(--line));
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-body, inherit);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+.hudson-site .gh-star:hover { border-color: var(--ink); background: color-mix(in oklch, var(--ink) 4%, transparent); }
+.hudson-site .gh-star:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.hudson-site .gh-star__count {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 3px;
+  padding-left: 11px;
+  border-left: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--ink-1);
+}
+.hudson-site .gh-star__count svg { color: var(--accent); }
 
 /* Hero on axis: copy, CTAs and stats center over the product. */
 /* First view: the intro is a compact band, the product starts high. */
@@ -2051,15 +2191,11 @@
   .hudson-site .dim__v { display: none; }
   .hudson-site #hero .hero-intro { padding-bottom: 72px; }
   .hudson-site .sheet-header__title-cell { display: none; }
-  /* Hero CTAs: one compact row, not two tall slabs */
-  .hudson-site .hero-intro [data-cal-label='hero CTAs'] { gap: 8px; }
-  .hudson-site .hero-intro [data-cal-label='hero CTAs'] .btn {
-    min-width: 0 !important;
-    min-height: 40px;
-    padding: 10px 14px;
-    font-size: 11px;
-    white-space: nowrap;
-  }
+  /* Hero CTAs: the command takes the full row; GitHub sits under it. */
+  .hudson-site .hero-ctas { gap: 8px; }
+  .hudson-site .cmd-copy { width: 100%; justify-content: flex-start; font-size: 13px; }
+  .hudson-site .cmd-copy__action { margin-left: auto; }
+  .hudson-site .gh-star { height: 42px; font-size: 13px; }
   .hudson-site .hide-narrow { display: none; }
 }
 
