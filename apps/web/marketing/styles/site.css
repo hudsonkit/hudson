@@ -1606,7 +1606,8 @@
     repeating-linear-gradient(to right,
       transparent 0, transparent 71px,
       color-mix(in oklch, var(--ink-2) 60%, transparent) 71px,
-      color-mix(in oklch, var(--ink-2) 60%, transparent) 72px) top / 100% 6px no-repeat;
+      color-mix(in oklch, var(--ink-2) 60%, transparent) 72px) top / 100% 6px no-repeat,
+    var(--paper);
 }
 .hudson-site .sheet-header { display: flex; flex-direction: column; }
 .hudson-site .sheet-header__bar { order: 1; }
@@ -1641,9 +1642,8 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 24px;
   padding: 11px max(16px, calc(var(--sheet-pad-x, 64px) / 2));
-  background: color-mix(in oklch, var(--paper) 86%, transparent);
-  backdrop-filter: blur(14px) saturate(1.1);
-  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  /* Solid: the hero headline is large enough to read through any tint. */
+  background: var(--paper);
   border-bottom: 1px solid color-mix(in oklch, var(--line) 55%, transparent);
 }
 .hudson-site .sheet-header__brand,
@@ -1882,32 +1882,84 @@
   padding: 10px 0;
 }
 
-/* Figure callouts under the hero embed */
-.hudson-site .hero-tour {
+/* Walkthrough: caption bar + step rail under the hero embed */
+.hudson-site .walkthrough { margin-top: 18px; }
+.hudson-site .walkthrough__bar {
   display: flex;
-  align-items: stretch;
-  gap: 16px;
-  margin-top: 18px;
+  align-items: center;
+  gap: 14px;
+  min-height: 48px;
+  padding: 8px 10px 8px 8px;
+  border: 1px solid color-mix(in oklch, var(--line) 80%, transparent);
+  border-radius: 6px;
+  background: color-mix(in oklch, var(--paper-2, var(--paper)) 70%, transparent);
 }
-.hudson-site .hero-tour__start {
+.hudson-site .walkthrough__play {
   flex: none;
-  padding: 10px 14px 0 0;
-  background: none;
-  border: 0;
-  border-top: 1px solid var(--ink-2);
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--paper);
   color: var(--ink);
   cursor: pointer;
-  white-space: nowrap;
+  transition: border-color 160ms ease, color 160ms ease;
 }
-.hudson-site .hero-tour__start:hover { color: var(--accent); }
-.hudson-site .hero-tour .hero-callouts { flex: 1; margin: 0; grid-template-columns: repeat(7, minmax(0, 1fr)); }
-.hudson-site .hero-callouts__step {
+.hudson-site .walkthrough__play:hover { border-color: var(--accent); color: var(--accent); }
+.hudson-site .walkthrough__caption {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+.hudson-site .walkthrough[data-phase='waiting'] .walkthrough__caption { color: var(--ink-2); }
+.hudson-site .walkthrough__sound {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 9px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease;
+}
+.hudson-site .walkthrough__sound:hover { color: var(--ink); border-color: var(--line); }
+.hudson-site .walkthrough__sound[aria-pressed='true'] { color: var(--accent); }
+.hudson-site .walkthrough__steps {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.hudson-site .walkthrough__steps li {
+  padding-top: 9px;
+  border-top: 1px solid color-mix(in oklch, var(--line) 60%, transparent);
+  transition: border-color 200ms ease;
+}
+.hudson-site .walkthrough__steps li:has([data-done]) { border-top-color: color-mix(in oklch, var(--accent) 40%, var(--line)); }
+.hudson-site .walkthrough__steps li:has([aria-current='step']) { border-top-color: var(--accent); }
+.hudson-site .walkthrough__steps button {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
   padding: 0;
   background: none;
@@ -1920,30 +1972,15 @@
   cursor: pointer;
   transition: color 160ms ease;
 }
-.hudson-site .hero-callouts__step:hover { color: var(--ink-1); }
-.hudson-site .hero-callouts li:has([aria-current='step']) { border-top-color: var(--accent); }
-.hudson-site .hero-callouts__step[aria-current='step'] { color: var(--ink); }
-.hudson-site .hero-callouts__step[aria-current='step'] .hero-callouts__num { color: var(--accent); }
-.hudson-site .hero-callouts {
-  list-style: none;
-  margin: 18px 0 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ink-3);
+.hudson-site .walkthrough__steps button:hover { color: var(--ink-1); }
+.hudson-site .walkthrough__steps [aria-current='step'] { color: var(--ink); }
+.hudson-site .walkthrough__num { color: var(--ink-2); }
+.hudson-site .walkthrough__steps [aria-current='step'] .walkthrough__num { color: var(--accent); }
+@media (max-width: 760px) {
+  .hudson-site .walkthrough__steps { grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 10px; }
+  .hudson-site .walkthrough__sound span { display: none; }
+  .hudson-site .walkthrough__caption { font-size: 13.5px; }
 }
-.hudson-site .hero-callouts li {
-  display: flex;
-  gap: 10px;
-  padding-top: 10px;
-  border-top: 1px solid color-mix(in oklch, var(--line) 60%, transparent);
-}
-.hudson-site .hero-callouts__num { color: var(--ink-1); }
 
 /* Hero on axis: copy, CTAs and stats center over the product. */
 /* First view: the intro is a compact band, the product starts high. */
@@ -2012,8 +2049,6 @@
 @media (max-width: 720px) {
   .hudson-site .hero-stage .embed-plate__caption > span:last-child { display: none; }
   .hudson-site .dim__v { display: none; }
-  /* The in-frame card carries the step count; the strip is just the start control. */
-  .hudson-site .hero-tour .hero-callouts { display: none; }
   .hudson-site #hero .hero-intro { padding-bottom: 72px; }
   .hudson-site .sheet-header__title-cell { display: none; }
   /* Hero CTAs: one compact row, not two tall slabs */

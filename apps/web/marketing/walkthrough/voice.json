@@ -1,0 +1,50 @@
+{
+  "live": {
+    "src": "/walkthrough/live.mp3",
+    "duration": 6.32,
+    "text": "This is Hudson, running live in the page. What you are about to see is the real app, moving on its own.",
+    "voice": "XrExE9yKIg1WjnnlVkGX"
+  },
+  "windows": {
+    "src": "/walkthrough/windows.mp3",
+    "duration": 6.83,
+    "text": "Apps open as windows on one shared canvas. Open another, and the canvas re-tiles so every app stays readable.",
+    "voice": "XrExE9yKIg1WjnnlVkGX"
+  },
+  "slots": {
+    "src": "/walkthrough/slots.mp3",
+    "duration": 7.2,
+    "text": "Apps don’t draw their own chrome. They fill slots the shell provides: navigation on the left, an inspector on the right.",
+    "voice": "XrExE9yKIg1WjnnlVkGX"
+  },
+  "palette": {
+    "src": "/walkthrough/palette.mp3",
+    "duration": 6.04,
+    "text": "Every action an app declares becomes a command, so the whole workspace is searchable from one place.",
+    "voice": "XrExE9yKIg1WjnnlVkGX"
+  },
+  "agents": {
+    "src": "/walkthrough/agents.mp3",
+    "duration": 7.11,
+    "text": "Agents call those same commands. This walkthrough runs on them too: each move you see is a Hudson action.",
+    "voice": "XrExE9yKIg1WjnnlVkGX"
+  },
+  "console": {
+    "src": "/walkthrough/console.mp3",
+    "duration": 4.97,
+    "text": "Underneath it all sits a console, with Hudson AI and a terminal a keystroke away.",
+    "voice": "XrExE9yKIg1WjnnlVkGX"
+  },
+  "everywhere": {
+    "src": "/walkthrough/everywhere.mp3",
+    "duration": 5.81,
+    "text": "The same primitives ship on iOS, macOS, and the web, so your apps feel at home on each.",
+    "voice": "XrExE9yKIg1WjnnlVkGX"
+  },
+  "close": {
+    "src": "/walkthrough/close.mp3",
+    "duration": 5.11,
+    "text": "That’s Hudson. Your apps bring the work; Hudson gives them a shared workspace.",
+    "voice": "XrExE9yKIg1WjnnlVkGX"
+  }
+}

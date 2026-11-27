@@ -31,7 +31,7 @@ export function IntentList() {
 
   if (groups.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-neutral-500 text-[12px] font-mono">
+      <div className="flex items-center justify-center h-full text-muted-foreground text-[12px] font-mono">
         No intents match your search
       </div>
     );
@@ -47,17 +47,17 @@ export function IntentList() {
               {/* Group header */}
               <button
                 onClick={() => toggleGroup(group.id)}
-                className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-white/5 transition-colors"
+                className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-muted/60 transition-colors"
               >
                 {isCollapsed ? (
-                  <ChevronRight size={12} className="text-neutral-500 shrink-0" />
+                  <ChevronRight size={12} className="text-muted-foreground shrink-0" />
                 ) : (
-                  <ChevronDown size={12} className="text-neutral-500 shrink-0" />
+                  <ChevronDown size={12} className="text-muted-foreground shrink-0" />
                 )}
-                <span className="text-[11px] font-mono font-bold text-neutral-200 tracking-wider uppercase">
+                <span className="text-[11px] font-mono font-bold text-foreground tracking-wider uppercase">
                   {group.label}
                 </span>
-                <span className="text-[10px] font-mono text-neutral-500">
+                <span className="text-[10px] font-mono text-muted-foreground">
                   ({group.intents.length})
                 </span>
               </button>
@@ -106,25 +106,25 @@ function IntentRow({
       onClick={onSelect}
       className={`w-full flex items-center gap-3 px-4 py-1.5 text-left transition-colors ${
         isSelected
-          ? 'bg-emerald-500/10 border-l-2 border-emerald-400'
-          : 'border-l-2 border-transparent hover:bg-white/5'
+          ? 'bg-accent/10 border-l-2 border-accent'
+          : 'border-l-2 border-transparent hover:bg-muted/60'
       }`}
     >
       {/* Shortcut badge */}
-      <div className="w-[52px] shrink-0 flex justify-end">
+      <div className="w-[84px] shrink-0 flex justify-end">
         {intent.shortcut ? (
-          <span className="bg-neutral-800 text-neutral-300 px-1.5 py-0.5 rounded text-[10px] font-mono leading-none">
+          <span className="bg-muted text-foreground/80 px-1.5 py-0.5 rounded text-[10px] font-mono leading-none">
             {intent.shortcut}
           </span>
         ) : (
-          <span className="text-neutral-600 text-[10px] font-mono">--</span>
+          <span className="text-muted-foreground/70 text-[10px] font-mono">--</span>
         )}
       </div>
 
       {/* Title */}
       <span
         className={`flex-1 text-[12px] font-mono truncate ${
-          isSelected ? 'text-emerald-300' : 'text-neutral-200'
+          isSelected ? 'text-accent' : 'text-foreground'
         }`}
       >
         {intent.title}
