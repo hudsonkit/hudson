@@ -7,6 +7,7 @@ import {
   sampleGeminiImportDocument,
 } from '../../conversation/import';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- fixtures are mutated at arbitrary depth to build invalid documents
 const valid = () => JSON.parse(JSON.stringify(sampleGeminiImportDocument)) as Record<string, any>;
 
 describe('conversation settings import', () => {
@@ -137,6 +138,7 @@ describe('conversation settings import', () => {
     thinkingOnBase.configuration.model = 'gemini-3.8-live';
     expect(() => parseConversationSettingsDocument(JSON.stringify(thinkingOnBase)))
       .toThrowError(/thinking level/);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- fixtures are mutated at arbitrary depth to build invalid documents
     const wrongRate = JSON.parse(JSON.stringify(sampleGPTLiveImportDocument)) as Record<string, any>;
     wrongRate.configuration.inputSampleRate = 8_000;
     expect(() => parseConversationSettingsDocument(JSON.stringify(wrongRate)))

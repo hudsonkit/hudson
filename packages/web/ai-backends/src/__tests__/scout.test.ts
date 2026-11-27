@@ -30,6 +30,7 @@ function turnResult(text: string, over: Partial<ScoutLocalTurnResult> = {}): Sco
 function fakeLocal(reply: (input: string) => string = () => 'PONG', forceTransport?: string) {
   const transportFor = (harness: string) =>
     forceTransport ?? HARNESS_TRANSPORTS[harness as keyof typeof HARNESS_TRANSPORTS][0];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- records whatever options each backend call received
   const calls: { kind: 'complete' | 'create' | 'turn'; opts: any }[] = [];
   let alive = true;
   const local: ScoutLocalModule = {
@@ -128,6 +129,7 @@ describe('scout backend', () => {
       req({ harness: 'kimi' }, {
         messages: [
           { role: 'user', content: 'hi' },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- deliberately malformed content shape
           { role: 'assistant', content: [{ type: 'text', text: 'hello' }] as any },
         ],
         input: 'and now?',

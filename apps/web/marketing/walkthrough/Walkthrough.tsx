@@ -31,6 +31,15 @@ function readingTime(text: string): number {
   return Math.max(4.5, text.split(/\s+/).length * 0.36 + 1.6);
 }
 
+/** Start a clip on the shared element, creating it on first use. */
+function playClip(holder: { current: HTMLAudioElement | null }, src: string) {
+  const el = holder.current ?? new Audio();
+  holder.current = el;
+  el.src = src;
+  el.currentTime = 0;
+  void el.play().catch(() => undefined);
+}
+
 function stepDuration(index: number, sound: boolean): number {
   const step = WALKTHROUGH[index];
   const clip = VOICE[step.id];
@@ -51,6 +60,8 @@ export function Walkthrough({ frameSelector }: { frameSelector: string }) {
   const audio = useRef<HTMLAudioElement | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const autoStarted = useRef(false);
+  /** Each step schedules the next through this, so `play` can chain itself. */
+  const playNext = useRef<(i: number, withSound: boolean) => void>(() => undefined);
 
   const frame = useCallback(
     () => document.querySelector<HTMLIFrameElement>(frameSelector),
@@ -87,21 +98,18 @@ export function Walkthrough({ frameSelector }: { frameSelector: string }) {
       for (const move of step.moves) later(() => send(move), move.at * 1000);
 
       const clip = VOICE[step.id];
-      if (withSound && clip) {
-        const el = audio.current ?? new Audio();
-        audio.current = el;
-        el.src = clip.src;
-        el.currentTime = 0;
-        void el.play().catch(() => undefined);
-      }
+      if (withSound && clip) playClip(audio, clip.src);
 
       later(() => {
-        if (i + 1 < WALKTHROUGH.length) play(i + 1, withSound);
+        if (i + 1 < WALKTHROUGH.length) playNext.current(i + 1, withSound);
         else setPhase('done');
       }, stepDuration(i, withSound));
     },
     [clearTimers, later, send],
   );
+  useEffect(() => {
+    playNext.current = play;
+  }, [play]);
 
   /** Jump to a step: reset, replay earlier steps' moves at once, then play. */
   const jump = useCallback(
@@ -136,10 +144,17 @@ export function Walkthrough({ frameSelector }: { frameSelector: string }) {
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
-    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), { threshold: 0.6 });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setVisible(entry.isIntersecting);
+        // Scrolled away: pause rather than move things nobody is watching.
+        if (!entry.isIntersecting) pause();
+      },
+      { threshold: 0.6 },
+    );
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [pause]);
 
   useEffect(() => {
     if (autoStarted.current || !ready || !visible) return;
@@ -148,11 +163,6 @@ export function Walkthrough({ frameSelector }: { frameSelector: string }) {
     const id = window.setTimeout(() => play(0, false), START_DELAY_MS);
     return () => window.clearTimeout(id);
   }, [play, ready, visible]);
-
-  // Scrolled away: pause rather than move things nobody is watching.
-  useEffect(() => {
-    if (!visible && phase === 'playing') pause();
-  }, [pause, phase, visible]);
 
   useEffect(() => () => clearTimers(), [clearTimers]);
 

@@ -74,14 +74,14 @@ export function fromCodexModels(data: CodexModel[]): HarnessModel[] {
 export function codexModels(timeoutMs = 15_000, bin = 'codex'): Promise<HarnessModel[]> {
   return new Promise((resolve, reject) => {
     const child = spawn(bin, ['app-server'], { stdio: ['pipe', 'pipe', 'ignore'] });
-    const waiting = new Map<number, { ok: (r: any) => void; fail: (e: Error) => void }>();
+    const waiting = new Map<number, { ok: (r: unknown) => void; fail: (e: Error) => void }>();
     let next = 1;
     let buf = '';
     const send = (m: object) => child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', ...m })}\n`);
-    const request = (method: string, params: object) =>
-      new Promise<any>((ok, fail) => {
+    const request = <T = unknown>(method: string, params: object) =>
+      new Promise<T>((ok, fail) => {
         const id = next++;
-        waiting.set(id, { ok, fail });
+        waiting.set(id, { ok: r => ok(r as T), fail });
         send({ id, method, params });
       });
     const done = (fn: () => void) => {
@@ -121,7 +121,7 @@ export function codexModels(timeoutMs = 15_000, bin = 'codex'): Promise<HarnessM
       const out: CodexModel[] = [];
       let cursor: string | null | undefined;
       do {
-        const r: { data?: CodexModel[]; nextCursor?: string | null } = await request(
+        const r = await request<{ data?: CodexModel[]; nextCursor?: string | null }>(
           'model/list',
           cursor ? { cursor } : {},
         );

@@ -109,8 +109,8 @@ jobs:
     env:
       # HudsonVoice consumes the provider-aware Vox Apple playback product.
       # Pin it so a restored branch-based SwiftPM cache cannot select a
-      # pre-VoxAppleSpeech main revision.
-      HUDSON_VOX_GIT_REVISION: 0989a058e04da9a5b012d38a577c772d13906745
+      # pre-VoxAppleSpeech main revision. Keep it equal to the Package.swift default.
+      HUDSON_VOX_GIT_REVISION: e1895152859779f4427296e8c5a8d0e38a16f123
     steps:
       - uses: actions/checkout@v4
 
