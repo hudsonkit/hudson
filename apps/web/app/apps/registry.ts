@@ -119,6 +119,7 @@ interface WorkspaceJson {
     appId: string;
     canvasMode?: CanvasParticipation;
     defaultWindowBounds?: { x: number; y: number; w: number; h: number };
+    openFromSidebar?: boolean;
   }[];
 }
 
@@ -141,6 +142,7 @@ function loadWorkspacesFromJson(): HudsonWorkspace[] {
               app,
               canvasMode: entry.canvasMode,
               defaultWindowBounds: entry.defaultWindowBounds,
+              openFromSidebar: entry.openFromSidebar,
             } as WorkspaceAppConfig;
           })
           .filter((c): c is WorkspaceAppConfig => c !== null);
@@ -185,16 +187,22 @@ function getCoreApps(): WorkspaceAppConfig[] {
       app: themeDesignerApp,
       canvasMode: 'windowed',
       defaultWindowBounds: { x: -820, y: 360, w: 1040, h: 720 },
+      // Framework tooling stays put: the sidebar expands it, the eye opens it.
+      openFromSidebar: false,
     },
     {
       app: codeEditorApp,
       canvasMode: 'windowed',
       defaultWindowBounds: { x: 260, y: 360, w: 760, h: 560 },
+      // Framework tooling stays put: the sidebar expands it, the eye opens it.
+      openFromSidebar: false,
     },
     {
       app: hudsonVoiceApp,
       canvasMode: 'windowed',
       defaultWindowBounds: { x: 1060, y: 360, w: 720, h: 560 },
+      // Framework tooling stays put: the sidebar expands it, the eye opens it.
+      openFromSidebar: false,
     },
   ];
 }

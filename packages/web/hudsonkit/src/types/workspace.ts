@@ -19,6 +19,13 @@ export interface WorkspaceAppConfig {
   canvasMode?: CanvasParticipation;
   /** Default window bounds for 'windowed' apps */
   defaultWindowBounds?: { x: number; y: number; w: number; h: number };
+  /**
+   * Whether choosing this app in the sidebar opens its window when it is
+   * closed (default: true). Set false for supporting apps that should stay
+   * put: their section still expands, and the visibility toggle still opens
+   * them deliberately.
+   */
+  openFromSidebar?: boolean;
 }
 
 // ---------------------------------------------------------------------------

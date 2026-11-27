@@ -2426,8 +2426,13 @@ function WorkspaceInner({
           appIcon={app.leftPanel?.icon ?? app.rightPanel?.icon}
           isFocused={app.id === focusedAppId}
           // Choosing a closed app opens it (and the canvas re-tiles), so a
-          // click in the navigation always lands somewhere visible.
-          onFocus={() => (activatedAppIds.has(app.id) ? setFocusedAppId(app.id) : handleActivateApp(app.id))}
+          // click in the navigation lands somewhere visible. Apps that opt out
+          // (`openFromSidebar: false`) stay put: their section expands and
+          // offers an explicit Open, and focus stays on what's on the canvas.
+          onFocus={() => {
+            if (activatedAppIds.has(app.id)) setFocusedAppId(app.id);
+            else if (config.openFromSidebar !== false) handleActivateApp(app.id);
+          }}
           defaultExpanded={app.id === focusedAppId}
           isVisible={activatedAppIds.has(app.id)}
           onToggleVisibility={() => handleToggleAppVisibility(app.id)}

@@ -95,6 +95,13 @@
   --radius-3xl: calc(var(--radius) + 4px);
 }
 
+/* JetBrains Mono has a tall x-height and reads a size larger than the system
+   mono at UI sizes (10-12px). Normalize it so 11px chrome reads as 11px.
+   Product only: the marketing deck picks its own type. */
+:is(.font-mono, code, kbd, samp, pre):not(.hudson-site *) {
+  font-size-adjust: 0.5;
+}
+
 .font-brand {
   font-family: var(--font-brand);
 }
