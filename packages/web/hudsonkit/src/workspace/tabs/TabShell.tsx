@@ -15,10 +15,12 @@ import { Command, PanelBottom, PanelRightOpen, Plus } from '../../icons';
 import { usePlatform } from '../../platform/PlatformContext';
 import { usePlatformLayout } from '../../platform/usePlatformLayout';
 import { HudsonThemeScript, ThemeProvider, useOptionalTheme, type HudsonTemplate, type HudsonTheme } from '../../theme';
+import { activityKey, type ActivityRef, type PlatformActivityBridge } from '../../types/activity';
 import type { HudsonApp } from '../../types/app';
 import type { OpenTabPlacement, OpenTabRequest, TabCycleScope, TabSelectTarget, TabStore } from '../../types/tabs';
 import type { HudsonWorkspace } from '../../types/workspace';
 import { AppProviderStack, useAppHooks, type AppHookData } from '../shared/appHost';
+import { ActivityIndicator, type ActivityKindLabel } from './ActivityIndicator';
 import { useTabsController, type TabsHandle } from './controller';
 import { findGroup, visibleGroups } from './layout';
 import { createLocalTabStore } from './store';
@@ -39,6 +41,10 @@ export interface TabShellProps {
   /** Navigation bar title. Default: the workspace name. */
   title?: string;
   emptyState?: ReactNode;
+  /** Activity source; defaults to the platform adapter's. */
+  activities?: PlatformActivityBridge;
+  /** Words for the status-bar activity summary, e.g. `{ playback: 'playing' }`. */
+  activityLabels?: Readonly<Record<string, ActivityKindLabel>>;
   managedTheme?: boolean;
   defaultTheme?: HudsonTheme;
   defaultTemplate?: HudsonTemplate;
@@ -88,6 +94,8 @@ function TabShellInner({
   ref,
   title,
   emptyState,
+  activities,
+  activityLabels,
   onRuntime,
 }: Omit<TabShellProps, 'managedTheme' | 'defaultTheme' | 'defaultTemplate'> & {
   apps: readonly HudsonApp[];
@@ -181,6 +189,52 @@ function TabShellInner({
     return list;
   }, [apps, controller.api, controller.commands, focusedHooks?.commands, openApp]);
 
+  // The activity indicator opens an activity's tab: the open one whose
+  // activityRef matches, else a new tab from the app that views that kind.
+  const tabForActivity = useCallback(
+    (ref: ActivityRef): string | null => {
+      const key = activityKey(ref);
+      for (const instance of controller.state.ws.instances) {
+        const fn = apps.find((a) => a.id === instance.appId)?.tab?.activityRef;
+        try {
+          const own = fn?.(instance.params);
+          if (own && activityKey(own) === key) return instance.instanceId;
+        } catch {
+          // A throwing activityRef just doesn't match.
+        }
+      }
+      return null;
+    },
+    [apps, controller.state.ws.instances],
+  );
+  const appForActivity = useCallback(
+    (ref: ActivityRef): { app: HudsonApp; params: unknown } | null => {
+      for (const app of apps) {
+        try {
+          const params = app.tab?.paramsForActivity?.(ref);
+          if (params != null) return { app, params };
+        } catch {
+          // Skip an app whose mapping throws.
+        }
+      }
+      return null;
+    },
+    [apps],
+  );
+  const canOpenActivity = useCallback((ref: ActivityRef) => !!tabForActivity(ref) || !!appForActivity(ref), [appForActivity, tabForActivity]);
+  const openActivity = useCallback(
+    (ref: ActivityRef) => {
+      const existing = tabForActivity(ref);
+      if (existing) {
+        controller.api.focus(existing);
+        return;
+      }
+      const target = appForActivity(ref);
+      if (target) controller.api.open({ appId: target.app.id, params: target.params });
+    },
+    [appForActivity, controller.api, tabForActivity],
+  );
+
   const newTabItems: HudMenuEntry[] = apps.map((app) => ({ id: app.id, label: app.name, icon: app.icon, action: () => openApp(app) }));
   const dockButton = (dock: 'right' | 'bottom') => {
     const d = layout.docks[dock];
@@ -234,14 +288,24 @@ function TabShellInner({
       </div>
 
       <main className="relative min-h-0 flex-1">
-        <TabAreaView controller={controller} keyBindings={keyBindings} emptyState={emptyState ?? <EmptyShell apps={apps} onOpen={openApp} />} />
+        <TabAreaView controller={controller} keyBindings={keyBindings} activities={activities} emptyState={emptyState ?? <EmptyShell apps={apps} onOpen={openApp} />} />
       </main>
 
       <div className="relative h-7 shrink-0 border-t" style={{ borderColor: 'var(--hud-chrome-border, oklch(var(--border) / 0.8))' }}>
         <StatusBar
           embedded
           left={focusedHooks?.statusLeft ?? undefined}
-          right={focusedHooks?.statusRight ?? undefined}
+          right={
+            <>
+              <ActivityIndicator
+                activities={activities}
+                labels={activityLabels}
+                onOpen={openActivity}
+                canOpen={canOpenActivity}
+              />
+              {focusedHooks?.statusRight}
+            </>
+          }
           status={focusedHooks?.status}
         />
       </div>

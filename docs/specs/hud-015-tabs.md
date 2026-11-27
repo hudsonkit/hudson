@@ -562,8 +562,12 @@ interface PlatformActivityBridge {
 
 // PlatformAdapter.activities?: PlatformActivityBridge   (an app may supply its own)
 // HudsonAppTabConfig.activityRef?: (params) => ActivityRef | null
-// useActivity(ref) → { snapshot, send }
-// useActivities() → ActivitySnapshot[]
+// HudsonAppTabConfig.paramsForActivity?: (ref) => params | null   (the inverse; lets
+//   the indicator open a tab for an activity that has none)
+// useActivity(ref) → ActivitySnapshot | null
+// useActivitySender() → (ref, command, args?) => Promise<boolean>
+// useActivities() → ReadonlyMap<string, ActivitySnapshot>, one shared list()
+//   and subscription per bridge however many components read it
 ```
 
 - The shell subscribes once and derives strip status for every tab whose
@@ -702,7 +706,14 @@ The Electron window setup, preload bridge and menu move to
    static page can't read the query until hydration, so `/app` would mount
    the canvas shell first.)
 5. The platform-neutral command and activity bridges, with Electron and
-   WKWebView adapters, and the status-bar activity indicator.
+   WKWebView adapters, and the status-bar activity indicator. Shipped as:
+   `createElectronAdapter({ commands, activities, guestHosting })`;
+   `createWebKitAdapter()` over a versioned wire protocol
+   (`platform/bridgeProtocol.ts`) whose native end is `HudWebBridge` in
+   HudsonUIWeb; `<ActivityIndicator>` and `<ActivityControls>` in
+   `TabShell`'s status bar. The `/demo/tabs` Recorder app runs a simulated
+   host, so closing a recording's tab and reopening it from the indicator
+   can be checked on the web.
 6. Linea migration, as one change (Linea repo).
 7. v2 items as needed.
 

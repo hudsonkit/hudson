@@ -10,12 +10,17 @@
 // - Preview: a web guest that opens in the right dock, reuses by URL and
 //   sets a favicon. Moving it never reloads the frame.
 // - Console: lives in the bottom dock and drives everything through useTabs.
+// - Recorder (recorder.tsx): views an activity owned by a host. Closing its
+//   tab never stops the recording; the status-bar indicator keeps it.
 // ---------------------------------------------------------------------------
 import { createElement, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { HudsonApp, HudsonWorkspace, OpenTabRequest, OpenTabPlacement } from 'hudsonkit';
 import { usePersistentState } from 'hudsonkit';
 import { useTab, useTabs } from 'hudsonkit/workspace';
 import { Clock, FileText, Globe, Terminal } from 'hudsonkit/icons';
+import { recorderApp } from './recorder';
+
+export { demoRecordingHost } from './recorder';
 
 const Passthrough = ({ children }: { children: ReactNode }) => <>{children}</>;
 const READY = { label: 'READY', color: 'emerald' as const };
@@ -188,6 +193,7 @@ function ConsoleContent() {
         <DemoButton onClick={() => tabs.open({ appId: 'tabs-preview', params: { url: '/demo/side-nav' } }, { reuse: true, inactive: true })}>
           …in background
         </DemoButton>
+        <DemoButton onClick={() => tabs.open({ appId: 'tabs-recorder' }, { placement: 'right' })}>Recorder</DemoButton>
         <DemoButton onClick={() => tabs.reopen()}>Reopen closed</DemoButton>
       </div>
       <ol className="min-h-0 flex-1 overflow-auto px-3 py-2" aria-label="Open tabs">
@@ -239,7 +245,7 @@ function DemoButton({ children, onClick, primary }: { children: ReactNode; onCli
   );
 }
 
-export const tabsDemoApps = [notesApp, stopwatchApp, previewApp, consoleApp];
+export const tabsDemoApps = [notesApp, stopwatchApp, previewApp, consoleApp, recorderApp];
 
 export const tabsDemoWorkspace: HudsonWorkspace = {
   id: 'tabs-demo',

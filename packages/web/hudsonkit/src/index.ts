@@ -299,8 +299,8 @@ export { useAppApiStatus } from './hooks/useAppApiStatus';
 export type { UseAppApiStatusResult } from './hooks/useAppApiStatus';
 
 // Platform adapter
-export type { PlatformAdapter, PlatformLayout, PlatformCommandBridge, PlatformGuestHosting } from './platform';
-export { WEB_ADAPTER, ELECTRON_ADAPTER, ELECTRON_NO_DRAG_PROPS, createElectronAdapter, PlatformProvider, usePlatform, usePlatformLayout } from './platform';
+export type { PlatformAdapter, PlatformLayout, PlatformCommandBridge, PlatformGuestHosting, ElectronAdapterOptions, WebKitAdapterOptions, WebKitBridge, WebKitBridgeOptions, HudsonBridgeRequest, HudsonBridgeEvent, HudsonBridgeHello } from './platform';
+export { WEB_ADAPTER, ELECTRON_ADAPTER, ELECTRON_NO_DRAG_PROPS, createElectronAdapter, createWebKitAdapter, connectWebKitBridge, isWebKitHost, HUDSON_BRIDGE_VERSION, HUDSON_BRIDGE_HANDLER, HUDSON_BRIDGE_GLOBAL, HUDSON_BRIDGE_BUFFER_LIMIT, hudsonBridgeBootstrapScript, PlatformProvider, usePlatform, usePlatformLayout } from './platform';
 
 // Reusable widgets
 export { HudsonKitLockup, HudsonKitMark } from './components/brand';
