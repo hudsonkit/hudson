@@ -1,6 +1,6 @@
 # OpenAI as a Hudson AI provider
 
-Status as of 2026-11-26. This note covers two paths: a pasted OpenAI API key, which works today, and "Sign in with ChatGPT", which is researched here but not built.
+Status as of 2026-11-27. This note covers three paths: a pasted OpenAI API key, a ChatGPT plan through the Codex CLI (both work today), and Hudson's own "Sign in with ChatGPT", which is researched here but not built.
 
 ## 1. OpenAI API key (works today)
 
@@ -17,7 +17,27 @@ The following fixes were needed to make this work end to end:
 - **Same-tab settings sync.** The Hudson AI window and the shell each hold a `useAppSettings('hudson-ai')` copy. The shell's copy stayed stale, so the console kept sending the old provider. `usePersistentState` now adopts writes that another instance in the same tab makes to the same key (through `hudson:saved`).
 - **Restore under StrictMode.** After a reload, the stored setting was overwritten with defaults. The cause: the restore guard was a ref, and the React 19 StrictMode double render kept the ref but dropped the restored value. The guard is now state. This bug affected every `usePersistentState` value in dev, not only AI settings.
 
-## 2. "Sign in with ChatGPT": what OpenAI supports
+## 2. ChatGPT plan through Codex (works today, local Hudson only)
+
+Hudson does not run its own ChatGPT sign-in. It uses the Codex CLI on the same machine, which is already signed in to the user's ChatGPT plan. OpenAI documents Codex app-server as a supported way for an app to use a ChatGPT plan ([Codex app-server route](https://developers.openai.com/siwc/token-sharing-open-source/codex-app-server)).
+
+1. Install the Codex CLI and run `codex login` (choose ChatGPT).
+2. Open **Hudson AI → Settings**. Under **Hudson Default**, set **AI Provider** to **Codex (ChatGPT plan)**. The model list shows the models Codex reports for that account.
+3. Chat from the console AI tab.
+
+How it works:
+
+- `/api/ai/models` asks Codex for its model list. If Codex is not installed or returns no models, the provider is not listed. The hosted site has no Codex, so it never shows the provider.
+- `/api/ai/chat` sends `provider: "codex"` to `apps/web/app/api/ai/codex.ts`. That module runs one Codex turn through the Scout backend (`@hudsonkit/ai/scout`) and returns the reply as a UI message stream. Earlier messages are added to the prompt as a transcript.
+- **Sandbox.** agent-sessions starts Codex with full machine access and no approval prompts by default. Hudson starts Codex itself instead, with `sandbox: "read-only"` and `approvalPolicy: "never"`, in the empty folder `~/.hudson/codex-chat`. A turn can read files but cannot write them. A request to write a file fails with "the filesystem is read-only".
+
+Limits:
+
+- Hudson's app tools do not run in a Codex turn. Codex gets Hudson's system prompt only.
+- The reply arrives whole, not token by token. A cold turn takes about 4–5 seconds.
+- The read-only sandbox still lets Codex read files on the machine.
+
+## 3. Hudson's own "Sign in with ChatGPT": what OpenAI supports
 
 OpenAI ships an official program for this: **Sign in with ChatGPT (SIWC)** with **ChatGPT plan usage** ([docs](https://developers.openai.com/siwc), [quickstart](https://developers.openai.com/siwc/quickstart), [help center](https://help.openai.com/en/articles/20001542-using-your-chatgpt-plan-in-other-apps-and-sites), [user page](https://learn.chatgpt.com/docs/sign-in-with-chatgpt)). It was expanded at DevDay 2026 ([The New Stack](https://thenewstack.io/sign-in-with-chatgpt/)).
 
@@ -48,10 +68,11 @@ OpenAI ships an official program for this: **Sign in with ChatGPT (SIWC)** with 
 ## Recommendation
 
 1. **Ship the API-key path now.** It is done and verified.
-2. **Build "Continue with ChatGPT" for local Hudson only**, on the official SIWC flow:
+2. **Use Codex for ChatGPT plans on local Hudson.** It is done and verified (section 2).
+3. **Build Hudson's own "Continue with ChatGPT" only if Codex is not enough**, for example to run Hudson tools or to stream tokens. Use the official SIWC flow:
    - Server route `POST /api/ai/chatgpt/sign-in` starts a one-shot listener on `127.0.0.1:<port>`, opens the authorize URL (dynamic registration with PKCE), exchanges the code, and stores `{client_id, access_token, refresh_token, id_token, ext_agent_host_id}` in the existing local vault, never in the browser.
    - Add a `chatgpt-plan` provider in `providers.ts` / the Pi backend. It refreshes tokens under a lock and calls `api.openai.com/v1/responses` with `store:false, stream:true`. It omits the parameters listed in Limits, and it fetches models from `/v1/models` with the user's token.
    - Add a **Continue with ChatGPT** button next to Environment Credentials, following the [UI/UX guidelines](https://developers.openai.com/siwc/ui-ux-guidelines), plus a sign-out action that revokes the tokens.
-   - First check whether upgrading pi-ai gives us SIWC for free. If it does, use pi-ai's flow rather than writing our own.
-3. **Do not offer ChatGPT sign-in on app.hudsonkit.com** until OpenAI approves an interest-form application. Production keeps Workers AI.
-4. **Retire or relabel the `openai-codex` path**, which relies on Codex CLI's client ID. Also note: the Pi backend maps provider `copilot` to `openai-codex` (`packages/web/ai-backends/src/adapters/pi-ai.ts:normalizeProvider`). With no Codex login, Hudson's default provider fails with `No API key for provider "openai-codex"`.
+   - First check pi-ai. Version 1.5.2 and later include `auth/oauth/openai-chatgpt.js`, which uses the SIWC flow (`dynamic_agent_client`, `chatgpt.tokens.use.direct`, `127.0.0.1` callback). Use pi-ai's flow rather than writing our own.
+4. **Do not offer ChatGPT sign-in on app.hudsonkit.com** until OpenAI approves an interest-form application. Production keeps Workers AI.
+5. **Retire or relabel the `openai-codex` path**, which relies on Codex CLI's client ID. Also note: the Pi backend maps provider `copilot` to `openai-codex` (`packages/web/ai-backends/src/adapters/pi-ai.ts:normalizeProvider`). With no Codex login, Hudson's default provider fails with `No API key for provider "openai-codex"`.

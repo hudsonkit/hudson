@@ -23,6 +23,15 @@ export const AI_PROVIDER_OPTIONS: AISelectOption[] = [
   { label: 'Google AI', value: 'google' },
 ];
 
+/**
+ * Providers that run on a harness installed next to the server. They are
+ * offered only when /api/ai/models reports them, so the hosted site never
+ * lists them. Listed here so labels resolve everywhere.
+ */
+export const AI_LOCAL_PROVIDER_OPTIONS: AISelectOption[] = [
+  { label: 'Codex (ChatGPT plan)', value: 'codex' },
+];
+
 // Catalogs are loaded from the server's installed pi-ai registry. Keeping the
 // loading state empty prevents stale bundled options from masking new models.
 export const AI_MODEL_OPTIONS: AISelectOption[] = [];
@@ -42,6 +51,9 @@ export const AI_PROVIDER_DEFAULT_MODELS = {
   github: 'gpt-4o',
   google: 'gemini-2.0-flash',
   copilot: 'gemini-3-flash-preview',
+  // Codex lists the models its signed-in account may run; this is only the
+  // fallback before that list loads.
+  codex: 'gpt-6.1-terra',
 } as const;
 
 export type AIProviderName = keyof typeof AI_PROVIDER_DEFAULT_MODELS;
@@ -56,6 +68,7 @@ export const AI_PROVIDER_ENV_KEYS: Record<AIProviderName, string> = {
   github: 'GITHUB_TOKEN',
   google: 'GOOGLE_GENERATIVE_AI_API_KEY',
   copilot: 'GitHub Copilot sign-in',
+  codex: 'Codex sign-in (run `codex login`)',
 };
 
 export function defaultModelForProvider(provider: string): string {

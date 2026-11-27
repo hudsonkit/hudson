@@ -40,10 +40,10 @@ export function useHudsonAIApp() {
 
 export function HudsonAIProvider({ children }: { children: ReactNode }) {
   const { workspaceId } = useActiveWorkspace();
-  const { modelOptions } = useAIModelOptions();
+  const { modelOptions, localProviderOptions } = useAIModelOptions();
   const settingsConfig = useMemo(
-    () => createHudsonAISettings(modelOptions),
-    [modelOptions],
+    () => createHudsonAISettings(modelOptions, undefined, localProviderOptions),
+    [localProviderOptions, modelOptions],
   );
   const {
     resolvedSettings,

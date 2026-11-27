@@ -3,6 +3,7 @@ import { streamFromCLI } from './cli';
 import { DEFAULT_MODELS, loadCredentials } from '../providers';
 import { loadToolset } from '../toolsets';
 import { appCredentials, compileAppToolset } from '../app-toolset';
+import { CODEX_PROVIDER, streamCodexChat } from '../codex';
 
 function log(msg: string) {
   const ts = new Date().toISOString().slice(11, 23);
@@ -68,6 +69,13 @@ export async function POST(req: Request) {
 
   if (mode === 'cli') {
     return streamFromCLI(messages, toolset, context, sessionId);
+  }
+
+  // Codex runs the turn on the ChatGPT plan it is signed in with. It gets
+  // Hudson's system prompt but not Hudson's tools.
+  if (provider === CODEX_PROVIDER) {
+    const system = appToolset ? appToolset.system : loadToolset(toolset, context).system;
+    return streamCodexChat({ messages, system, model, effort, signal: req.signal });
   }
 
   try {
