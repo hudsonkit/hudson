@@ -83,7 +83,7 @@ import { DEFAULT_SHELL_SETTINGS, mergeHudsonSettings, normalizeHudsonSettings } 
 import { ActiveWorkspaceProvider } from '../context/ActiveWorkspaceContext';
 import { WorkspaceDecorProvider } from './decor/WorkspaceDecorContext';
 import { DecorationLayer } from './decor/DecorationLayer';
-import { arrangeForViewport } from './arrange';
+import { arrangeForViewport, arrangeInsets } from './arrange';
 import {
   WorkspaceHostRoutesProvider,
   routeWithQuery,
@@ -1927,25 +1927,65 @@ function WorkspaceInner({
   const arrangedRef = useRef(false);
   const arrangeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const viewportReady = viewport.width > 0 && viewport.height > 0;
+  const windowedActiveIds = workspace.apps
+    .filter(c => activatedAppIds.has(c.app.id) && c.canvasMode === 'windowed')
+    .map(c => c.app.id);
+  const windowedActiveKey = windowedActiveIds.join('|');
+  // What the layout depends on: open windows and which side panels take room.
+  const arrangeKey = `${windowedActiveKey}#${leftCollapsed ? 0 : 1}${rightCollapsed ? 0 : 1}`;
+
+  // Tile the open windows for the current viewport. Open side panels count
+  // as insets on wide frames so nothing lands underneath them.
+  const runArrange = useCallback(() => {
+    const base = arrangeInsets(viewport);
+    const wide = viewport.width >= 900;
+    const insets = {
+      ...base,
+      left: wide && !leftCollapsed ? Math.max(base.left, leftWidth + 32) : base.left,
+      right: wide && !rightCollapsed ? Math.max(base.right, rightWidth + 32) : base.right,
+    };
+    const arranged = arrangeForViewport(windowedActiveIds, viewport, insets);
+    if (!arranged) return;
+    // Saved bounds win over defaults when a window mounts, so save the
+    // arrangement itself: the remounted windows restore exactly these.
+    if (persistSession) {
+      for (const id of windowedActiveIds) {
+        try { localStorage.setItem(`hudson.ws.${workspace.id}.win.${id}`, JSON.stringify(arranged.bounds[id])); } catch {}
+      }
+    }
+    setWindowBoundsOverrides(previous => ({ ...previous, ...arranged.bounds }));
+    setWindowResetKey(k => k + 1);
+    setScale(arranged.scale);
+    setPanOffset(arranged.pan);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- windowedActiveKey stands in for the id list
+  }, [viewport, leftCollapsed, rightCollapsed, leftWidth, rightWidth, windowedActiveKey, persistSession]);
+
+  // Once per workspace mount, as soon as the viewport is measured.
   useEffect(() => {
     if (!autoArrange || arrangedRef.current || !viewportReady) return;
     arrangedRef.current = true;
-    const ids = workspace.apps
-      .filter(c => activatedAppIds.has(c.app.id) && c.canvasMode === 'windowed')
-      .map(c => c.app.id);
-    const arranged = arrangeForViewport(ids, viewport);
-    if (arranged) {
-      setWindowBoundsOverrides(previous => ({ ...previous, ...arranged.bounds }));
-      setWindowResetKey(k => k + 1);
-      setScale(arranged.scale);
-      setPanOffset(arranged.pan);
-    }
+    runArrange();
     const workspaceId = workspace.id;
     arrangeTimerRef.current = setTimeout(() => {
       window.dispatchEvent(new CustomEvent('hudson:canvas-arranged', { detail: { workspaceId } }));
     }, 80);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once per workspace mount, as soon as the viewport is measured
   }, [autoArrange, viewportReady]);
+
+  // Opening or closing an app (or a side panel) re-tiles so everything open
+  // fits at a readable zoom: clicking an app in the navigation always visibly
+  // lands somewhere, and no window ends up under a panel.
+  const lastArrangedKeyRef = useRef(arrangeKey);
+  useEffect(() => {
+    if (!autoArrange || !arrangedRef.current) {
+      lastArrangedKeyRef.current = arrangeKey;
+      return;
+    }
+    if (lastArrangedKeyRef.current === arrangeKey) return;
+    lastArrangedKeyRef.current = arrangeKey;
+    runArrange();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when open windows or panels change
+  }, [autoArrange, arrangeKey]);
   useEffect(() => () => clearTimeout(arrangeTimerRef.current), []);
 
   // --- Fullscreen app mode ---
@@ -2385,7 +2425,9 @@ function WorkspaceInner({
           appName={app.name}
           appIcon={app.leftPanel?.icon ?? app.rightPanel?.icon}
           isFocused={app.id === focusedAppId}
-          onFocus={() => setFocusedAppId(app.id)}
+          // Choosing a closed app opens it (and the canvas re-tiles), so a
+          // click in the navigation always lands somewhere visible.
+          onFocus={() => (activatedAppIds.has(app.id) ? setFocusedAppId(app.id) : handleActivateApp(app.id))}
           defaultExpanded={app.id === focusedAppId}
           isVisible={activatedAppIds.has(app.id)}
           onToggleVisibility={() => handleToggleAppVisibility(app.id)}
@@ -4766,6 +4808,11 @@ function WindowedApp({
     [config.defaultWindowBounds, initialBounds],
   );
   const [bounds, setBounds] = useWindowBounds(workspaceId, config.app.id, defaults, persistWindowState);
+  // An arrangement from the shell (auto-layout) wins over restored bounds:
+  // adopt it whenever it changes, however this window's mount was timed.
+  useEffect(() => {
+    if (initialBounds) setBounds(initialBounds);
+  }, [initialBounds, setBounds]);
   const layout = useShellLayout();
   const { navTotalHeight } = usePlatformLayout();
 

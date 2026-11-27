@@ -66,7 +66,11 @@ const LEGACY_CRISP_AMBER_DEFAULTS: StudioState = {
   accent: 'amber',
 };
 
+/* Slate + ember baseline, before the Frost + Harbor default. */
+const LEGACY_SLATE_EMBER_DEFAULTS: StudioState = { ...DEFAULTS, accent: 'ember', paper: 'slate' };
+
 const REPLACED_BASELINES = [
+  LEGACY_SLATE_EMBER_DEFAULTS,
   LEGACY_CRISP_AMBER_DEFAULTS,
   LEGACY_QUIET_AMBER_DEFAULTS,
   LEGACY_EMERALD_DEFAULTS,

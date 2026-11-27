@@ -24,7 +24,7 @@ export function DocsRightPanel() {
               {(() => { const I = selectedEntry.icon; return <I size={16} className="text-accent" />; })()}
               <div>
                 <div className="text-[13px] font-mono font-bold text-foreground tracking-wider">{selectedEntry.label}</div>
-                <div className="text-[10px] font-mono text-accent/80">{selectedEntry.ns}</div>
+                <div className="text-[10px] font-mono text-muted-foreground">{selectedEntry.ns}</div>
               </div>
             </div>
           </div>
@@ -33,7 +33,7 @@ export function DocsRightPanel() {
             <div className="text-[10px] font-mono text-muted-foreground tracking-widest uppercase">Attributes</div>
             <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[11px] font-mono">
               <div className="text-muted-foreground">namespace</div>
-              <div className="text-accent truncate">{selectedEntry.ns}</div>
+              <div className="text-foreground/86 truncate">{selectedEntry.ns}</div>
               <div className="text-muted-foreground">props</div>
               <div className="text-foreground">{selectedEntry.props.length}</div>
               <div className="text-muted-foreground">has_notes</div>
@@ -46,7 +46,7 @@ export function DocsRightPanel() {
             <div className="space-y-1.5">
               {selectedEntry.props.map(p => (
                 <div key={p.name} className="flex items-baseline gap-2">
-                  <span className="text-[11px] font-mono text-accent">{p.name}</span>
+                  <span className="text-[11px] font-mono text-foreground/90">{p.name}</span>
                   <span className="text-[10px] font-mono text-muted-foreground truncate">{p.type}</span>
                 </div>
               ))}

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import { useDocs } from './DocsProvider';
 import { COMPONENTS, AGENT_DOCS } from './data';
 import { Bot } from 'hudsonkit/icons';
@@ -10,7 +11,30 @@ export function DocsContent() {
     viewMode, openSheets, selectedCard, setSelectedCard,
     searchValue, settings, sheetPositions, getSheetPos,
     handleSheetDragStart, isDraggingRef, toggleSheet, closeSheet,
+    canvasScale, setCanvasFrame, setHubHeight,
   } = useDocs();
+
+  // Measure the frame (only inside an app window: on the shell's own canvas
+  // the shell zooms) and the hub card, so the auto-layout can fit them.
+  const frameRef = useRef<HTMLDivElement>(null);
+  const hubRef = useRef<HTMLDivElement>(null);
+  const isCanvas = viewMode === 'canvas';
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!isCanvas || !frame) return;
+    // Window membership is checked on every measure (the frame may not sit
+    // inside its window yet on the first run). No clearing on cleanup: an old
+    // window instance can unmount after its replacement has measured.
+    const observer = new ResizeObserver(() => {
+      setCanvasFrame(
+        frame.closest('[data-app-window]') ? { width: frame.clientWidth, height: frame.clientHeight } : null,
+      );
+      if (hubRef.current) setHubHeight(hubRef.current.offsetHeight);
+    });
+    observer.observe(frame);
+    if (hubRef.current) observer.observe(hubRef.current);
+    return () => observer.disconnect();
+  }, [isCanvas, setCanvasFrame, setHubHeight]);
 
   const isCanvasMode = viewMode === 'canvas';
 
@@ -19,9 +43,15 @@ export function DocsContent() {
 
   return (
     <>
+      {isCanvasMode && (
+      <div ref={frameRef} className="absolute inset-0 pointer-events-none">
+      <div
+        className="absolute inset-0"
+        style={{ transform: `scale(${canvasScale})`, transformOrigin: '50% 50%', transition: 'transform 320ms var(--hud-ease-spring, ease-out)' }}
+      >
       {/* Canvas-only: hub card, floating sheets, connectors */}
       {isCanvasMode && (() => {
-        const hubPos = sheetPositions['hub'] ?? { x: 0, y: 0 };
+        const hubPos = getSheetPos('hub');
         const isHubSelected = selectedCard === 'hub';
         const g = settings.glowIntensity / 100;
         const hubShadow = isHubSelected && g > 0
@@ -37,6 +67,7 @@ export function DocsContent() {
             }}
           >
             <div
+              ref={hubRef}
               onMouseDown={(e) => handleSheetDragStart('hub', e)}
               onClick={() => { if (!isDraggingRef.current) setSelectedCard('hub'); }}
               style={{ boxShadow: hubShadow }}
@@ -158,6 +189,9 @@ export function DocsContent() {
 
       {/* Connection lines from hub to open sheets */}
       {isCanvasMode && <ConnectorLines />}
+      </div>
+      </div>
+      )}
 
       {/* List view */}
       {viewMode === 'list' && <ListView components={COMPONENTS} searchValue={searchValue} selectedId={selectedCard} onSelect={setSelectedCard} />}
@@ -173,12 +207,18 @@ export function DocsContent() {
 // ---------------------------------------------------------------------------
 function ConnectorLines() {
   const { openSheets, selectedCard, settings, sheetPositions, getSheetPos } = useDocs();
+  // Measures the DOM, so it only draws on the client.
+  const [mounted, setMounted] = useState(false);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time client-mount gate
+  useEffect(() => setMounted(true), []);
 
   // Collect all open sheet IDs (both component and agent docs)
   const allOpenIds: string[] = [
     ...COMPONENTS.filter(c => openSheets.has(c.id)).map(c => c.id),
     ...AGENT_DOCS.filter(d => openSheets.has(`agent:${d.slug}`)).map(d => `agent:${d.slug}`),
   ];
+
+  if (!mounted) return null;
 
   return (
     <svg
@@ -192,7 +232,7 @@ function ConnectorLines() {
         const svgH = svgEl?.clientHeight ?? window.innerHeight;
         const halfVW = svgW / 2;
         const halfVH = svgH / 2;
-        const hubPos = sheetPositions['hub'] ?? { x: 0, y: 0 };
+        const hubPos = getSheetPos('hub');
         const hubCenter = { x: halfVW + hubPos.x, y: halfVH + hubPos.y };
         const sheetCenter = { x: halfVW + pos.x, y: halfVH + pos.y };
 

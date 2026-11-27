@@ -120,7 +120,7 @@ export function BootSplash({ onPhaseChange, onBooted, mode }: BootSplashProps) {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.4, ease: 'easeOut' }}
                 style={{
-                  background: 'linear-gradient(170deg, #131316 0%, #0f1614 40%, #0d0d10 100%)',
+                  background: '#111113',
                   border: '1px solid #27272a',
                   boxShadow: '0 0 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.2)',
                 }}
@@ -231,7 +231,7 @@ export function BootSplash({ onPhaseChange, onBooted, mode }: BootSplashProps) {
                   transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1] }}
                   style={{
                     marginTop: '-8vh',
-                    background: 'linear-gradient(170deg, #131316 0%, #0f1614 40%, #0d0d10 100%)',
+                    background: '#111113',
                     border: '1px solid #27272a',
                     boxShadow: '0 0 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.2)',
                   }}

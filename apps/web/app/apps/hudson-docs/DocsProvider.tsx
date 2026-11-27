@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, useMemo, useRef, type ReactNode } from 'react';
 import { usePersistentState, sounds } from 'hudsonkit';
+import { layoutDocsCanvas } from './canvas-layout';
 import { setMuted as setSoundMuted } from 'hudsonkit';
 import { useEffect } from 'react';
 import type { ComponentEntry, ViewMode, HudsonSettings } from './types';
@@ -41,6 +42,12 @@ interface DocsContextValue {
   // Sheet positions (canvas dragging)
   sheetPositions: Record<string, { x: number; y: number }>;
   getSheetPos: (id: string) => { x: number; y: number };
+  /** Replace the open sheets with these (canvas view), selecting the first. */
+  showSheets: (ids: string[]) => void;
+  /** Scale that fits the auto-laid-out canvas into its frame (1 outside a window). */
+  canvasScale: number;
+  setCanvasFrame: (frame: { width: number; height: number } | null) => void;
+  setHubHeight: (h: number) => void;
   handleSheetDragStart: (id: string, e: React.MouseEvent) => void;
   isDraggingRef: React.RefObject<boolean>;
 
@@ -63,15 +70,18 @@ export function useDocs(): DocsContextValue {
 // ---------------------------------------------------------------------------
 // Provider
 // ---------------------------------------------------------------------------
+const INITIAL_COMPONENT = 'status-bar';
+
 export function DocsProvider({ children }: { children: ReactNode }) {
   // View mode
   const [viewMode, setViewMode] = usePersistentState<ViewMode>('hudson.viewMode', 'canvas');
 
   // Open component doc sheets
-  const [openSheets, setOpenSheets] = useState<Set<string>>(new Set());
+  // Open on one real component so the inspector and nav have something to show.
+  const [openSheets, setOpenSheets] = useState<Set<string>>(() => new Set([INITIAL_COMPONENT]));
 
   // Selected card
-  const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const [selectedCard, setSelectedCard] = useState<string | null>(INITIAL_COMPONENT);
 
   // Search
   const [searchValue, setSearchValue] = useState('');
@@ -85,6 +95,21 @@ export function DocsProvider({ children }: { children: ReactNode }) {
   // Sheet positions (canvas dragging)
   const [sheetPositions, setSheetPositions] = useState<Record<string, { x: number; y: number }>>({});
   const isDraggingRef = useRef(false);
+
+  // Auto-layout: tile the hub and open sheets; fit them to the frame.
+  const [canvasFrame, setCanvasFrame] = useState<{ width: number; height: number } | null>(null);
+  const [hubHeight, setHubHeight] = useState(560);
+  const openSheetIds = useMemo(
+    () => [
+      ...COMPONENTS.filter(c => openSheets.has(c.id)).map(c => c.id),
+      ...AGENT_DOCS.filter(d => openSheets.has(`agent:${d.slug}`)).map(d => `agent:${d.slug}`),
+    ],
+    [openSheets],
+  );
+  const autoLayout = useMemo(
+    () => layoutDocsCanvas(openSheetIds, canvasFrame, hubHeight),
+    [openSheetIds, canvasFrame, hubHeight],
+  );
 
   // Sync mute state to sound engine
   useEffect(() => { setSoundMuted(settings.masterMute); }, [settings.masterMute]);
@@ -138,9 +163,18 @@ export function DocsProvider({ children }: { children: ReactNode }) {
     playSound('thock');
   }, [playSound]);
 
+  const showSheets = useCallback((ids: string[]) => {
+    setViewMode('canvas');
+    setOpenSheets(new Set(ids));
+    setSheetPositions({});
+    setSelectedCard(ids[0] ?? null);
+    playSound('click');
+  }, [setViewMode, playSound]);
+
   // Get sheet position (overridden or default) — works for both component and agent doc IDs
   const getSheetPos = useCallback((id: string) => {
     if (sheetPositions[id]) return sheetPositions[id];
+    if (autoLayout.positions[id]) return autoLayout.positions[id];
     if (id.startsWith('agent:')) {
       const slug = id.slice(6);
       const doc = AGENT_DOCS.find(d => d.slug === slug);
@@ -148,7 +182,7 @@ export function DocsProvider({ children }: { children: ReactNode }) {
     }
     const comp = COMPONENTS.find(c => c.id === id);
     return comp?.position ?? { x: 0, y: 0 };
-  }, [sheetPositions]);
+  }, [sheetPositions, autoLayout]);
 
   // Drag handler
   const handleSheetDragStart = useCallback((id: string, e: React.MouseEvent) => {
@@ -161,9 +195,7 @@ export function DocsProvider({ children }: { children: ReactNode }) {
 
     const startX = e.clientX;
     const startY = e.clientY;
-    const startPos = sheetPositions[id] ?? (id.startsWith('agent:')
-      ? AGENT_DOCS.find(d => d.slug === id.slice(6))?.position
-      : COMPONENTS.find(c => c.id === id)?.position) ?? { x: 0, y: 0 };
+    const startPos = getSheetPos(id);
     let dragged = false;
 
     // Read current CSS zoom from the world layer.
@@ -171,6 +203,7 @@ export function DocsProvider({ children }: { children: ReactNode }) {
     const worldEl = document.querySelector('[data-hudson-world]');
     const zoomEl = worldEl?.parentElement?.parentElement;
     const currentScale = zoomEl ? parseFloat(zoomEl.style.zoom || '1') : 1;
+    const fitScale = autoLayout.scale;
 
     const onMouseMove = (ev: MouseEvent) => {
       const dx = ev.clientX - startX;
@@ -182,8 +215,8 @@ export function DocsProvider({ children }: { children: ReactNode }) {
       setSheetPositions(prev => ({
         ...prev,
         [id]: {
-          x: startPos.x + dx / currentScale,
-          y: startPos.y + dy / currentScale,
+          x: startPos.x + dx / (currentScale * fitScale),
+          y: startPos.y + dy / (currentScale * fitScale),
         },
       }));
     };
@@ -196,7 +229,7 @@ export function DocsProvider({ children }: { children: ReactNode }) {
 
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
-  }, [sheetPositions]);
+  }, [getSheetPos, autoLayout.scale]);
 
   const value = useMemo<DocsContextValue>(() => ({
     viewMode, setViewMode,
@@ -205,13 +238,15 @@ export function DocsProvider({ children }: { children: ReactNode }) {
     searchValue, setSearchValue,
     activeNav, setActiveNav,
     settings, updateSettings, resetSettings,
-    sheetPositions, getSheetPos, handleSheetDragStart, isDraggingRef,
+    sheetPositions, getSheetPos, showSheets, handleSheetDragStart, isDraggingRef,
+    canvasScale: autoLayout.scale, setCanvasFrame, setHubHeight,
     playSound, handleToggleMute,
     components: COMPONENTS,
   }), [
     viewMode, setViewMode, openSheets, toggleSheet, closeSheet, closeAllSheets,
     selectedCard, searchValue, activeNav, settings, updateSettings, resetSettings,
     sheetPositions, getSheetPos, handleSheetDragStart, playSound, handleToggleMute,
+    autoLayout.scale, showSheets,
   ]);
 
   return <DocsContext.Provider value={value}>{children}</DocsContext.Provider>;

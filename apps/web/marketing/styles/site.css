@@ -2787,7 +2787,8 @@
   inset: 0;
   display: grid;
   place-items: center;
-  background: oklch(0.145 0 0);
+  /* Matches the page paper, so a light or dark frame never flashes the other. */
+  background: var(--paper-2, oklch(0.145 0 0));
   transition: opacity 500ms ease-out;
 }
 .hudson-site .embed-reveal[data-phase='revealing'] .embed-reveal__glass { opacity: 0; }

@@ -11,6 +11,8 @@ export default function AppPage() {
       defaultWorkspaceId="hudson-os"
       bootMode="none"
       environment={hudsonShellEnvironment}
+      autoArrange
+      showDecor={false}
     />
   );
 }

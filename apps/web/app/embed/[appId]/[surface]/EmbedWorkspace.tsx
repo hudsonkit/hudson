@@ -6,6 +6,10 @@ import { WorkspaceShell, type WorkspaceShellInitialState } from 'hudsonkit/works
 import { coreWorkspaces } from '../../../apps/registry';
 import { hudsonShellEnvironment } from '../../../lib/hudsonShellEnvironment';
 import { EmbedTour } from './EmbedTour';
+import { panelsToOpenWhenWide } from '../../initial-state';
+
+/** Frames at least this wide have room for a side panel beside the canvas. */
+const WIDE_FRAME = 960;
 
 export function EmbedWorkspace({
   initialState,
@@ -24,6 +28,7 @@ export function EmbedWorkspace({
     .filter((workspace): workspace is (typeof coreWorkspaces)[number] => Boolean(workspace));
 
   usePaintedSignal();
+  useOpenPanelsWhenWide();
 
   return (
     <ThemeProvider
@@ -46,6 +51,41 @@ export function EmbedWorkspace({
       <EmbedTour />
     </ThemeProvider>
   );
+}
+
+/**
+ * `collapse=right:narrow`: the panel starts closed (phones, small frames) and
+ * opens as soon as the shell mounts when the frame is wide; the shell re-tiles
+ * around it and the first view shows the inspector working.
+ */
+function useOpenPanelsWhenWide() {
+  useEffect(() => {
+    if (window.innerWidth < WIDE_FRAME) return;
+    const sides = panelsToOpenWhenWide(new URLSearchParams(window.location.search).get('collapse'));
+    if (sides.length === 0) return;
+    // Ask until the panel is actually open: the shell's listener and its
+    // initial-state restore both land after first paint, in either order.
+    const selector: Record<'left' | 'right', string> = {
+      left: '[data-frame-panel="manifest"]',
+      right: '[data-frame-panel="inspector"]',
+    };
+    let frame = 0;
+    let lastAsk = 0;
+    const started = performance.now();
+    const tryOpen = (now: number) => {
+      const pending = sides.filter(side => !document.querySelector(selector[side]));
+      if (pending.length === 0 || now - started > 4000) return;
+      if (now - lastAsk > 200) {
+        lastAsk = now;
+        for (const side of pending) {
+          window.dispatchEvent(new CustomEvent('hudson:set-panel-collapsed', { detail: { side, collapsed: false } }));
+        }
+      }
+      frame = window.requestAnimationFrame(tryOpen);
+    };
+    frame = window.requestAnimationFrame(tryOpen);
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 }
 
 /**

@@ -28,10 +28,14 @@ function cleanApps(value: string | undefined): string[] | undefined {
   return ids.length > 0 ? [...new Set(ids)] : undefined;
 }
 
-/** `collapse=left,right` — start the embed with those shell panels closed. */
+/**
+ * `collapse=left,right` — start the embed with those shell panels closed.
+ * `right:narrow` starts it closed and opens it once the frame proves wide
+ * (see `panelsToOpenWhenWide`).
+ */
 export function parseCollapse(value: string | null | undefined): { leftCollapsed?: boolean; rightCollapsed?: boolean } {
   if (!value) return {};
-  const parts = new Set(value.split(',').map(part => part.trim()));
+  const parts = new Set(value.split(',').map(part => part.trim().split(':')[0]));
   return {
     ...(parts.has('left') ? { leftCollapsed: true } : null),
     ...(parts.has('right') ? { rightCollapsed: true } : null),
@@ -120,8 +124,21 @@ export function parseWorkspaceIds(value: string | null | undefined): string[] {
 /** Named accent presets an embed can ask for (`accent=ember`), as oklch triplets. */
 const ACCENT_PRESETS: Record<string, string> = {
   ember: '0.70 0.11 42',
+  // Steel blue; bright enough for dark chrome, deep enough for light.
+  harbor: '0.62 0.11 245',
 };
 
 export function parseAccent(value: string | null | undefined): string | undefined {
   return value ? ACCENT_PRESETS[value.trim().toLowerCase()] : undefined;
+}
+
+/** Panels marked `side:narrow` in `collapse=`: open them when the frame is wide. */
+export function panelsToOpenWhenWide(value: string | null | undefined): Array<'left' | 'right'> {
+  if (!value) return [];
+  return value
+    .split(',')
+    .map(part => part.trim())
+    .filter(part => part.endsWith(':narrow'))
+    .map(part => part.split(':')[0])
+    .filter((side): side is 'left' | 'right' => side === 'left' || side === 'right');
 }

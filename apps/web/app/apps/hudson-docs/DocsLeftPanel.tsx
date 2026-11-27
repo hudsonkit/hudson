@@ -1,10 +1,17 @@
 'use client';
 
 import { useDocs } from './DocsProvider';
-import { NAV_ITEMS, COMPONENTS } from './data';
+import { NAV_ITEMS, COMPONENTS, AGENT_DOCS } from './data';
+
+// Each nav item lands somewhere visible on the canvas.
+const NAV_SHEETS: Record<string, string[]> = {
+  overview: [],
+  guides: AGENT_DOCS.map(d => `agent:${d.slug}`),
+  layout: ['frame', 'side-panel', 'navigation-bar', 'status-bar'],
+};
 
 export function DocsLeftPanel() {
-  const { activeNav, setActiveNav, openSheets, toggleSheet, playSound } = useDocs();
+  const { activeNav, setActiveNav, openSheets, toggleSheet, playSound, showSheets, setViewMode } = useDocs();
 
   return (
     <>
@@ -19,8 +26,18 @@ export function DocsLeftPanel() {
                 if (item.id === 'settings') {
                   // Trigger shell settings via keyboard event
                   window.dispatchEvent(new KeyboardEvent('keydown', { key: ',', metaKey: true }));
-                } else { setActiveNav(item.id); }
-                playSound('click');
+                  playSound('click');
+                  return;
+                }
+                setActiveNav(item.id);
+                if (item.id === 'reference') {
+                  setViewMode('list');
+                  playSound('click');
+                } else if (item.id === 'theming') {
+                  window.dispatchEvent(new CustomEvent('hudson:open-app', { detail: { appId: 'theme-designer' } }));
+                } else {
+                  showSheets(NAV_SHEETS[item.id] ?? []);
+                }
               }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
                 isActive

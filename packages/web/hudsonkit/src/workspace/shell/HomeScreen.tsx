@@ -100,7 +100,7 @@ function InfoPopout({ appId, name, onClose }: { appId: string; name: string; onC
       <motion.div
         className="w-[420px] max-w-[90vw] rounded-xl overflow-hidden"
         style={{
-          background: 'linear-gradient(170deg, rgba(30,30,30,0.98) 0%, rgba(20,20,20,0.98) 100%)',
+          background: 'rgba(24,24,24,0.98)',
           border: '1px solid rgba(255,255,255,0.10)',
           boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
         }}
@@ -303,7 +303,7 @@ export function AppLauncher({ workspace, activatedAppIds, onActivateApp, onDismi
             animate={{ opacity: 0.85, y: 0 }}
             transition={{ duration: 0.35, delay: 0.1 + workspace.apps.length * 0.06, ease: [0.25, 1, 0.5, 1] }}
             style={{
-              background: 'linear-gradient(170deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+              background: 'rgba(255,255,255,0.04)',
               border: '1px solid rgba(255,255,255,0.10)',
             }}
           >

@@ -352,8 +352,9 @@ export function HudsonAIContent() {
   const outputCount = selectedApp?.ports?.outputs?.length ?? 0;
 
   return (
-    <div className="h-full min-h-0 overflow-y-auto frame-scrollbar p-4 space-y-4">
-      <div className="rounded-2xl border border-info/20 bg-gradient-to-br from-info/[0.10] via-foreground/[0.03] to-transparent p-4">
+    // @container: layout follows the window width, not the browser width.
+    <div className="@container h-full min-h-0 overflow-y-auto frame-scrollbar p-4 space-y-4">
+      <div className="rounded-lg border border-border/70 bg-card p-4">
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-info/30 bg-info/10 text-info">
             <Sparkles size={18} />
@@ -405,17 +406,17 @@ export function HudsonAIContent() {
       </div>
 
       {activeView === 'overview' && (
-        <div className="grid gap-4 xl:grid-cols-[1.2fr_0.9fr]">
+        <div className="grid gap-4 @7xl:grid-cols-[1.2fr_0.9fr]">
           <div className="space-y-4">
             <div className="rounded-xl border border-border/70 bg-card/72 p-4 space-y-3">
               <SectionTitle>Runtime Configuration</SectionTitle>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-3 @xl:grid-cols-2 @7xl:grid-cols-4">
                 <StatCard label="AI Provider" value={resolvedProviderLabel} />
                 <StatCard label="AI Model" value={resolvedModelLabel} />
                 <StatCard label="Voice Provider" value={voiceProviderLabel} />
                 <StatCard label="Config Source" value={settingsSource} />
               </div>
-              <div className="grid gap-2 md:grid-cols-2">
+              <div className="grid gap-2 @3xl:grid-cols-2">
                 {HUDSON_AI_ACTIONS.map(action => (
                   <CapabilityRow
                     key={action.id}
@@ -429,7 +430,7 @@ export function HudsonAIContent() {
 
             <div className="rounded-xl border border-border/70 bg-card/72 p-4 space-y-3">
               <SectionTitle>Settings Scope</SectionTitle>
-              <div className="grid gap-3 lg:grid-cols-2">
+              <div className="grid gap-3 @5xl:grid-cols-2">
                 <div className="rounded-xl border border-border/60 bg-background/52 p-3 space-y-3">
                   <div className="flex items-center justify-between gap-3">
                     <div className="text-[12px] font-medium text-foreground/80">Hudson Preferences</div>
@@ -594,7 +595,7 @@ export function HudsonAIContent() {
       )}
 
       {activeView === 'settings' && (
-        <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+        <div className="grid gap-4 @7xl:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-4">
             <div className="rounded-xl border border-border/70 bg-card/72 p-4 space-y-4">
               <div className="flex items-center justify-between gap-3">
@@ -757,7 +758,7 @@ export function HudsonAIContent() {
       )}
 
       {activeView === 'construction' && selectedApp && (
-        <div className="grid gap-4 xl:grid-cols-[280px_1fr]">
+        <div className="grid gap-4 @7xl:grid-cols-[280px_1fr]">
           <div className="space-y-4">
             <div className="rounded-xl border border-border/70 bg-card/72 p-4 space-y-3">
               <SectionTitle>Workspace Apps</SectionTitle>
@@ -808,13 +809,13 @@ export function HudsonAIContent() {
           <div className="space-y-4">
             <div className="rounded-xl border border-border/70 bg-card/72 p-4 space-y-3">
               <SectionTitle>Construction Graph</SectionTitle>
-              <div className="grid gap-3 lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr]">
+              <div className="grid gap-3 @5xl:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr]">
                 <ConstructionNode
                   label="App"
                   description={selectedApp.name}
                   meta={`${selectedApp.mode} mode`}
                 />
-                <div className="hidden items-center justify-center text-muted-foreground/60 lg:flex">
+                <div className="hidden items-center justify-center text-muted-foreground/60 @5xl:flex">
                   <ArrowRight size={14} />
                 </div>
                 <ConstructionNode
@@ -822,7 +823,7 @@ export function HudsonAIContent() {
                   description={selectedIntent?.title || 'No selected intent'}
                   meta={selectedIntent ? `${selectedIntent.category} • ${selectedIntent.commandId}` : 'No intent metadata'}
                 />
-                <div className="hidden items-center justify-center text-muted-foreground/60 lg:flex">
+                <div className="hidden items-center justify-center text-muted-foreground/60 @5xl:flex">
                   <ArrowRight size={14} />
                 </div>
                 <ConstructionNode
@@ -830,7 +831,7 @@ export function HudsonAIContent() {
                   description={selectedCommand?.label || 'No linked command'}
                   meta={selectedCommand ? `${selectedCommand.scope} scope` : 'No live command bridge'}
                 />
-                <div className="hidden items-center justify-center text-muted-foreground/60 lg:flex">
+                <div className="hidden items-center justify-center text-muted-foreground/60 @5xl:flex">
                   <ArrowRight size={14} />
                 </div>
                 <ConstructionNode
@@ -843,7 +844,7 @@ export function HudsonAIContent() {
 
             <div className="rounded-xl border border-border/70 bg-card/72 p-4 space-y-4">
               <SectionTitle>Drilldown</SectionTitle>
-              <div className="grid gap-3 xl:grid-cols-4">
+              <div className="grid gap-3 @7xl:grid-cols-4">
                 <div className="rounded-xl border border-border/60 bg-background/52 p-3 space-y-2">
                   <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-muted-foreground">
                     App

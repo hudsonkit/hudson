@@ -91,7 +91,6 @@ const AnimationTimeline: React.FC<AnimationTimelineProps> = ({
         className="h-16 bg-card/95 border-t border-l border-r shadow-[var(--hud-shadow-bar)] flex items-center px-4 gap-4"
         style={chromeBorderStyle}
       >
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-foreground/5 to-transparent" />
 
         {/* Playback controls */}
         <div className="flex items-center gap-2">
@@ -130,7 +129,7 @@ const AnimationTimeline: React.FC<AnimationTimelineProps> = ({
               {/* Progress bar */}
               <div
                 ref={progressBarRef}
-                className="absolute inset-y-0 left-0 bg-gradient-to-r from-info to-accent"
+                className="absolute inset-y-0 left-0 bg-accent"
                 style={{ width: `${progress * 100}%` }}
               />
               {/* Playhead */}

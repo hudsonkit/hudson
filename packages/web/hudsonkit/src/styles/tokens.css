@@ -104,7 +104,7 @@
   --border: 0.28 0 0;
   --input: 0.28 0 0;
   --ring: 0.70 0.11 42;
-  --radius: 8px;
+  --radius: 6px;
 }
 
 [data-hudson-template="hudson"][data-hudson-theme="light"] {
@@ -131,7 +131,7 @@
   --border: 0.848 0.014 218;
   --input: 0.8 0.015 218;
   --ring: 0.56 0.12 40;
-  --radius: 8px;
+  --radius: 6px;
 }
 
 [data-hudson-template="editorial"] {
@@ -394,7 +394,7 @@
   --hud-status-warn: oklch(var(--warning));
   --hud-status-error: oklch(var(--destructive));
   --hud-status-info: oklch(var(--info));
-  --radius: 8px;
+  --radius: 6px;
   --hud-radius: var(--radius);
 }
 
@@ -454,6 +454,6 @@
   --hud-status-warn: oklch(var(--warning));
   --hud-status-error: oklch(var(--destructive));
   --hud-status-info: oklch(var(--info));
-  --radius: 8px;
+  --radius: 6px;
   --hud-radius: var(--radius);
 }

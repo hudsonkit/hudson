@@ -3,15 +3,16 @@ import { Sheet } from '@/marketing/primitives/Sheet';
 import { sheetNumber } from './order';
 import { PrimitiveSparkline } from './_components/PrimitiveSparkline';
 
+// AI first, the terminal right beside it, then the chrome that holds them.
 const PRIMS = [
+  { name: 'Assistant', dim: 'overlay', use: 'AI primitive. Reads every app’s intents and acts on them, by text or voice.' },
+  { name: 'CommandPalette', dim: '⌘K · 480 px', use: 'Every intent, searchable. The same actions the assistant can take.' },
+  { name: 'TerminalDrawer', dim: 'h: 0 / 240px', use: 'A real shell beside the canvas. Describe it in words, get the bash.' },
+  { name: 'Canvas', dim: 'fluid', use: 'Pan/zoom workspace. Windows tile themselves as apps open.' },
   { name: 'Frame', dim: '100% × 100%', use: 'Chrome root. Hosts nav, panels, canvas, status.' },
   { name: 'NavigationBar', dim: 'h: 48 px', use: 'Crumbs, ⌘K, install. Always pinned to top.' },
   { name: 'SidePanel', dim: 'w: 280 px', use: 'Manifest, inspector, file tree. Either side.' },
-  { name: 'Canvas', dim: 'fluid', use: 'Pan/zoom workspace. Floating windows live here.' },
   { name: 'StatusBar', dim: 'h: 28 px', use: 'Live runtime: uptime, intents, logs, version.' },
-  { name: 'CommandPalette', dim: '⌘K · 480 px', use: 'Fuzzy-searches every intent. Voice + keys.' },
-  { name: 'TerminalDrawer', dim: 'h: 0 / 240px', use: 'Slide-up shell. Natural-language → bash.' },
-  { name: 'Assistant', dim: 'overlay', use: 'AI primitive. Reads capability map, dispatches commands.' },
 ];
 
 export function Sheet06Primitives() {
@@ -35,12 +36,13 @@ export function Sheet06Primitives() {
           style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, marginBottom: 72 }}
         >
           <h2 className="h-section">
-            The workspace around your tool, <em>already handled</em>.
+            AI-forward primitives, <em>with a terminal at hand</em>.
           </h2>
           <p className="subhead" style={{ fontSize: 17, alignSelf: 'end' }}>
-            Eight foundational components establish the workspace vocabulary. They compose and
-            nest into the shell patterns Hudson apps share. If you&apos;ve used one Hudson workspace,
-            the interaction model is already familiar.
+            Every app action is an intent that people and agents share: the assistant, the
+            command palette, and any agent you point at Hudson can run it. The terminal drawer
+            keeps a real shell one keystroke away, and the chrome around it all is the same on
+            iOS, macOS, and the web.
           </p>
         </div>
 
