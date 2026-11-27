@@ -580,6 +580,33 @@ interface PlatformActivityBridge {
 - Two windows can attach to the same activity. That is how two views share
   live work; instances themselves are never shared (section 5).
 
+**Finding and starting the host.** These rules come from reading the
+source of Orca, Paradev and T3 Code on 2026-11-27 (see Reuse).
+
+- **Adopt or start.** On launch the UI looks for a running host through a
+  manifest file (pid, socket path or port, version) in the app's data folder,
+  checks that the pid is alive, and probes the socket. If the host answers, the
+  UI attaches. If not, the UI starts it detached and does not own it. The host
+  is a separate Rust, Swift or Bun process, never Electron run as Node.
+- **One host per data folder.** The host holds a lock on its data folder, so
+  two hosts never write the same state. A second UI attaches to the existing
+  host; it never starts another one.
+- **Replay on attach.** The host keeps a bounded output buffer for each
+  activity that streams (terminal output, transcript, agent events), so a UI
+  that attaches late catches up without the host re-running anything.
+- **Two ways to quit.** A normal quit only detaches the UI: session work
+  ends and activities continue. A separate "Quit Completely" command, in the
+  app menu and the host's menu-bar item or tray, asks the host to stop its
+  activities and exit. The activity indicator shows what Quit Completely will
+  stop.
+- **Versions.** The manifest carries the host's protocol version. If the UI
+  and host disagree, the UI says so and offers to restart the host once its
+  `'host'` activities have finished; it never kills them silently.
+- **Development builds restart the host** on every launch, so stale host code
+  never lingers.
+- **Headless.** A host can run with no UI at all, and can be installed as a
+  login item or launchd agent. HudsonKit does not install it; the app does.
+
 **Per platform:**
 
 - **Web:** no adapter bridge, so all work is session work unless the app
@@ -621,6 +648,9 @@ shell learns that an activity's owner is unreachable.
 | Talkie `TalkieDetailLayout.swift`, `layout.json` | Per-kind default layouts (`defaultPlacement`, `defaultSize`) |
 | Talkie `ConsolePopoutManager.swift` | Drag a tab out to a window (v2) |
 | Talkie `TabDefinitionRegistry.swift` | User-defined tab kinds as files, if Hudson wants presets later |
+| Orca `src/main/daemon/` (endpoint adoption, `desktop-core-shutdown.ts`) | Adopt a running host, detach on normal quit (section 13) |
+| Paradev `packages/host-service/src/daemon/DaemonSupervisor.ts`, `quit-sequence.ts`, tray | Manifest and socket discovery, output replay buffer, "Quit Completely" (section 13) |
+| T3 Code `apps/desktop/src/backend/DesktopHomeOwner.ts`, `server/src/cli/service.ts` | One owner per data folder; installing the host as a launchd service (section 13) |
 
 ## Linea migration
 
@@ -750,3 +780,11 @@ Fable.
 | ⌘1–⌘9 on native hosts? | Select tab N by default; the app can target groups instead or rebind (section 9). |
 | Keep the Linea adapter step? | No. The migration is one change, with the importer and compatibility suite in it. |
 | Electron quit for long-running work? | No background Electron. Long-running work lives in a Rust, Swift or Bun host; Electron is only a UI that stays in sync with it, and ⌘Q quits it fully (section 13). |
+
+**Fourth round (source survey):** Orca, Paradev and T3 Code, read on
+2026-11-27, all keep long-running work outside the Electron UI. Orca and
+Paradev keep terminals alive after quit in a detached daemon and reattach;
+T3 Code stops its server on quit unless it is installed as a service. None
+keeps all work alive, and Orca and T3 Code run their background process as
+Electron-as-Node. Section 13 adopts their discovery, replay, quit and
+ownership patterns, keeping the rule that hosts are never Electron.
