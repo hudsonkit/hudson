@@ -31,8 +31,8 @@ export function IntentFloatingCard({
     <div
       className={`absolute w-[320px] rounded-lg border backdrop-blur-md shadow-lg select-none transition-shadow duration-150 ${
         isFocused
-          ? 'border-emerald-500/40 shadow-emerald-500/10'
-          : 'border-neutral-700/60 shadow-black/30'
+          ? 'border-accent/40 shadow-emerald-500/10'
+          : 'border-border shadow-black/30'
       }`}
       style={{
         left: position.x,
@@ -49,16 +49,16 @@ export function IntentFloatingCard({
     >
       {/* Header — drag handle */}
       <div
-        className="flex items-center gap-2 px-3 py-2.5 border-b border-neutral-700/50 cursor-grab active:cursor-grabbing"
+        className="flex items-center gap-2 px-3 py-2.5 border-b border-border cursor-grab active:cursor-grabbing"
         onMouseDown={onDragStart}
       >
-        <GripHorizontal size={12} className="text-neutral-500 shrink-0" />
-        <span className="flex-1 text-[12px] font-mono font-bold text-white truncate">
+        <GripHorizontal size={12} className="text-muted-foreground shrink-0" />
+        <span className="flex-1 text-[12px] font-mono font-bold text-foreground truncate">
           {intent.title}
         </span>
         <button
           onClick={onClose}
-          className="p-1 rounded hover:bg-white/10 transition-colors text-neutral-400 hover:text-neutral-200"
+          className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
         >
           <X size={11} />
         </button>
@@ -67,7 +67,7 @@ export function IntentFloatingCard({
       {/* Body */}
       <div className="p-3 space-y-3">
         {/* commandId */}
-        <div className="text-[10px] font-mono text-emerald-400 truncate">
+        <div className="text-[10px] font-mono text-emerald-600 truncate">
           {intent.commandId}
         </div>
 
@@ -78,26 +78,26 @@ export function IntentFloatingCard({
           >
             {intent.category}
           </span>
-          <span className="text-[10px] font-mono text-neutral-500">{appId}</span>
+          <span className="text-[10px] font-mono text-muted-foreground">{appId}</span>
         </div>
 
         {/* Shortcut */}
         {intent.shortcut && (
           <div>
-            <kbd className="bg-neutral-800 text-neutral-300 px-1.5 py-0.5 rounded text-[10px] font-mono">
+            <kbd className="bg-muted text-foreground/80 px-1.5 py-0.5 rounded text-[10px] font-mono">
               {intent.shortcut}
             </kbd>
           </div>
         )}
 
         {/* Description */}
-        <div className="text-[10px] font-mono text-neutral-400 leading-relaxed">
+        <div className="text-[10px] font-mono text-muted-foreground leading-relaxed">
           {intent.description}
         </div>
 
         {/* Keywords */}
         {intent.keywords.length > 0 && (
-          <div className="text-[10px] font-mono text-neutral-500">
+          <div className="text-[10px] font-mono text-muted-foreground">
             {intent.keywords.join(' \u00b7 ')}
           </div>
         )}

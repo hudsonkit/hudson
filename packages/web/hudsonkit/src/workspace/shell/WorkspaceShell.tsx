@@ -1416,6 +1416,8 @@ function WorkspaceInner({
 
   const featureFlags = useOptionalFeatureFlags();
   const [showCommandPalette, setShowCommandPalette] = useState(false);
+  /** Query a driver (agent, guided walkthrough) has typed into the palette. */
+  const [commandPaletteQuery, setCommandPaletteQuery] = useState<string | undefined>(undefined);
   const [showFeatureFlagPanel, setShowFeatureFlagPanel] = useState(false);
   const [showWorkspaceManager, setShowWorkspaceManager] = useState(false);
   const [workspaceEditorTab, setWorkspaceEditorTab] = useState<EditorTab>('overview');
@@ -2793,6 +2795,33 @@ function WorkspaceInner({
   // --- Workspace AI tool call handler ---
   const handleWorkspaceToolCall = useCallback(async (name: string, args: Record<string, unknown>) => {
     switch (name) {
+      // Presentation tools: visible, side-effect-free moves through the shell
+      // chrome (used by guided walkthroughs as well as agents).
+      case 'set_panel': {
+        const side = args.side;
+        if (side !== 'left' && side !== 'right') break;
+        setPanelCollapsed(side, typeof args.collapsed === 'boolean' ? args.collapsed : 'toggle');
+        break;
+      }
+      case 'open_command_palette': {
+        setCommandPaletteQuery(typeof args.query === 'string' ? args.query : '');
+        setShowCommandPalette(true);
+        break;
+      }
+      case 'close_command_palette': {
+        setShowCommandPalette(false);
+        setCommandPaletteQuery(undefined);
+        break;
+      }
+      case 'set_console': {
+        if (typeof args.open === 'boolean') setShowTerminal(args.open);
+        break;
+      }
+      case 'queue_ai_prompt': {
+        // Fills the Hudson AI composer; never submits.
+        if (typeof args.text === 'string') queueHudsonAIPrompt(args.text, { submit: false });
+        break;
+      }
       case 'run_command': {
         const commandId = args.commandId as string;
         const command = allCommands.find(entry => entry.id === commandId);
@@ -3010,7 +3039,23 @@ function WorkspaceInner({
     routes.imageGeneration,
     routes.localEnvironment,
     shellSettings,
+    setPanelCollapsed,
+    setShowTerminal,
+    queueHudsonAIPrompt,
   ]);
+
+  // Drivers inside the page (e.g. a guided walkthrough relayed from an embed
+  // host) reach the same tool surface as the agent through a window event.
+  // The relay decides what to allow; this only routes.
+  useEffect(() => {
+    const onToolCall = (e: Event) => {
+      const detail = (e as CustomEvent<{ name?: string; args?: Record<string, unknown> } | undefined>).detail;
+      if (!detail?.name) return;
+      void handleWorkspaceToolCall(detail.name, detail.args ?? {});
+    };
+    window.addEventListener('hudson:tool-call', onToolCall);
+    return () => window.removeEventListener('hudson:tool-call', onToolCall);
+  }, [handleWorkspaceToolCall]);
 
   // --- Terminal screenshot button ---
   const [termSnapping, setTermSnapping] = useState(false);
@@ -4096,8 +4141,9 @@ function WorkspaceInner({
             {/* Command palette */}
             <CommandPalette
               isOpen={showCommandPalette}
-              onClose={() => setShowCommandPalette(false)}
+              onClose={() => { setShowCommandPalette(false); setCommandPaletteQuery(undefined); }}
               commands={allCommands}
+              query={commandPaletteQuery}
             />
 
             <FeatureFlagPanel

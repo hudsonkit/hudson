@@ -1,48 +1,19 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { HudsonEmbed } from '@/marketing/lib/embed';
 import { EmbedFrame } from '@/marketing/primitives/EmbedFrame';
 import { EmbedReveal } from '@/marketing/primitives/EmbedReveal';
 import { LiveDimensions } from '@/marketing/primitives/LiveDimensions';
 import { Sheet } from '@/marketing/primitives/Sheet';
 import { REPOSITORY_URL } from '@/site/seo';
+import { Walkthrough } from '@/marketing/walkthrough/Walkthrough';
 
 const INSTALL_CMD = 'bun add hudsonkit';
 const GITHUB_URL = REPOSITORY_URL;
 
-/** Mirrors the steps of EmbedTour inside the iframe (same order). */
-const TOUR_STEPS = ['Canvas', 'Workspaces', 'Navigation', 'Inspector', 'Command palette', 'Status bar', 'Voice'];
-
-function heroFrame(): HTMLIFrameElement | null {
-  return document.querySelector<HTMLIFrameElement>('#hero iframe');
-}
-
 export function Sheet01Hero() {
   const [copied, setCopied] = useState(false);
-  const [tourStep, setTourStep] = useState(-1);
-
-  useEffect(() => {
-    const onMessage = (e: MessageEvent) => {
-      const frame = heroFrame();
-      if (!frame || e.source !== frame.contentWindow) return;
-      const data = e.data as { type?: string; step?: number } | null;
-      if (data?.type === 'hudson:tour-state' && typeof data.step === 'number') setTourStep(data.step);
-    };
-    window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
-  }, []);
-
-  const tour = useCallback((action: 'start' | 'stop', step?: number) => {
-    const frame = heroFrame();
-    if (!frame?.contentWindow) return;
-    if (action === 'start') {
-      const r = frame.getBoundingClientRect();
-      if (r.top < 0 || r.bottom > window.innerHeight) frame.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-    frame.contentWindow.postMessage({ type: 'hudson:tour', action, step }, '*');
-  }, []);
-
   const handleInstallClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     window.__hudAudio?.chime?.({ cat: 'ui' });
@@ -137,30 +108,7 @@ export function Sheet01Hero() {
           </LiveDimensions>
           </div>
 
-          <div className="hero-tour">
-            <button
-              type="button"
-              className="hero-tour__start"
-              onClick={() => (tourStep >= 0 ? tour('stop') : tour('start', 0))}
-            >
-              {tourStep >= 0 ? 'End tour' : 'Take the tour →'}
-            </button>
-            <ol className="hero-callouts" aria-label="Tour steps">
-              {TOUR_STEPS.map((label, i) => (
-                <li key={label}>
-                  <button
-                    type="button"
-                    className="hero-callouts__step"
-                    aria-current={tourStep === i ? 'step' : undefined}
-                    onClick={() => tour('start', i)}
-                  >
-                    <span className="hero-callouts__num">{String(i + 1).padStart(2, '0')}</span>
-                    {label}
-                  </button>
-                </li>
-              ))}
-            </ol>
-          </div>
+          <Walkthrough frameSelector="#hero iframe" />
         </div>
       </div>
     </Sheet>

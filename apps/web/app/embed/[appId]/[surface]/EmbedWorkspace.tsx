@@ -5,7 +5,7 @@ import { ThemeProvider } from 'hudsonkit';
 import { WorkspaceShell, type WorkspaceShellInitialState } from 'hudsonkit/workspace';
 import { coreWorkspaces } from '../../../apps/registry';
 import { hudsonShellEnvironment } from '../../../lib/hudsonShellEnvironment';
-import { EmbedTour } from './EmbedTour';
+import { EmbedDriver } from './EmbedDriver';
 import { panelsToOpenWhenWide } from '../../initial-state';
 
 /** Frames at least this wide have room for a side panel beside the canvas. */
@@ -48,7 +48,7 @@ export function EmbedWorkspace({
           showDecor={false}
         />
       </Suspense>
-      <EmbedTour />
+      <EmbedDriver />
     </ThemeProvider>
   );
 }

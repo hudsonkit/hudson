@@ -18,6 +18,8 @@ interface CommandPaletteProps {
   isOpen: boolean;
   onClose: () => void;
   commands: CommandOption[];
+  /** Drive the search field from outside (a walkthrough or agent typing). */
+  query?: string;
 }
 
 const chromeBorderStyle = {
@@ -28,7 +30,7 @@ const focusRingStyle = {
   '--tw-ring-color': 'color-mix(in srgb, var(--hud-accent, currentColor) 34%, transparent)',
 } as React.CSSProperties;
 
-const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, commands }) => {
+const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, commands, query: drivenQuery }) => {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const paletteId = useId();
@@ -53,6 +55,9 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, comman
       setSelectedIndex(0);
     }
   }, [commands.length, isOpen]);
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- mirrors a driven query into the field; runs only when the driver changes it
+  useEffect(() => { if (isOpen && drivenQuery !== undefined) setQuery(drivenQuery); }, [drivenQuery, isOpen]);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect -- resets the highlighted row when the query changes; a bounded reaction to a single dep, not a cascade
   useEffect(() => { setSelectedIndex(0); }, [query]);

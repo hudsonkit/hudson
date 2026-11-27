@@ -4,14 +4,14 @@ import type { IntentCategory } from 'hudsonkit';
 // Category badge colors (shared across components)
 // ---------------------------------------------------------------------------
 export const CATEGORY_COLORS: Record<IntentCategory, string> = {
-  tool: 'text-cyan-400 bg-cyan-400/10',
-  edit: 'text-amber-400 bg-amber-400/10',
-  file: 'text-emerald-400 bg-emerald-400/10',
-  view: 'text-sky-400 bg-sky-400/10',
-  navigation: 'text-teal-400 bg-teal-400/10',
-  toggle: 'text-neutral-400 bg-neutral-400/10',
-  workspace: 'text-blue-400 bg-blue-400/10',
-  settings: 'text-neutral-400 bg-neutral-400/10',
+  tool: 'text-cyan-600 bg-cyan-500/12',
+  edit: 'text-amber-600 bg-amber-500/12',
+  file: 'text-emerald-600 bg-emerald-500/12',
+  view: 'text-sky-600 bg-sky-500/12',
+  navigation: 'text-teal-600 bg-teal-500/12',
+  toggle: 'text-muted-foreground bg-muted',
+  workspace: 'text-blue-600 bg-blue-500/12',
+  settings: 'text-muted-foreground bg-muted',
 };
 
 // ---------------------------------------------------------------------------
