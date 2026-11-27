@@ -71,6 +71,9 @@ function HudsonNetworkTool() {
 }
 
 export const hudsonShellEnvironment: WorkspaceShellEnvironment = {
+  // Voice runs on Vox, a local macOS runtime: offer it where that can exist
+  // (local dev), not to visitors on the public site.
+  voice: 'local-only',
   routes: {
     agentActions: '/api/agent-actions',
     aiChat: '/api/ai/chat',

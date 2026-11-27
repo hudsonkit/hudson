@@ -81,6 +81,8 @@ interface WorkspaceAIProps {
   onToolCall: (name: string, args: Record<string, unknown>) => void | Promise<void>;
   voiceSettings: VoiceSettings;
   voiceTriggerNonce: number;
+  /** Hide voice capture (the host has no local voice runtime). Default true. */
+  voiceEnabled?: boolean;
   toolContext?: HudsonAIToolContext | Record<string, unknown>;
   provider?: string;
   model?: string;
@@ -234,6 +236,7 @@ export function WorkspaceAI({
   onToolCall,
   voiceSettings,
   voiceTriggerNonce,
+  voiceEnabled = true,
   toolContext,
   provider,
   model,
@@ -983,7 +986,7 @@ export function WorkspaceAI({
 
   const voiceBadge = getVoiceBadge(voiceStatus);
   const voiceErrorText = voiceError?.toLowerCase() ?? '';
-  const showVoiceError = Boolean(voiceError && !voiceErrorDismissed);
+  const showVoiceError = Boolean(voiceEnabled && voiceError && !voiceErrorDismissed);
   const showRetryVoice = voiceErrorText.includes('starting up')
     || voiceErrorText.includes('not reachable')
     || voiceErrorText.includes('not ready');
@@ -1254,29 +1257,31 @@ export function WorkspaceAI({
           >
             <ImageIcon size={14} />
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              if (voiceStatus === 'recording') {
-                stopVoiceCapture();
-              } else {
-                void startVoiceCapture();
-              }
-            }}
-            disabled={voiceStatus === 'transcribing'}
-            className={`p-2 rounded-lg transition-colors disabled:opacity-30 ${
-              voiceStatus === 'recording'
-                ? 'bg-red-500/15 text-red-300 hover:bg-red-500/20'
-                : 'text-muted-foreground hover:text-cyan-700 hover:bg-muted dark:hover:text-cyan-300'
-            }`}
-            title={voiceStatus === 'recording' ? 'Stop recording' : 'Record voice prompt'}
-          >
-            {voiceStatus === 'transcribing'
-              ? <Loader2 size={14} className="animate-spin" />
-              : voiceStatus === 'recording'
-                ? <Square size={12} />
-                : <Mic size={14} />}
-          </button>
+          {voiceEnabled && (
+            <button
+              type="button"
+              onClick={() => {
+                if (voiceStatus === 'recording') {
+                  stopVoiceCapture();
+                } else {
+                  void startVoiceCapture();
+                }
+              }}
+              disabled={voiceStatus === 'transcribing'}
+              className={`p-2 rounded-lg transition-colors disabled:opacity-30 ${
+                voiceStatus === 'recording'
+                  ? 'bg-red-500/15 text-red-300 hover:bg-red-500/20'
+                  : 'text-muted-foreground hover:text-cyan-700 hover:bg-muted dark:hover:text-cyan-300'
+              }`}
+              title={voiceStatus === 'recording' ? 'Stop recording' : 'Record voice prompt'}
+            >
+              {voiceStatus === 'transcribing'
+                ? <Loader2 size={14} className="animate-spin" />
+                : voiceStatus === 'recording'
+                  ? <Square size={12} />
+                  : <Mic size={14} />}
+            </button>
+          )}
           <input
             ref={fileInputRef}
             type="file"
