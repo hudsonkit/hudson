@@ -43,6 +43,7 @@ export default defineConfig({
       { find: 'ai', replacement: resolve(rootNodeModules, 'ai') },
       { find: '@ai-sdk/react', replacement: resolve(rootNodeModules, '@ai-sdk/react') },
       { find: 'hudsonkit/icons', replacement: resolve(hudsonkitSrc, 'icons.tsx') },
+      { find: 'hudsonkit/bridge-protocol', replacement: resolve(hudsonkitSrc, 'platform/bridgeProtocol.ts') },
       { find: 'server-only', replacement: resolve(appDir, 'test/mocks/server-only.ts') },
       {
         find: 'hudsonkit/workflow',

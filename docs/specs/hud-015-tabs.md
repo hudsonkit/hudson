@@ -630,6 +630,51 @@ source of Orca, Paradev and T3 Code on 2026-11-27 (see Reuse).
 - **Hosts** are Rust, Swift or TypeScript on Bun, whichever suits the app.
   The bridge contract is the same for all of them.
 
+**App channels.** An app often needs its own messages to the host as well:
+Scout's web client talks to Scout.app through about a dozen WKWebView
+handlers (settings, companion, glass, voice, native navigation), each with
+its own small protocol. Under Electron none of them exist. The bridge
+therefore also carries named app channels, so an app needs one seam
+instead of one handler per feature:
+
+```ts
+interface PlatformHostChannel {
+  request(body?): Promise<unknown>;   // the host answers, or rejects if it doesn't serve the channel
+  post(body?): void;                  // fire and forget
+  subscribe(listener: (body) => void): () => void;   // host pushes
+}
+// PlatformAdapter.channels?: { channel(name): PlatformHostChannel; has(name): Promise<boolean> }
+```
+
+- Wire: `channel.request` and `channel.post` requests, `channel` events.
+  `hello` lists the channels the host serves, so a page can hide a feature
+  its host lacks instead of failing.
+- Pushes that arrive before the page subscribes wait, like commands.
+- Channel names and bodies are the app's; HudsonKit only carries them.
+
+**Electron: `@hudsonkit/electron`.** The window, preload and menu setup that
+Linea built for itself, made reusable:
+
+- `createHudsonBridge({ activities, channels })` in the main process answers
+  the bridge over `ipcMain` and relays: `send(command)`, `publish(snapshot)`,
+  `emit(channel, body)`. It serves only pages it attached to.
+- The preload (`exposeHudsonBridge()`, or the ready-made
+  `HUDSON_PRELOAD`) exposes `window.__hudsonHost` through `contextBridge`
+  and buffers events until the page subscribes. It is one CommonJS file, so
+  windows keep the sandbox on.
+- `createHudsonWindow()`: hidden-inset title bar, context isolation, the
+  sandbox, external links to the system browser.
+- `installHudsonMenu()`: the section 9 tab commands on their native keys,
+  sent to the focused window, plus an optional "Quit Completely".
+- `quitWhenWindowsClose()`: no background Electron.
+- `createElectronAdapter()` in the page finds the preload and wires
+  commands, activities and channels; explicit bridges still win, as Linea
+  passes today.
+
+WKWebView carries the same requests and events. `HudWebBridge` (Swift) does
+not serve channels yet and rejects them as unsupported, so `has()` is false
+there until it does.
+
 **What stays out of HudsonKit:** process supervision, login items, the IPC
 transport, media and recording engines, storage of activity records, the
 menu-bar UI itself, system Now Playing integration, and each kind's lifetime
@@ -688,7 +733,7 @@ dockview with `TabShell` and ships with:
 
 The webview guest, the terminal and the reading context stay Linea app code.
 The Electron window setup, preload bridge and menu move to
-`@hudsonkit/electron` as a separate change.
+`@hudsonkit/electron` (section 13) as a separate change.
 
 ## Delivery
 
@@ -715,6 +760,12 @@ The Electron window setup, preload bridge and menu move to
    host, so closing a recording's tab and reopening it from the indicator
    can be checked on the web.
 6. Linea migration, as one change (Linea repo).
+   - Alongside: app channels on the bridge, and `@hudsonkit/electron`
+     (section 13). Its example runs `/demo/tabs` in an Electron window and
+     checks the preload, the sandbox, a channel round trip and menu commands
+     reaching the shell.
+   - Next: channels in `HudWebBridge`, and OpenScout moving its WKWebView
+     handlers onto channels so the same client runs in Electron.
 7. v2 items as needed.
 
 Every step ships with vitest tests. Step 4 also ships a browser check at

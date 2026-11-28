@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PlatformProvider } from '../src/platform/PlatformContext';
 import { WEB_ADAPTER } from '../src/platform/defaults';
+import { createElectronAdapter } from '../src/platform/electron';
 import type { PlatformActivityBridge } from '../src/types/activity';
 import type { HudsonApp } from '../src/types/app';
 import type { TabWorkspaceState } from '../src/types/tabs';
@@ -221,6 +222,38 @@ describe('TabArea', () => {
     act(() => emit('tabs.close'));
     expect(tabNames()).toEqual(['b']);
     fireEvent.keyDown(window, { key: 'w', metaKey: true });
+    expect(tabNames()).toEqual(['b']);
+  });
+
+  it('follows commands from the Electron preload bridge', async () => {
+    // A fake @hudsonkit/electron preload: events go to every subscriber.
+    const subscribers = new Set<(event: unknown, at: number) => void>();
+    const win = {
+      __hudsonHost: {
+        version: 1,
+        request: async () => [],
+        subscribe: (fn: (event: unknown, at: number) => void) => {
+          subscribers.add(fn);
+          return () => subscribers.delete(fn);
+        },
+      },
+    } as unknown as Window;
+    const adapter = createElectronAdapter({ window: win });
+    render(
+      <PlatformProvider adapter={adapter}>
+        <TabArea apps={apps} newInstanceId={newInstanceId} initialTabs={[{ appId: 'counter', params: { label: 'a' } }, { appId: 'counter', params: { label: 'b' } }]} />
+      </PlatformProvider>,
+    );
+    // The adapter also serves activities, so the area lists them once; let that settle.
+    await act(async () => {});
+    const send = (command: string) => act(() => subscribers.forEach((fn) => fn({ type: 'command', command }, Date.now())));
+    const selected = () => screen.getByRole('tab', { selected: true }).getAttribute('aria-label')!.split(',')[0];
+    const first = selected();
+    send('tabs.next');
+    expect(selected()).not.toBe(first);
+    send('tabs.select.1');
+    expect(selected()).toBe('a');
+    send('tabs.close');
     expect(tabNames()).toEqual(['b']);
   });
 

@@ -9,6 +9,27 @@ export interface PlatformCommandBridge {
   subscribe: (listener: (command: string, args?: unknown) => void) => () => void;
 }
 
+/**
+ * One named app channel to the native host: an app's own messages (Scout's
+ * settings, chat, glass…) carried over the shared host bridge, so the same
+ * page code works under WKWebView and Electron.
+ */
+export interface PlatformHostChannel {
+  readonly name: string;
+  /** Send and await the host's answer. Rejects if the host doesn't serve the channel. */
+  request(body?: unknown): Promise<unknown>;
+  /** Fire and forget. */
+  post(body?: unknown): void;
+  /** Messages the host pushes on this channel. */
+  subscribe(listener: (body: unknown) => void): () => void;
+}
+
+export interface PlatformChannelBridge {
+  channel(name: string): PlatformHostChannel;
+  /** Whether the host serves this channel (from its `hello`). */
+  has(name: string): Promise<boolean>;
+}
+
 /** Capabilities for hosting remote guest content in a native shell. */
 export interface PlatformGuestHosting {
   kind: 'electron-webview';
@@ -24,6 +45,8 @@ export interface PlatformAdapter {
   commands?: PlatformCommandBridge;
   /** Bridge to the host that owns long-running activities (HUD-015 §13), if any. */
   activities?: PlatformActivityBridge;
+  /** The app's own named channels to the host, if the host serves any. */
+  channels?: PlatformChannelBridge;
   /** Host guest capability hint; this does not grant a guest any permissions. */
   guestHosting?: PlatformGuestHosting;
   /** Extra vertical inset above the nav bar for native title bars (0 for web). */
