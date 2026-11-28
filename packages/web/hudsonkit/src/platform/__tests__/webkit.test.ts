@@ -34,6 +34,44 @@ function fakeHost(reply: (message: unknown) => unknown = () => null) {
 }
 
 describe('WKWebView adapter', () => {
+  test('carries app channels: request, post, pushes, and has()', async () => {
+    const { win, posted, evaluate } = fakeHost((m) => {
+      const message = m as { op: string; channel?: string; body?: unknown };
+      if (message.op === 'hello') return { version: 1, capabilities: ['commands', 'channels'], channels: ['scoutSettings'] };
+      if (message.op === 'channel.request') return { echoed: message.body };
+      return null;
+    });
+    // A push that arrives before the page subscribes waits for it.
+    evaluate({ type: 'channel', channel: 'scoutSettings', body: { kind: 'snapshot' } });
+    const adapter = createWebKitAdapter({ window: win });
+    const settings = adapter.channels!.channel('scoutSettings');
+    expect(await settings.request({ method: 'snapshot' })).toEqual({ echoed: { method: 'snapshot' } });
+    settings.post({ method: 'set' });
+    expect(posted).toContainEqual({ op: 'channel.post', channel: 'scoutSettings', body: { method: 'set' } });
+
+    const pushes: unknown[] = [];
+    settings.subscribe((body) => pushes.push(body));
+    evaluate({ type: 'channel', channel: 'scoutSettings', body: { kind: 'later' } });
+    evaluate({ type: 'channel', channel: 'other', body: 1 });
+    expect(pushes).toEqual([{ kind: 'snapshot' }, { kind: 'later' }]);
+
+    expect(await adapter.channels!.has('scoutSettings')).toBe(true);
+    expect(await adapter.channels!.has('scoutGlass')).toBe(false);
+    expect(createWebKitAdapter({ window: win, channels: false }).channels).toBeUndefined();
+  });
+
+  test('ignores channel events with no name', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { win, evaluate } = fakeHost();
+    const adapter = createWebKitAdapter({ window: win });
+    adapter.channels!.channel('x').subscribe(() => {
+      throw new Error('should not deliver');
+    });
+    evaluate({ type: 'channel', body: 1 });
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
   test('outside a host it has no bridges', () => {
     const win = {} as Window;
     expect(isWebKitHost({ window: win })).toBe(false);
@@ -121,7 +159,7 @@ describe('WKWebView adapter', () => {
     const list = await bridge.activities.list();
     expect(list.map((s) => s.ref.id)).toEqual(['r1']);
     await bridge.activities.send({ kind: 'recording', id: 'r1' }, 'stop');
-    expect(await bridge.hello()).toEqual({ version: 1, capabilities: ['commands', 'activities'] });
+    expect(await bridge.hello()).toEqual({ version: 1, capabilities: ['commands', 'activities'], channels: [] });
     expect(posted).toEqual([
       { op: 'activities.list' },
       { op: 'activities.send', ref: { kind: 'recording', id: 'r1' }, command: 'stop', args: undefined },

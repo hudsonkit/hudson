@@ -1,0 +1,56 @@
+{
+  "name": "@hudsonkit/electron",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Electron window, menu, preload and bridge relay for HudsonKit apps. Electron is the UI; long-running work stays in a separate host process.",
+  "keywords": [
+    "hudsonkit",
+    "electron",
+    "preload",
+    "bridge"
+  ],
+  "homepage": "https://github.com/arach/hudson/tree/main/packages/web/electron#readme",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    "./main": {
+      "types": "./dist/main.d.ts",
+      "import": "./dist/main.js",
+      "require": "./dist/main.cjs"
+    },
+    "./preload": {
+      "types": "./dist/preload-api.d.ts",
+      "import": "./dist/preload-api.js",
+      "require": "./dist/preload-api.cjs"
+    },
+    "./preload.cjs": "./dist/preload.cjs"
+  },
+  "files": [
+    "dist",
+    "LICENSE.md",
+    "NOTICE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/arach/hudson.git",
+    "directory": "packages/web/electron"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "example": "electron example/main.mjs"
+  },
+  "dependencies": {
+    "hudsonkit": "workspace:*"
+  },
+  "peerDependencies": {
+    "electron": ">=35"
+  },
+  "devDependencies": {
+    "electron": "44.9.3",
+    "tsup": "^8.0.0",
+    "typescript": "5.9.3",
+    "vitest": "^4.0.18"
+  }
+}
